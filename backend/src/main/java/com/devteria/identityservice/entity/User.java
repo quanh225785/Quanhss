@@ -27,7 +27,8 @@ public class User {
     String firstName;
     LocalDate dob;
     String lastName;
-
+    String email;
+    Boolean isVerified;
     @ManyToMany
     Set<Role> roles;
 }

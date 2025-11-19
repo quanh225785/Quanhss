@@ -1,14 +1,18 @@
 package com.devteria.identityservice.service;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
+import java.util.UUID;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.devteria.identityservice.constant.PredefinedRole;
 import com.devteria.identityservice.dto.request.UserCreationRequest;
@@ -16,15 +20,18 @@ import com.devteria.identityservice.dto.request.UserUpdateRequest;
 import com.devteria.identityservice.dto.response.UserResponse;
 import com.devteria.identityservice.entity.Role;
 import com.devteria.identityservice.entity.User;
+import com.devteria.identityservice.entity.VerificationToken;
 import com.devteria.identityservice.exception.AppException;
 import com.devteria.identityservice.exception.ErrorCode;
 import com.devteria.identityservice.mapper.UserMapper;
 import com.devteria.identityservice.repository.RoleRepository;
 import com.devteria.identityservice.repository.UserRepository;
+import com.devteria.identityservice.repository.VerificationTokenRepository;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
@@ -36,10 +43,23 @@ public class UserService {
     RoleRepository roleRepository;
     UserMapper userMapper;
     PasswordEncoder passwordEncoder;
+    VerificationTokenRepository verificationTokenRepository;
+    EmailVerify emailVerify;
 
+    @NonFinal
+    @Value("${app.verification-token-expiry:24}")
+    long tokenExpiryHours;
+
+    @Transactional
     public UserResponse createUser(UserCreationRequest request) {
+        // Check if email already exists
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new AppException(ErrorCode.EMAIL_ALREADY_EXISTS);
+        }
+
         User user = userMapper.toUser(request);
         user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setIsVerified(false); // User not verified by default
 
         HashSet<Role> roles = new HashSet<>();
         roleRepository.findById(PredefinedRole.USER_ROLE).ifPresent(roles::add);
@@ -50,6 +70,26 @@ public class UserService {
             user = userRepository.save(user);
         } catch (DataIntegrityViolationException exception) {
             throw new AppException(ErrorCode.USER_EXISTED);
+        }
+
+        // Generate verification token
+        String token = UUID.randomUUID().toString();
+        VerificationToken verificationToken = VerificationToken.builder()
+                .token(token)
+                .user(user)
+                .createdAt(LocalDateTime.now())
+                .expiryDate(LocalDateTime.now().plusHours(tokenExpiryHours))
+                .build();
+
+        verificationTokenRepository.save(verificationToken);
+
+        // Send verification email
+        try {
+            emailVerify.sendVerificationEmail(user, token);
+            log.info("Verification email sent to user: {}", user.getUsername());
+        } catch (Exception e) {
+            log.error("Failed to send verification email to user: {}", user.getUsername(), e);
+            // Don't fail user creation if email fails
         }
 
         return userMapper.toUserResponse(user);

@@ -1,0 +1,154 @@
+<!DOCTYPE html
+    PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns:th="http://www.thymeleaf.org" xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href='http://fonts.googleapis.com/css?family=Roboto' rel='stylesheet' type='text/css' />
+    <style>
+        body {
+            font-family: 'Roboto', Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        .email-container {
+            max-width: 600px;
+            margin: 40px auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .email-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px 30px;
+            text-align: center;
+            color: #ffffff;
+        }
+
+        .email-header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 600;
+        }
+
+        .email-body {
+            padding: 40px 30px;
+            color: #333333;
+            line-height: 1.6;
+        }
+
+        .email-body h2 {
+            color: #667eea;
+            font-size: 22px;
+            margin-bottom: 20px;
+        }
+
+        .email-body p {
+            margin: 15px 0;
+            font-size: 16px;
+        }
+
+        .verification-button {
+            display: inline-block;
+            margin: 30px 0;
+            padding: 15px 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 16px;
+            transition: transform 0.2s;
+        }
+
+        .verification-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .info-box {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-left: 4px solid #667eea;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        .email-footer {
+            background-color: #f8f9fa;
+            padding: 25px 30px;
+            text-align: center;
+            font-size: 14px;
+            color: #666666;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .warning-text {
+            color: #e74c3c;
+            font-weight: 500;
+            margin-top: 20px;
+        }
+
+        .link-text {
+            word-break: break-all;
+            color: #667eea;
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="email-container">
+        <div class="email-header">
+            <h1>🎉 Xác thực tài khoản</h1>
+        </div>
+
+        <div class="email-body">
+            <h2 th:text="${'Xin chào, ' + name + '! 👋'}"></h2>
+
+            <p>Cảm ơn bạn đã đăng ký tài khoản với chúng tôi. Chỉ còn một bước nữa để hoàn tất!</p>
+
+            <div class="info-box">
+                <strong>Thông tin tài khoản của bạn:</strong><br />
+                📧 Tên đăng nhập: <strong th:text="${username}"></strong>
+            </div>
+
+            <p>Để kích hoạt tài khoản, vui lòng nhấp vào nút bên dưới:</p>
+
+            <div style="text-align: center;">
+                <a th:href="${verificationLink}" class="verification-button">
+                    ✅ Xác thực tài khoản ngay
+                </a>
+            </div>
+
+            <p class="warning-text">
+                ⚠️ Link xác thực này có hiệu lực trong vòng 24 giờ. Sau thời gian đó, bạn sẽ cần yêu cầu gửi lại email
+                xác thực.
+            </p>
+
+            <p style="margin-top: 30px; font-size: 14px; color: #666;">
+                Nếu nút không hoạt động, bạn có thể copy link sau vào trình duyệt:<br />
+                <span class="link-text" th:text="${verificationLink}"></span>
+            </p>
+        </div>
+
+        <div class="email-footer">
+            <p style="margin: 5px 0;">
+                <strong>Lưu ý:</strong> Nếu bạn không đăng ký tài khoản này, vui lòng bỏ qua email này.
+            </p>
+            <p style="margin: 5px 0; color: #999;">
+                Đây là email tự động, vui lòng không trả lời.
+            </p>
+            <p style="margin: 15px 0 5px 0; color: #999;">
+                © 2025 Identity Service. All rights reserved.
+            </p>
+        </div>
+    </div>
+</body>
+
+</html>

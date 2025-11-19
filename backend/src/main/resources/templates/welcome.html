@@ -1,0 +1,145 @@
+<!DOCTYPE html
+    PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns:th="http://www.thymeleaf.org" xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href='http://fonts.googleapis.com/css?family=Roboto' rel='stylesheet' type='text/css' />
+    <style>
+        body {
+            font-family: 'Roboto', Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        .email-container {
+            max-width: 600px;
+            margin: 40px auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .email-header {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            padding: 40px 30px;
+            text-align: center;
+            color: #ffffff;
+        }
+
+        .email-header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 600;
+        }
+
+        .email-body {
+            padding: 40px 30px;
+            color: #333333;
+            line-height: 1.6;
+        }
+
+        .email-body h2 {
+            color: #28a745;
+            font-size: 22px;
+            margin-bottom: 20px;
+        }
+
+        .email-body p {
+            margin: 15px 0;
+            font-size: 16px;
+        }
+
+        .success-icon {
+            font-size: 64px;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .info-box {
+            background-color: #d4edda;
+            padding: 20px;
+            border-left: 4px solid #28a745;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        .cta-button {
+            display: inline-block;
+            margin: 25px 0;
+            padding: 15px 40px;
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .email-footer {
+            background-color: #f8f9fa;
+            padding: 25px 30px;
+            text-align: center;
+            font-size: 14px;
+            color: #666666;
+            border-top: 1px solid #e0e0e0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="email-container">
+        <div class="email-header">
+            <h1>🎊 Chào mừng bạn!</h1>
+        </div>
+
+        <div class="email-body">
+            <div class="success-icon">✅</div>
+
+            <h2 th:text="${'Xin chào, ' + name + '!'}"></h2>
+
+            <p>Tài khoản của bạn đã được xác thực thành công! 🎉</p>
+
+            <div class="info-box">
+                <strong>Thông tin tài khoản:</strong><br />
+                👤 Tên đăng nhập: <strong th:text="${username}"></strong>
+            </div>
+
+            <p>Bạn có thể bắt đầu sử dụng đầy đủ các tính năng của hệ thống.</p>
+
+            <p>Một số điều bạn có thể làm:</p>
+            <ul>
+                <li>✨ Cập nhật thông tin cá nhân</li>
+                <li>🔐 Đổi mật khẩu để bảo mật tài khoản</li>
+                <li>🚀 Khám phá các tính năng mới</li>
+            </ul>
+
+            <div style="text-align: center;">
+                <a href="#" class="cta-button">
+                    🏠 Đăng nhập ngay
+                </a>
+            </div>
+
+            <p style="margin-top: 30px; color: #666; font-size: 14px;">
+                Nếu bạn cần hỗ trợ, đừng ngần ngại liên hệ với chúng tôi.
+            </p>
+        </div>
+
+        <div class="email-footer">
+            <p style="margin: 5px 0; color: #999;">
+                Cảm ơn bạn đã tin tưởng sử dụng dịch vụ của chúng tôi!
+            </p>
+            <p style="margin: 5px 0; color: #999;">
+                Đây là email tự động, vui lòng không trả lời.
+            </p>
+            <p style="margin: 15px 0 5px 0; color: #999;">
+                © 2025 Identity Service. All rights reserved.
+            </p>
+        </div>
+    </div>
+</body>
+
+</html>
