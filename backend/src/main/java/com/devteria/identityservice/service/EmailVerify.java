@@ -1,22 +1,24 @@
 package com.devteria.identityservice.service;
 
-import jakarta.mail.MessagingException;
-import jakarta.mail.internet.MimeMessage;
-import lombok.AccessLevel;
-import lombok.RequiredArgsConstructor;
-import lombok.experimental.FieldDefaults;
-import lombok.extern.slf4j.Slf4j;
-import lombok.experimental.NonFinal;
+import java.nio.charset.StandardCharsets;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 
 import com.devteria.identityservice.entity.User;
 
-import java.nio.charset.StandardCharsets;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.experimental.NonFinal;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
@@ -37,7 +39,9 @@ public class EmailVerify {
 
     /**
      * Gửi email xác thực đến người dùng với token
+     * Phương thức này chạy bất đồng bộ để không block request
      */
+    @Async("emailTaskExecutor")
     public void sendVerificationEmail(User user, String token) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
@@ -65,13 +69,18 @@ public class EmailVerify {
 
         } catch (MessagingException e) {
             log.error("Failed to send verification email to: {}", user.getEmail(), e);
-            throw new RuntimeException("Could not send verification email", e);
+            // Log lỗi nhưng không throw exception vì chạy async
+            // Có thể implement retry mechanism hoặc email queue nếu cần
+        } catch (Exception e) {
+            log.error("Unexpected error while sending verification email to: {}", user.getEmail(), e);
         }
     }
 
     /**
      * Gửi email chào mừng sau khi xác thực thành công
+     * Phương thức này chạy bất đồng bộ để không block request
      */
+    @Async("emailTaskExecutor")
     public void sendWelcomeEmail(User user) {
         try {
             MimeMessage message = mailSender.createMimeMessage();

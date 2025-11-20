@@ -56,13 +56,26 @@ public class UserService {
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new AppException(ErrorCode.EMAIL_ALREADY_EXISTS);
         }
+        
+        // Check if username already exists
+            if (userRepository.existsByUsername(request.getUsername())) {
+                throw new AppException(ErrorCode.USER_EXISTED);
+            }
 
         User user = userMapper.toUser(request);
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setIsVerified(false); // User not verified by default
 
         HashSet<Role> roles = new HashSet<>();
-        roleRepository.findById(PredefinedRole.USER_ROLE).ifPresent(roles::add);
+        // Xác định role từ request, mặc định là USER
+        String selectedRole = request.getRole();
+        if (PredefinedRole.AGENT_ROLE.equals(selectedRole)) {
+            roleRepository.findById(PredefinedRole.AGENT_ROLE).ifPresent(roles::add);
+            log.info("Creating new user with AGENT role: {}", user.getUsername());
+        } else {
+            roleRepository.findById(PredefinedRole.USER_ROLE).ifPresent(roles::add);
+            log.info("Creating new user with USER role: {}", user.getUsername());
+        }
 
         user.setRoles(roles);
 
@@ -83,14 +96,9 @@ public class UserService {
 
         verificationTokenRepository.save(verificationToken);
 
-        // Send verification email
-        try {
-            emailVerify.sendVerificationEmail(user, token);
-            log.info("Verification email sent to user: {}", user.getUsername());
-        } catch (Exception e) {
-            log.error("Failed to send verification email to user: {}", user.getUsername(), e);
-            // Don't fail user creation if email fails
-        }
+        // Send verification email async - không cần đợi
+        emailVerify.sendVerificationEmail(user, token);
+        log.info("Verification email task queued for user: {}", user.getUsername());
 
         return userMapper.toUserResponse(user);
     }

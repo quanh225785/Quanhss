@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { api } from '../utils/api';
 import './Auth.css';
 
 function VerifyEmail() {
@@ -8,8 +8,12 @@ function VerifyEmail() {
     const navigate = useNavigate();
     const [status, setStatus] = useState('verifying'); // verifying, success, error
     const [message, setMessage] = useState('');
+    const hasVerified = useRef(false); // Đảm bảo chỉ verify một lần
 
     useEffect(() => {
+        // Nếu đã verify rồi thì không làm gì nữa
+        if (hasVerified.current) return;
+
         const token = searchParams.get('token');
 
         if (!token) {
@@ -18,12 +22,13 @@ function VerifyEmail() {
             return;
         }
 
+        hasVerified.current = true; // Đánh dấu đã verify
         verifyEmail(token);
     }, [searchParams]);
 
     const verifyEmail = async (token) => {
         try {
-            const response = await axios.get(`http://localhost:8080/api/auth/verify?token=${token}`);
+            const response = await api.get(`/api/auth/verify?token=${token}`);
             setStatus('success');
             setMessage(response.data?.result || 'Email đã được xác thực thành công!');
 
@@ -60,17 +65,16 @@ function VerifyEmail() {
 
                     {status === 'success' && (
                         <div className="success-message">
-                            <div style={{ fontSize: '64px', marginBottom: '20px' }}>✅</div>
-                            <h2 style={{ color: '#28a745', marginBottom: '15px' }}>
-                                Xác thực thành công!
+                            <h2 style={{ color: '#166534', marginBottom: '8px', fontSize: '18px', fontWeight: '600' }}>
+                                Xác thực thành công
                             </h2>
-                            <p style={{ fontSize: '16px', marginBottom: '10px' }}>
+                            <p style={{ fontSize: '14px', marginBottom: '16px', color: '#166534' }}>
                                 {message}
                             </p>
-                            <p style={{ fontSize: '14px', color: '#666' }}>
+                            <p style={{ fontSize: '14px', color: '#64748b' }}>
                                 Bạn sẽ được chuyển đến trang đăng nhập sau 3 giây...
                             </p>
-                            <Link to="/login" className="btn-submit" style={{ marginTop: '25px', display: 'inline-block' }}>
+                            <Link to="/login" className="btn-submit" style={{ marginTop: '16px', width: '100%' }}>
                                 Đăng nhập ngay
                             </Link>
                         </div>
@@ -78,18 +82,17 @@ function VerifyEmail() {
 
                     {status === 'error' && (
                         <div className="error-message">
-                            <div style={{ fontSize: '64px', marginBottom: '20px' }}>❌</div>
-                            <h2 style={{ color: '#dc3545', marginBottom: '15px' }}>
+                            <h2 style={{ color: '#ef4444', marginBottom: '8px', fontSize: '18px', fontWeight: '600' }}>
                                 Xác thực thất bại
                             </h2>
-                            <p style={{ fontSize: '16px', marginBottom: '20px' }}>
+                            <p style={{ fontSize: '14px', marginBottom: '16px', color: '#ef4444' }}>
                                 {message}
                             </p>
-                            <div style={{ marginTop: '30px' }}>
-                                <Link to="/login" className="btn-submit" style={{ marginRight: '10px' }}>
-                                    Đến trang đăng nhập
+                            <div style={{ marginTop: '16px', display: 'flex', gap: '10px' }}>
+                                <Link to="/login" className="btn-submit" style={{ flex: 1 }}>
+                                    Đăng nhập
                                 </Link>
-                                <Link to="/register" className="btn-submit" style={{ background: '#6c757d' }}>
+                                <Link to="/register" className="btn-submit" style={{ background: 'white', color: '#0f172a', border: '1px solid #e2e8f0', flex: 1 }}>
                                     Đăng ký lại
                                 </Link>
                             </div>

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { api } from '../utils/api';
 import './Auth.css';
 
 function Register() {
@@ -12,7 +12,8 @@ function Register() {
         email: '',
         dob: '',
         password: '',
-        confirmPassword: ''
+        confirmPassword: '',
+        role: 'USER' // Mặc định là USER
     });
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
@@ -52,14 +53,15 @@ function Register() {
 
         try {
             // Backend expects user creation at POST /api/users
-            await axios.post('http://localhost:8080/api/users', {
+            await api.post('/api/users', {
                 firstName: formData.firstName,
                 lastName: formData.lastName,
                 username: formData.username,
                 email: formData.email,
                 // backend expects LocalDate: use YYYY-MM-DD string from input[type=date]
                 dob: formData.dob || null,
-                password: formData.password
+                password: formData.password,
+                role: formData.role // Gửi role đã chọn
             });
 
             // Show success message
@@ -83,7 +85,7 @@ function Register() {
                 {error && <div className="error-message">{error}</div>}
                 {success && (
                     <div className="success-message">
-                        <h3>✅ Đăng ký thành công!</h3>
+                        <h3>Đăng ký thành công!</h3>
                         <p>Chúng tôi đã gửi email xác thực đến <strong>{formData.email}</strong></p>
                         <p>Vui lòng kiểm tra hộp thư và nhấp vào link xác thực để kích hoạt tài khoản.</p>
                         <p style={{ fontSize: '14px', marginTop: '15px' }}>Nếu không thấy email, hãy kiểm tra thư mục spam.</p>
@@ -118,7 +120,7 @@ function Register() {
                         </div>
 
                         <div className="form-group">
-                            <label htmlFor="username">Tên người dùng</label>
+                            <label htmlFor="username">Username</label>
                             <input
                                 type="text"
                                 id="username"
@@ -141,6 +143,34 @@ function Register() {
                                 placeholder="Nhập email của bạn"
                                 required
                             />
+                        </div>
+
+                        <div className="form-group">
+                            <label htmlFor="role">Loại tài khoản</label>
+                            <select
+                                id="role"
+                                name="role"
+                                value={formData.role}
+                                onChange={handleChange}
+                                style={{
+                                    width: '100%',
+                                    padding: '12px',
+                                    fontSize: '16px',
+                                    border: '1px solid #ddd',
+                                    borderRadius: '5px',
+                                    backgroundColor: 'white',
+                                    cursor: 'pointer'
+                                }}
+                                required
+                            >
+                                <option value="USER">👤 Người dùng (USER)</option>
+                                <option value="AGENT">🏢 Đại lý (AGENT)</option>
+                            </select>
+                            <small style={{ color: '#666', fontSize: '14px', marginTop: '5px', display: 'block' }}>
+                                {formData.role === 'USER'
+                                    ? 'Tài khoản người dùng thông thường - có thể đặt tour, xem địa điểm'
+                                    : 'Tài khoản đại lý - có thể quản lý địa điểm, tour du lịch'}
+                            </small>
                         </div>
 
                         <div className="form-group">

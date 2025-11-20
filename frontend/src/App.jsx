@@ -6,7 +6,6 @@ import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import VerifyEmail from './pages/VerifyEmail';
 import './App.css';
-
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 

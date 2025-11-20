@@ -54,13 +54,8 @@ public class VerificationService {
 
         log.info("Email verified successfully for user: {}", user.getUsername());
 
-        // Send welcome email
-        try {
-            emailVerify.sendWelcomeEmail(user);
-        } catch (Exception e) {
-            log.error("Failed to send welcome email", e);
-            // Don't fail verification if welcome email fails
-        }
+        // Send welcome email async - không cần đợi
+        emailVerify.sendWelcomeEmail(user);
     }
 
     @Transactional

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { api, setAuthToken } from '../utils/api';
 import './Auth.css';
 
 function Login({ onLogin }) {
@@ -13,6 +13,7 @@ function Login({ onLogin }) {
     const [loading, setLoading] = useState(false);
     const [showResendVerification, setShowResendVerification] = useState(false);
     const [userEmail, setUserEmail] = useState('');
+    // apiBaseUrl and preconfigured axios instance are available from `src/utils/api.js`
 
     const handleChange = (e) => {
         setFormData({
@@ -27,41 +28,36 @@ function Login({ onLogin }) {
         setLoading(true);
 
         try {
-            // Backend expects username + password at POST /api/auth/token and
-            // returns ApiResponse<AuthenticationResponse> with token in result.token
-            const response = await axios.post('http://localhost:8080/api/auth/token', {
-                username: formData.username,
+            // Backend expects usernameOrEmail + password at POST /api/auth/token
+            const response = await api.post('/api/auth/token', {
+                usernameOrEmail: formData.username,
                 password: formData.password
             });
 
-            // Save JWT token from result
             const authResult = response.data?.result;
             const token = authResult?.token;
             const authenticated = authResult?.authenticated;
+
             if (!token || !authenticated) {
                 throw new Error('Đăng nhập không thành công');
             }
-            if (!token) {
-                throw new Error('Không nhận được token từ server');
-            }
-            localStorage.setItem('token', token);
 
-            // Fetch user info from backend using token
+            // persist token and set for future api calls
+            localStorage.setItem('token', token);
+            setAuthToken(token);
+
+            // try to fetch user info using secured endpoint; non-blocking
             try {
-                const userRes = await axios.get('http://localhost:8080/api/users/my-info', {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
+                const userRes = await api.get('/api/users/my-info');
                 localStorage.setItem('user', JSON.stringify(userRes.data?.result || {}));
             } catch (err) {
-                // If user info cannot be fetched, don't block login — continue
                 console.warn('Không lấy được thông tin người dùng:', err);
             }
 
-            // Gọi callback để cập nhật trạng thái đăng nhập
+            // notify parent and navigate
             onLogin();
-
-            // Chuyển hướng đến dashboard
             navigate('/dashboard');
+
         } catch (err) {
             const errorCode = err.response?.data?.code;
             const errorMessage = err.response?.data?.message;
@@ -86,7 +82,7 @@ function Login({ onLogin }) {
 
         setLoading(true);
         try {
-            await axios.post(`http://localhost:8080/api/auth/resend-verify?email=${userEmail}`);
+            await api.post(`/api/auth/resend-verify?email=${userEmail}`);
             setError('');
             alert('Đã gửi lại email xác thực! Vui lòng kiểm tra hộp thư của bạn.');
             setShowResendVerification(false);
