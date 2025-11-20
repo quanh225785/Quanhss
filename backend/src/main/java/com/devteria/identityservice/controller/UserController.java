@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import com.devteria.identityservice.dto.request.ApiResponse;
 import com.devteria.identityservice.dto.request.UserCreationRequest;
 import com.devteria.identityservice.dto.request.PasswordForgotRequest;
+import com.devteria.identityservice.dto.request.PasswordChangeRequest;
 import com.devteria.identityservice.dto.request.ResetPasswordRequest;
 import com.devteria.identityservice.dto.request.UserUpdateRequest;
 import com.devteria.identityservice.dto.response.UserResponse;
@@ -79,6 +80,14 @@ public class UserController {
     ApiResponse<UserResponse> updateUser(@PathVariable String userId, @RequestBody UserUpdateRequest request) {
         return ApiResponse.<UserResponse>builder()
                 .result(userService.updateUser(userId, request))
+                .build();
+    }
+
+    @PostMapping("/{userId}/change-password")
+    ApiResponse<String> changePassword(@PathVariable String userId, @RequestBody @Valid PasswordChangeRequest request) {
+        userService.changePassword(userId, request.getCurrentPassword(), request.getNewPassword());
+        return ApiResponse.<String>builder()
+                .result("Password changed successfully")
                 .build();
     }
 }

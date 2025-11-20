@@ -8,6 +8,7 @@ import {
   FileText,
   LogOut,
   Shield,
+  User,
 } from "lucide-react";
 
 import NavItem from "../components/shared/NavItem";
@@ -17,6 +18,7 @@ import TourManagement from "../components/admin/TourManagement";
 import LocationManagement from "../components/admin/LocationManagement";
 import BookingManagement from "../components/admin/BookingManagement";
 import ContentManagement from "../components/admin/ContentManagement";
+import AdminProfile from "../components/admin/AdminProfile";
 
 const AdminDashboard = ({ onLogout }) => {
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -41,6 +43,8 @@ const AdminDashboard = ({ onLogout }) => {
         return <BookingManagement />;
       case "content":
         return <ContentManagement />;
+      case "profile":
+        return <AdminProfile user={user} />;
       default:
         return <AdminOverview />;
     }
@@ -93,6 +97,12 @@ const AdminDashboard = ({ onLogout }) => {
             label="Nội dung"
             active={activeTab === "content"}
             onClick={() => setActiveTab("content")}
+          />
+          <NavItem
+            icon={<User size={20} />}
+            label="Hồ sơ"
+            active={activeTab === "profile"}
+            onClick={() => setActiveTab("profile")}
           />
         </nav>
 
