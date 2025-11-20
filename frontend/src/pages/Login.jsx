@@ -29,7 +29,7 @@ function Login({ onLogin }) {
 
         try {
             // Backend expects usernameOrEmail + password at POST /api/auth/token
-            const response = await api.post('/api/auth/token', {
+            const response = await api.post('/auth/token', {
                 usernameOrEmail: formData.username,
                 password: formData.password
             });
@@ -48,7 +48,7 @@ function Login({ onLogin }) {
 
             // try to fetch user info using secured endpoint; non-blocking
             try {
-                const userRes = await api.get('/api/users/my-info');
+                const userRes = await api.get('/users/my-info');
                 localStorage.setItem('user', JSON.stringify(userRes.data?.result || {}));
             } catch (err) {
                 console.warn('Không lấy được thông tin người dùng:', err);
@@ -82,7 +82,7 @@ function Login({ onLogin }) {
 
         setLoading(true);
         try {
-            await api.post(`/api/auth/resend-verify?email=${userEmail}`);
+            await api.post(`/auth/resend-verify?email=${userEmail}`);
             setError('');
             alert('Đã gửi lại email xác thực! Vui lòng kiểm tra hộp thư của bạn.');
             setShowResendVerification(false);

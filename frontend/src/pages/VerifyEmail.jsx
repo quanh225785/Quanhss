@@ -28,7 +28,7 @@ function VerifyEmail() {
 
     const verifyEmail = async (token) => {
         try {
-            const response = await api.get(`/api/auth/verify?token=${token}`);
+            const response = await api.get(`/auth/verify?token=${token}`);
             setStatus('success');
             setMessage(response.data?.result || 'Email đã được xác thực thành công!');
 

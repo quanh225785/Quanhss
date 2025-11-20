@@ -32,3 +32,8 @@ mailServer:
 app:
   client-url: http://localhost:5173
   verification-token-expiry: 24 # hours
+
+vietmap:
+  api:
+    key: ec4b6f6a60186d81c08db7c3beeed4abafcd2fc367c9f746
+    base-url: https://maps.vietmap.vn/api

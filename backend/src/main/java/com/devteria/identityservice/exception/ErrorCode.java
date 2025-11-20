@@ -20,7 +20,15 @@ public enum ErrorCode {
     INVALID_VERIFICATION_TOKEN(1010, "Invalid or expired verification token", HttpStatus.BAD_REQUEST),
     EMAIL_ALREADY_EXISTS(1011, "Email already exists", HttpStatus.BAD_REQUEST),
     INVALID_EMAIL(1012, "Invalid email format", HttpStatus.BAD_REQUEST),
-    ;
+    LOCATION_SUGGESTION_NOT_FOUND(1013, "Location suggestion not found", HttpStatus.NOT_FOUND),
+    LOCATION_SUGGESTION_ALREADY_PROCESSED(1014, "Location suggestion has already been processed",
+            HttpStatus.BAD_REQUEST),
+    LOCATION_NAME_ALREADY_EXISTS(1015, "Location with this name already exists", HttpStatus.BAD_REQUEST),
+    LOCATION_NOT_FOUND(1016, "Location not found", HttpStatus.NOT_FOUND),
+    COORDINATES_REQUIRED(1017, "Latitude and longitude are required for location suggestion", HttpStatus.BAD_REQUEST),
+    USER_LOCATION_REQUIRED(1018, "User current location is required for searching nearby places",
+            HttpStatus.BAD_REQUEST),
+            ;
 
     ErrorCode(int code, String message, HttpStatusCode statusCode) {
         this.code = code;

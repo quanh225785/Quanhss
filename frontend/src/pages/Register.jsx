@@ -53,7 +53,7 @@ function Register() {
 
         try {
             // Backend expects user creation at POST /api/users
-            await api.post('/api/users', {
+            await api.post('/users', {
                 firstName: formData.firstName,
                 lastName: formData.lastName,
                 username: formData.username,
