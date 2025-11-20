@@ -115,4 +115,38 @@ public class EmailVerify {
     public void resendVerificationEmail(User user, String token) {
         sendVerificationEmail(user, token);
     }
+
+    /**
+     * Gửi email reset password
+     */
+    @Async("emailTaskExecutor")
+    public void sendPasswordResetEmail(User user, String token) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(
+                    message,
+                    MimeMessageHelper.MULTIPART_MODE_MIXED_RELATED,
+                    StandardCharsets.UTF_8.name());
+
+            Context context = new Context();
+            context.setVariable("name", user.getFirstName() + " " + user.getLastName());
+            context.setVariable("username", user.getUsername());
+            context.setVariable("resetLink", clientUrl + "/reset-password?token=" + token);
+
+            String htmlContent = templateEngine.process("reset_password", context);
+
+            helper.setTo(user.getEmail());
+            helper.setFrom(fromEmail);
+            helper.setSubject("Đặt lại mật khẩu của bạn");
+            helper.setText(htmlContent, true);
+
+            mailSender.send(message);
+            log.info("Password reset email sent successfully to: {}", user.getEmail());
+
+        } catch (MessagingException e) {
+            log.error("Failed to send password reset email to: {}", user.getEmail(), e);
+        } catch (Exception e) {
+            log.error("Unexpected error while sending password reset email to: {}", user.getEmail(), e);
+        }
+    }
 }

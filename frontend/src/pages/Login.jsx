@@ -65,6 +65,10 @@ function Login({ onLogin }) {
             if (errorCode === 1009 || errorMessage?.includes('not verified') || errorMessage?.includes('Email not verified')) {
                 setError('Email của bạn chưa được xác thực. Vui lòng kiểm tra email hoặc gửi lại email xác thực.');
                 setShowResendVerification(true);
+                // Prefill email from entered username if it looks like an email
+                if (formData.username && formData.username.includes('@')) {
+                    setUserEmail(formData.username);
+                }
             } else {
                 setError(errorMessage || 'Đăng nhập thất bại. Vui lòng thử lại.');
                 setShowResendVerification(false);
@@ -86,6 +90,7 @@ function Login({ onLogin }) {
             setError('');
             alert('Đã gửi lại email xác thực! Vui lòng kiểm tra hộp thư của bạn.');
             setShowResendVerification(false);
+            setUserEmail('');
         } catch (err) {
             setError(err.response?.data?.message || 'Gửi lại email thất bại.');
         } finally {
@@ -174,6 +179,9 @@ function Login({ onLogin }) {
                 <div className="auth-footer">
                     <p>
                         Chưa có tài khoản? <Link to="/register">Đăng ký ngay</Link>
+                    </p>
+                    <p style={{ marginTop: '8px' }}>
+                        <Link to="/forgot-password">Quên mật khẩu?</Link>
                     </p>
                 </div>
             </div>

@@ -32,6 +32,7 @@ mailServer:
 app:
   client-url: http://localhost:5173
   verification-token-expiry: 24 # hours
+  reset-token-expiry: 1 # hours for password reset
 
 vietmap:
   api:

@@ -8,9 +8,12 @@ import org.springframework.web.bind.annotation.*;
 
 import com.devteria.identityservice.dto.request.ApiResponse;
 import com.devteria.identityservice.dto.request.UserCreationRequest;
+import com.devteria.identityservice.dto.request.PasswordForgotRequest;
+import com.devteria.identityservice.dto.request.ResetPasswordRequest;
 import com.devteria.identityservice.dto.request.UserUpdateRequest;
 import com.devteria.identityservice.dto.response.UserResponse;
 import com.devteria.identityservice.service.UserService;
+import com.devteria.identityservice.service.PasswordResetService;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -24,12 +27,25 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class UserController {
     UserService userService;
+    PasswordResetService passwordResetService;
 
     @PostMapping
     ApiResponse<UserResponse> createUser(@RequestBody @Valid UserCreationRequest request) {
         return ApiResponse.<UserResponse>builder()
                 .result(userService.createUser(request))
                 .build();
+    }
+
+    @PostMapping("/forgot-password")
+    public ApiResponse<String> forgotPassword(@RequestBody @Valid PasswordForgotRequest request) {
+        passwordResetService.requestPasswordReset(request.getEmail());
+        return ApiResponse.<String>builder().result("Password reset email sent").build();
+    }
+
+    @PostMapping("/reset-password")
+    public ApiResponse<String> resetPassword(@RequestBody @Valid ResetPasswordRequest request) {
+        passwordResetService.resetPassword(request.getToken(), request.getPassword());
+        return ApiResponse.<String>builder().result("Password changed successfully").build();
     }
 
     @GetMapping
