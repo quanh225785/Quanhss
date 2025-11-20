@@ -125,4 +125,15 @@ public class LocationController {
                 .result(locationSuggestionService.getLocationById(locationId))
                 .build();
     }
+
+    /**
+     * Admin creates a location directly (auto-approved, no suggestion needed)
+     * POST /locations
+     */
+    @PostMapping
+    ApiResponse<LocationResponse> createLocationDirectly(@RequestBody @Valid LocationSuggestionRequest request) {
+        return ApiResponse.<LocationResponse>builder()
+                .result(locationSuggestionService.createLocationDirectly(request))
+                .build();
+    }
 }
