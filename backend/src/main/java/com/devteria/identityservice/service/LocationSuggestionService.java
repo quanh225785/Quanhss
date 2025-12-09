@@ -210,4 +210,54 @@ public class LocationSuggestionService {
 
         return locationMapper.toLocationResponse(location);
     }
+
+    /**
+     * Admin creates a location directly (auto-approved)
+     */
+    @PreAuthorize("hasRole('ADMIN')")
+    @Transactional
+    public LocationResponse createLocationDirectly(LocationSuggestionRequest request) {
+        // Get current authenticated admin
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User admin = userRepository
+                .findByUsername(username)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        // Validate coordinates
+        if (request.getLatitude() == null || request.getLongitude() == null) {
+            throw new AppException(ErrorCode.COORDINATES_REQUIRED);
+        }
+
+        // Check if location name already exists
+        if (locationRepository.existsByName(request.getName())) {
+            throw new AppException(ErrorCode.LOCATION_NAME_ALREADY_EXISTS);
+        }
+
+        // Create Location entity directly (bypass suggestion)
+        Location location = Location.builder()
+                .name(request.getName())
+                .address(request.getAddress())
+                .description(request.getDescription())
+                .refId(request.getRefId())
+                .latitude(request.getLatitude())
+                .longitude(request.getLongitude())
+                .cityId(request.getCityId())
+                .cityName(request.getCityName())
+                .districtId(request.getDistrictId())
+                .districtName(request.getDistrictName())
+                .wardId(request.getWardId())
+                .wardName(request.getWardName())
+                .houseNumber(request.getHouseNumber())
+                .streetName(request.getStreetName())
+                .createdBy(admin)
+                .approvedFromSuggestion(null) // No suggestion, created directly by admin
+                .build();
+
+        // Save location
+        location = locationRepository.save(location);
+        log.info("Location created directly by admin: {} with id: {} at coordinates ({}, {})",
+                username, location.getId(), location.getLatitude(), location.getLongitude());
+
+        return locationMapper.toLocationResponse(location);
+    }
 }
