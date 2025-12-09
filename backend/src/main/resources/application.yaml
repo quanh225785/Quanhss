@@ -4,10 +4,10 @@ server:
     context-path: /api
 spring:
   datasource:
-    url: ${DBMS_CONNECTION:jdbc:mysql://localhost:3306/quanh}
-    driverClassName: "com.mysql.cj.jdbc.Driver"
-    password: 12092001
-    username: root
+    url: jdbc:mysql://mysql-192be37d-vietlinh1482004-83dd.g.aivencloud.com:10404/quanh
+    driverClassName: com.mysql.cj.jdbc.Driver
+    username: avnadmin
+    password: AVNS_lMHHQZnQlVaKNWFxbgP
   jpa:
     hibernate:
       ddl-auto: update
