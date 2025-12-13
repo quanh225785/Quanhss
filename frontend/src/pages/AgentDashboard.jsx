@@ -8,7 +8,7 @@ import {
     MessageSquare,
 } from 'lucide-react';
 
-import NavItem from '../components/agent/NavItem';
+import NavItem from '../components/shared/NavItem';
 import DashboardOverview from '../components/agent/DashboardOverview';
 import MyTours from '../components/agent/MyTours';
 import LocationProposals from '../components/agent/LocationProposals';

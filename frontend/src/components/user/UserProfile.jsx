@@ -2,8 +2,6 @@ import React, { useState } from "react";
 import {
   User,
   Mail,
-  Phone,
-  MapPin,
   Camera,
   Loader2,
   Check,
@@ -56,86 +54,94 @@ const UserProfile = ({ user }) => {
       console.error("[UserProfile] Update error:", err);
       setError(
         err.response?.data?.message ||
-          "Không thể cập nhật thông tin. Vui lòng thử lại."
+        "Không thể cập nhật thông tin. Vui lòng thử lại."
       );
     } finally {
       setIsSubmitting(false);
     }
   };
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
+    <div className="max-w-3xl mx-auto space-y-8 animate-fade-in-up">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight">Hồ sơ cá nhân</h2>
-        <p className="text-zinc-500">Quản lý thông tin cá nhân và bảo mật.</p>
+        <h2 className="text-3xl font-display font-bold text-slate-900 tracking-tight">Hồ sơ cá nhân</h2>
+        <p className="text-slate-500 mt-2">Quản lý thông tin cá nhân và cài đặt bảo mật.</p>
       </div>
 
-      <div className="bg-white p-6 rounded-xl border border-zinc-200 shadow-sm">
-        <div className="flex flex-col items-center mb-6">
-          <div className="relative">
-            <div className="w-24 h-24 rounded-full bg-zinc-100 flex items-center justify-center text-2xl font-bold text-zinc-400 mb-2">
+      <div className="bg-white/60 backdrop-blur-md p-8 rounded-[2.5rem] border border-white/60 shadow-xl">
+        <div className="flex flex-col items-center mb-10">
+          <div className="relative group cursor-pointer">
+            <div className="w-32 h-32 rounded-full bg-gradient-to-br from-slate-100 to-slate-200 border-4 border-white shadow-lg flex items-center justify-center text-4xl font-bold text-slate-400 mb-2 overflow-hidden">
               {user.name ? user.name.charAt(0).toUpperCase() : "U"}
             </div>
-            <button className="absolute bottom-2 right-0 p-1.5 bg-zinc-900 text-white rounded-full hover:bg-zinc-800">
-              <Camera className="w-4 h-4" />
+            <button className="absolute bottom-2 right-2 p-2.5 bg-slate-900 text-white rounded-full hover:bg-primary transition-colors shadow-lg group-hover:scale-110">
+              <Camera className="w-5 h-5" />
             </button>
           </div>
-          <h3 className="text-lg font-medium">{user.name}</h3>
-          <p className="text-zinc-500">{user.email}</p>
+          <h3 className="text-xl font-bold text-slate-900 mt-4">{user.name}</h3>
+          <p className="text-slate-500 font-medium">{user.email}</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
           {success && (
-            <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 flex items-center gap-2">
-              <Check className="text-emerald-600" size={18} />
-              <p className="text-sm text-emerald-800">
-                Cập nhật thông tin thành công!
-              </p>
+            <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 flex items-center gap-3 animate-fade-in-up">
+              <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
+                <Check size={16} strokeWidth={3} />
+              </div>
+              <div>
+                <h4 className="font-bold text-emerald-800 text-sm">Thành công</h4>
+                <p className="text-sm text-emerald-700">Thông tin đã được cập nhật.</p>
+              </div>
             </div>
           )}
 
           {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-center gap-2">
-              <AlertCircle className="text-red-600" size={18} />
-              <p className="text-sm text-red-800">{error}</p>
+            <div className="bg-red-50 border border-red-200 rounded-2xl p-4 flex items-center gap-3 animate-fade-in-up">
+              <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-red-600">
+                <AlertCircle size={16} strokeWidth={3} />
+              </div>
+              <div>
+                <h4 className="font-bold text-red-800 text-sm">Lỗi</h4>
+                <p className="text-sm text-red-700">{error}</p>
+              </div>
             </div>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-zinc-700 mb-1">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <label className="block text-sm font-bold text-slate-700 ml-1">
                 Họ
               </label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 w-4 h-4" />
+              <div className="relative group">
+                <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors w-5 h-5" />
                 <input
                   type="text"
                   name="firstName"
                   value={formData.firstName}
                   onChange={handleChange}
                   placeholder="Nhập họ"
-                  className="w-full pl-10 pr-4 py-2 border border-zinc-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900"
+                  className="w-full pl-12 pr-4 py-3.5 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-slate-900 font-medium"
                 />
               </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-zinc-700 mb-1">
+            <div className="space-y-2">
+              <label className="block text-sm font-bold text-slate-700 ml-1">
                 Tên
               </label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 w-4 h-4" />
+              <div className="relative group">
+                <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors w-5 h-5" />
                 <input
                   type="text"
                   name="lastName"
                   value={formData.lastName}
                   onChange={handleChange}
                   placeholder="Nhập tên"
-                  className="w-full pl-10 pr-4 py-2 border border-zinc-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900"
+                  className="w-full pl-12 pr-4 py-3.5 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-slate-900 font-medium"
                 />
               </div>
             </div>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-zinc-700 mb-1">
+          <div className="space-y-2">
+            <label className="block text-sm font-bold text-slate-700 ml-1">
               Ngày sinh
             </label>
             <input
@@ -143,36 +149,36 @@ const UserProfile = ({ user }) => {
               name="dob"
               value={formData.dob}
               onChange={handleChange}
-              className="w-full px-4 py-2 border border-zinc-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900"
+              className="w-full px-4 py-3.5 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-slate-900 font-medium"
             />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-zinc-700 mb-1">
+          <div className="space-y-2">
+            <label className="block text-sm font-bold text-slate-700 ml-1">
               Email
             </label>
             <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 w-4 h-4" />
+              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
               <input
                 type="email"
                 value={user.email}
                 disabled
-                className="w-full pl-10 pr-4 py-2 border border-zinc-200 rounded-md text-sm bg-zinc-50 text-zinc-500"
+                className="w-full pl-12 pr-4 py-3.5 border border-slate-200 rounded-xl bg-slate-50 text-slate-500 font-medium cursor-not-allowed"
               />
             </div>
-            <p className="text-xs text-zinc-500 mt-1">
-              Email không thể thay đổi
+            <p className="text-xs text-slate-400 ml-1 font-medium">
+              * Email không thể thay đổi
             </p>
           </div>
 
-          <div className="pt-4 flex justify-end">
+          <div className="pt-6 flex justify-end border-t border-slate-100">
             <button
               type="submit"
               disabled={isSubmitting}
-              className="bg-zinc-900 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-zinc-800 disabled:opacity-50 flex items-center gap-2"
+              className="bg-slate-900 text-white px-8 py-3.5 rounded-xl font-bold hover:bg-primary transition-all shadow-lg hover:shadow-primary/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               {isSubmitting ? (
                 <>
-                  <Loader2 className="animate-spin" size={16} />
+                  <Loader2 className="animate-spin" size={18} />
                   Đang lưu...
                 </>
               ) : (
@@ -184,19 +190,22 @@ const UserProfile = ({ user }) => {
       </div>
 
       {/* Security Section */}
-      <div className="bg-white p-6 rounded-xl border border-zinc-200 shadow-sm">
-        <h3 className="text-lg font-semibold mb-4">Bảo mật</h3>
+      <div className="bg-white/60 backdrop-blur-md p-6 rounded-[2rem] border border-white/60 shadow-sm hover:shadow-md transition-shadow">
         <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm font-medium text-zinc-900">Mật khẩu</p>
-            <p className="text-xs text-zinc-500">Đổi mật khẩu của bạn</p>
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-900">
+              <Lock size={24} />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-slate-900">Mật khẩu & Bảo mật</h3>
+              <p className="text-sm text-slate-500">Quản lý mật khẩu và bảo mật tài khoản</p>
+            </div>
           </div>
           <button
             type="button"
             onClick={() => setShowPasswordModal(true)}
-            className="flex items-center gap-2 px-4 py-2 border border-zinc-300 rounded-md text-sm font-medium hover:bg-zinc-50"
+            className="px-5 py-2.5 border border-slate-200 bg-white rounded-xl text-sm font-bold text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm"
           >
-            <Lock size={16} />
             Đổi mật khẩu
           </button>
         </div>

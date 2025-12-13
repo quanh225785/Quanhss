@@ -1,82 +1,102 @@
 import React, { useState } from "react";
-import { Map, Calendar, Clock, ArrowRight } from "lucide-react";
+import { Map, Calendar, Clock, ArrowRight, Check, RotateCcw } from "lucide-react";
 
 const TripPlanner = () => {
   const [step, setStep] = useState(1);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 animate-fade-in-up">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight">
+        <h2 className="text-3xl font-display font-bold text-slate-900 tracking-tight">
           Lập kế hoạch chuyến đi
         </h2>
-        <p className="text-zinc-500">
-          Tạo lịch trình cá nhân hóa cho chuyến đi của bạn.
+        <p className="text-slate-500 mt-2">
+          Tạo lịch trình cá nhân hóa cho chuyến đi của bạn trong 3 bước đơn giản.
         </p>
       </div>
 
-      <div className="bg-white p-6 rounded-xl border border-zinc-200 shadow-sm">
+      <div className="bg-white/60 backdrop-blur-md p-8 rounded-[2.5rem] border border-white/60 shadow-xl relative overflow-hidden">
+        {/* Progress Bar */}
+        <div className="absolute top-0 left-0 w-full h-1.5 bg-slate-100">
+          <div
+            className="h-full bg-primary transition-all duration-500 ease-out"
+            style={{ width: `${(step / 3) * 100}%` }}
+          ></div>
+        </div>
+
         {step === 1 && (
-          <div className="space-y-4">
-            <h3 className="text-lg font-medium">
-              Bước 1: Chọn điểm đến & Thời gian
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-zinc-700 mb-1">
+          <div className="space-y-6 animate-fade-in-up">
+            <div className="flex items-center gap-4 mb-6">
+              <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center font-bold text-xl">1</div>
+              <h3 className="text-xl font-bold text-slate-900">Chọn điểm đến & Thời gian</h3>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="block text-sm font-bold text-slate-700">
                   Điểm đến
                 </label>
-                <input
-                  type="text"
-                  className="w-full px-3 py-2 border border-zinc-200 rounded-md"
-                  placeholder="Ví dụ: Đà Nẵng"
-                />
+                <div className="relative group">
+                  <Map className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors" size={20} />
+                  <input
+                    type="text"
+                    className="w-full pl-12 pr-4 py-3.5 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-slate-900 font-medium placeholder:text-slate-400"
+                    placeholder="Ví dụ: Đà Nẵng"
+                  />
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-zinc-700 mb-1">
+              <div className="space-y-2">
+                <label className="block text-sm font-bold text-slate-700">
                   Số ngày
                 </label>
-                <input
-                  type="number"
-                  className="w-full px-3 py-2 border border-zinc-200 rounded-md"
-                  placeholder="3"
-                />
+                <div className="relative group">
+                  <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors" size={20} />
+                  <input
+                    type="number"
+                    className="w-full pl-12 pr-4 py-3.5 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-slate-900 font-medium placeholder:text-slate-400"
+                    placeholder="Ví dụ: 3"
+                  />
+                </div>
               </div>
             </div>
             <button
               onClick={() => setStep(2)}
-              className="w-full bg-zinc-900 text-white py-2 rounded-md font-medium hover:bg-zinc-800 mt-4"
+              className="w-full bg-slate-900 text-white py-4 rounded-xl font-medium hover:bg-primary transition-all shadow-lg hover:shadow-primary/30 mt-4 flex items-center justify-center gap-2 group"
             >
-              Tiếp tục
+              Tiếp tục <ArrowRight className="group-hover:translate-x-1 transition-transform" />
             </button>
           </div>
         )}
 
         {step === 2 && (
-          <div className="space-y-4">
-            <h3 className="text-lg font-medium">Bước 2: Chọn sở thích</h3>
-            <div className="flex gap-2 flex-wrap">
-              {["Văn hóa", "Ẩm thực", "Mạo hiểm", "Nghỉ dưỡng", "Check-in"].map(
+          <div className="space-y-6 animate-fade-in-up">
+            <div className="flex items-center gap-4 mb-6">
+              <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center font-bold text-xl">2</div>
+              <h3 className="text-xl font-bold text-slate-900">Chọn sở thích</h3>
+            </div>
+
+            <div className="flex gap-3 flex-wrap">
+              {["Văn hóa", "Ẩm thực", "Mạo hiểm", "Nghỉ dưỡng", "Check-in", "Gia đình", "Cặp đôi"].map(
                 (tag) => (
                   <button
                     key={tag}
-                    className="px-3 py-1 border border-zinc-200 rounded-full text-sm hover:bg-zinc-50 focus:bg-zinc-900 focus:text-white"
+                    className="px-6 py-2.5 border border-slate-200 bg-white rounded-full text-sm font-medium hover:border-primary hover:text-primary focus:bg-primary focus:text-white focus:border-primary transition-all"
                   >
                     {tag}
                   </button>
                 )
               )}
             </div>
-            <div className="flex gap-2 mt-4">
+            <div className="flex gap-4 mt-8">
               <button
                 onClick={() => setStep(1)}
-                className="flex-1 px-4 py-2 border border-zinc-200 rounded-md font-medium hover:bg-zinc-50"
+                className="flex-1 px-4 py-3.5 border border-slate-200 rounded-xl font-medium hover:bg-slate-50 text-slate-600 transition-colors"
               >
                 Quay lại
               </button>
               <button
                 onClick={() => setStep(3)}
-                className="flex-1 bg-zinc-900 text-white py-2 rounded-md font-medium hover:bg-zinc-800"
+                className="flex-1 bg-slate-900 text-white py-3.5 rounded-xl font-medium hover:bg-primary transition-all shadow-lg hover:shadow-primary/30"
               >
                 Tạo lịch trình
               </button>
@@ -85,18 +105,23 @@ const TripPlanner = () => {
         )}
 
         {step === 3 && (
-          <div className="space-y-6">
+          <div className="space-y-8 animate-fade-in-up">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-medium">Lịch trình gợi ý</h3>
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold text-xl">
+                  <Check />
+                </div>
+                <h3 className="text-xl font-bold text-slate-900">Lịch trình gợi ý</h3>
+              </div>
               <button
                 onClick={() => setStep(1)}
-                className="text-sm text-zinc-500 hover:text-zinc-900"
+                className="text-sm font-medium text-slate-500 hover:text-primary flex items-center gap-1 transition-colors"
               >
-                Làm lại
+                <RotateCcw size={14} /> Làm lại
               </button>
             </div>
 
-            <div className="space-y-4 relative pl-4 border-l-2 border-zinc-100">
+            <div className="space-y-0 relative pl-4 border-l-2 border-slate-100 ml-6">
               {[
                 { time: "08:00", activity: "Ăn sáng tại Mì Quảng 1A" },
                 { time: "09:30", activity: "Tham quan Ngũ Hành Sơn" },
@@ -104,17 +129,19 @@ const TripPlanner = () => {
                 { time: "14:00", activity: "Tắm biển Mỹ Khê" },
                 { time: "18:00", activity: "Dạo phố cổ Hội An" },
               ].map((item, idx) => (
-                <div key={idx} className="relative">
-                  <div className="absolute -left-[21px] top-1 w-3 h-3 rounded-full bg-zinc-300 border-2 border-white"></div>
-                  <div className="text-sm font-medium text-zinc-500">
-                    {item.time}
+                <div key={idx} className="relative pb-8 last:pb-0 group">
+                  <div className="absolute -left-[23px] top-1 w-4 h-4 rounded-full bg-slate-200 border-4 border-white group-hover:bg-primary group-hover:scale-125 transition-all shadow-sm"></div>
+                  <div className="bg-white/50 p-4 rounded-2xl border border-white/50 hover:bg-white hover:shadow-md transition-all ml-4">
+                    <div className="text-xs font-bold text-primary tracking-wide uppercase mb-1">
+                      {item.time}
+                    </div>
+                    <div className="text-slate-900 font-medium">{item.activity}</div>
                   </div>
-                  <div className="text-zinc-900">{item.activity}</div>
                 </div>
               ))}
             </div>
 
-            <button className="w-full bg-emerald-600 text-white py-2 rounded-md font-medium hover:bg-emerald-700">
+            <button className="w-full bg-emerald-500 text-white py-4 rounded-xl font-bold hover:bg-emerald-600 transition-all shadow-lg hover:shadow-emerald-500/30">
               Lưu lịch trình
             </button>
           </div>

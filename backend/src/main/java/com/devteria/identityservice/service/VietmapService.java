@@ -10,6 +10,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import com.devteria.identityservice.dto.response.VietmapAutocompleteResponse;
 import com.devteria.identityservice.dto.response.VietmapPlaceResponse;
+import com.devteria.identityservice.dto.response.VietmapRouteResponse;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -104,6 +105,80 @@ public class VietmapService {
         } catch (Exception e) {
             log.error("Error calling Vietmap Reverse API", e);
             throw new RuntimeException("Failed to reverse geocode", e);
+        }
+    }
+
+    /**
+     * Calculate route between points using Vietmap Route API v3
+     * Points are visited in the order provided
+     */
+    public VietmapRouteResponse getRoute(List<String> points, String vehicle) {
+        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(baseUrl + "/route/v3")
+                .queryParam("apikey", apiKey)
+                .queryParam("points_encoded", true);
+
+        // Add each point as a separate query param
+        for (String point : points) {
+            builder.queryParam("point", point);
+        }
+
+        if (vehicle != null && !vehicle.isEmpty()) {
+            builder.queryParam("vehicle", vehicle);
+        }
+
+        String url = builder.toUriString();
+
+        try {
+            log.info("Calling Vietmap Route API with {} points, vehicle: {}", points.size(), vehicle);
+            VietmapRouteResponse response = restClient
+                    .get()
+                    .uri(url)
+                    .retrieve()
+                    .body(VietmapRouteResponse.class);
+
+            log.info("Route API response code: {}", response != null ? response.getCode() : "null");
+            return response;
+        } catch (Exception e) {
+            log.error("Error calling Vietmap Route API", e);
+            throw new RuntimeException("Failed to get route", e);
+        }
+    }
+
+    /**
+     * Calculate optimized route using Vietmap TSP API v3
+     * Points are reordered to minimize total travel distance
+     */
+    public VietmapRouteResponse getTspRoute(List<String> points, String vehicle, boolean roundtrip) {
+        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(baseUrl + "/tsp/v3")
+                .queryParam("apikey", apiKey)
+                .queryParam("points_encoded", true)
+                .queryParam("roundtrip", roundtrip);
+
+        // Add each point as a separate query param
+        for (String point : points) {
+            builder.queryParam("point", point);
+        }
+
+        if (vehicle != null && !vehicle.isEmpty()) {
+            builder.queryParam("vehicle", vehicle);
+        }
+
+        String url = builder.toUriString();
+
+        try {
+            log.info("Calling Vietmap TSP API with {} points, vehicle: {}, roundtrip: {}", 
+                    points.size(), vehicle, roundtrip);
+            VietmapRouteResponse response = restClient
+                    .get()
+                    .uri(url)
+                    .retrieve()
+                    .body(VietmapRouteResponse.class);
+
+            log.info("TSP API response code: {}", response != null ? response.getCode() : "null");
+            return response;
+        } catch (Exception e) {
+            log.error("Error calling Vietmap TSP API", e);
+            throw new RuntimeException("Failed to get TSP route", e);
         }
     }
 }

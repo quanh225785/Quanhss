@@ -16,6 +16,7 @@ import VerifyEmail from "./pages/VerifyEmail";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import { setAuthToken } from "./utils/api";
+import { registerVietmapServiceWorker } from "./utils/serviceWorker";
 import "./App.css";
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(
@@ -59,6 +60,9 @@ function App() {
         }
       }
     }
+
+    // Register service worker for Vietmap tile caching
+    registerVietmapServiceWorker();
   }, []);
 
   const handleLogin = () => {
