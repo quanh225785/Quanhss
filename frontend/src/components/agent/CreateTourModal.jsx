@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { X, MapPin, Loader2, Check, AlertCircle, Plus, Trash2, Route, Sparkles, Car, Bike, Search, Calendar, Clock, Coffee, Sun, Moon } from 'lucide-react';
+import { X, MapPin, Loader2, Check, AlertCircle, Plus, Trash2, Route, Sparkles, Car, Bike, Search, Calendar, Clock, Coffee, Sun, Moon, Image as ImageIcon } from 'lucide-react';
 import { api } from '../../utils/api';
 import TourMap from './TourMap';
+import ImageUpload from '../common/ImageUpload';
 
 const CreateTourModal = ({ onClose, onSuccess }) => {
     // Form state
@@ -13,6 +14,7 @@ const CreateTourModal = ({ onClose, onSuccess }) => {
         vehicle: 'car',
         useOptimization: false,
         roundtrip: false,
+        imageUrl: '',  // Tour thumbnail image
     });
 
     // Available approved locations
@@ -107,6 +109,7 @@ const CreateTourModal = ({ onClose, onSuccess }) => {
             startTime: suggestedTime,
             activity: location.name, // Default activity is location name
             isFreeActivity: false,
+            imageUrl: '',  // Tour point image
         }]);
         setError(null);
         setRoutePreview(null);
@@ -351,6 +354,7 @@ const CreateTourModal = ({ onClose, onSuccess }) => {
                 vehicle: formData.vehicle,
                 useOptimization: formData.useOptimization,
                 roundtrip: formData.roundtrip,
+                imageUrl: formData.imageUrl,  // Tour thumbnail
                 points: sortedLocations.map((loc, index) => ({
                     locationId: loc.locationId || null,  // Can be null for free activities
                     orderIndex: index,
@@ -359,6 +363,7 @@ const CreateTourModal = ({ onClose, onSuccess }) => {
                     dayNumber: loc.dayNumber,
                     startTime: loc.startTime,
                     activity: loc.activity,
+                    imageUrl: loc.imageUrl || null,  // Tour point image
                 })),
             });
 
@@ -457,6 +462,22 @@ const CreateTourModal = ({ onClose, onSuccess }) => {
                             placeholder="Mô tả về tour, điểm nổi bật..."
                             rows={2}
                             className="w-full px-4 py-2 border border-zinc-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent resize-none"
+                        />
+                    </div>
+
+                    {/* Tour Thumbnail Image */}
+                    <div className="space-y-2">
+                        <label className="block text-sm font-medium text-zinc-900">
+                            <div className="flex items-center gap-2">
+                                <ImageIcon size={16} />
+                                Ảnh đại diện Tour
+                            </div>
+                        </label>
+                        <ImageUpload
+                            folder="tours"
+                            currentImageUrl={formData.imageUrl}
+                            onUploadComplete={(url) => setFormData(prev => ({ ...prev, imageUrl: url }))}
+                            onRemove={() => setFormData(prev => ({ ...prev, imageUrl: '' }))}
                         />
                     </div>
 
@@ -720,6 +741,15 @@ const CreateTourModal = ({ onClose, onSuccess }) => {
                                                                 }`}
                                                         />
                                                     </div>
+
+                                                    {/* Image upload for tour point */}
+                                                    <ImageUpload
+                                                        folder="tour-points"
+                                                        currentImageUrl={location.imageUrl}
+                                                        onUploadComplete={(url) => handleUpdateItinerary(location.id, 'imageUrl', url)}
+                                                        onRemove={() => handleUpdateItinerary(location.id, 'imageUrl', '')}
+                                                        compact={true}
+                                                    />
 
                                                     {/* Delete button */}
                                                     <button

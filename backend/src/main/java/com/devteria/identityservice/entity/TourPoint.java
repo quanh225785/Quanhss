@@ -42,4 +42,6 @@ public class TourPoint {
 
     @Column(columnDefinition = "TEXT")
     String activity;  // What to do at this location, e.g., "Ăn sáng tại Mì Quảng 1A"
+
+    String imageUrl;  // S3 URL for tour point image
 }

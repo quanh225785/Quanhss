@@ -22,6 +22,7 @@ public class TourResponse {
     Double totalDistance;  // meters
     Long totalTime;  // milliseconds
     String routePolyline;
+    String imageUrl;  // S3 URL for tour thumbnail
     List<TourPointResponse> points;
     String createdByUsername;
     LocalDateTime createdAt;
@@ -43,6 +44,7 @@ public class TourResponse {
         Integer dayNumber;   // Which day (1, 2, 3...)
         String startTime;    // Time slot, e.g., "08:00"
         String activity;     // What to do at this location
+        String imageUrl;     // S3 URL for tour point image
         // Location details
         Long locationId;
         String locationName;

@@ -70,7 +70,7 @@ public class Tour {
     @Column(columnDefinition = "TEXT")
     String rejectionReason;  // Reason if rejected by admin
 
-    @Column(nullable = false)
+    String imageUrl;  // S3 URL for tour thumbnail image
     Boolean isActive;
 
     @PrePersist

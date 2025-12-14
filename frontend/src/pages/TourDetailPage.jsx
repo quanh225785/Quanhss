@@ -191,6 +191,17 @@ const TourDetailPage = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Main Content */}
                     <div className="lg:col-span-2 space-y-6">
+                        {/* Tour Hero Image */}
+                        {tour.imageUrl && (
+                            <div className="bg-white/60 backdrop-blur-md border border-white/60 shadow-sm rounded-[2rem] overflow-hidden">
+                                <img
+                                    src={tour.imageUrl}
+                                    alt={tour.name}
+                                    className="w-full h-64 object-cover"
+                                />
+                            </div>
+                        )}
+
                         {/* Map Section */}
                         <div className="bg-white/60 backdrop-blur-md border border-white/60 shadow-sm rounded-[2rem] overflow-hidden">
                             <TourMap
@@ -300,43 +311,59 @@ const TourDetailPage = () => {
                                             {/* Content */}
                                             <div className="flex-1 pb-6">
                                                 <div className="bg-white/80 rounded-2xl p-4 border border-slate-100 hover:shadow-md transition-shadow">
-                                                    <div className="flex items-start justify-between mb-2">
-                                                        <div>
-                                                            {point.startTime && (
-                                                                <span className="inline-flex items-center gap-1 text-xs font-medium text-primary bg-primary/10 px-2 py-1 rounded-full mb-2">
-                                                                    <Clock size={12} />
-                                                                    {point.startTime}
-                                                                </span>
+                                                    <div className="flex gap-4">
+                                                        {/* Text content */}
+                                                        <div className="flex-1">
+                                                            <div className="flex items-start justify-between mb-2">
+                                                                <div>
+                                                                    {point.startTime && (
+                                                                        <span className="inline-flex items-center gap-1 text-xs font-medium text-primary bg-primary/10 px-2 py-1 rounded-full mb-2">
+                                                                            <Clock size={12} />
+                                                                            {point.startTime}
+                                                                        </span>
+                                                                    )}
+                                                                    <h4 className="font-bold text-slate-900">
+                                                                        {point.locationName || point.activity || `Điểm ${index + 1}`}
+                                                                    </h4>
+                                                                </div>
+                                                                {point.stayDurationMinutes && (
+                                                                    <span className="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded-lg">
+                                                                        {point.stayDurationMinutes} phút
+                                                                    </span>
+                                                                )}
+                                                            </div>
+
+                                                            {point.locationAddress && (
+                                                                <p className="text-sm text-slate-500 flex items-start gap-1 mb-2">
+                                                                    <MapPin size={14} className="mt-0.5 flex-shrink-0" />
+                                                                    {point.locationAddress}
+                                                                </p>
                                                             )}
-                                                            <h4 className="font-bold text-slate-900">
-                                                                {point.locationName || point.activity || `Điểm ${index + 1}`}
-                                                            </h4>
+
+                                                            {point.activity && point.locationName && (
+                                                                <p className="text-sm text-slate-600 mb-2">
+                                                                    <strong>Hoạt động:</strong> {point.activity}
+                                                                </p>
+                                                            )}
+
+                                                            {point.note && (
+                                                                <p className="text-sm text-slate-600 bg-slate-50 p-3 rounded-xl">
+                                                                    {point.note}
+                                                                </p>
+                                                            )}
                                                         </div>
-                                                        {point.stayDurationMinutes && (
-                                                            <span className="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded-lg">
-                                                                {point.stayDurationMinutes} phút
-                                                            </span>
+
+                                                        {/* Tour Point Image - on the right */}
+                                                        {point.imageUrl && (
+                                                            <div className="flex-shrink-0">
+                                                                <img
+                                                                    src={point.imageUrl}
+                                                                    alt={point.locationName || point.activity}
+                                                                    className="w-32 h-24 object-cover rounded-xl"
+                                                                />
+                                                            </div>
                                                         )}
                                                     </div>
-
-                                                    {point.locationAddress && (
-                                                        <p className="text-sm text-slate-500 flex items-start gap-1 mb-2">
-                                                            <MapPin size={14} className="mt-0.5 flex-shrink-0" />
-                                                            {point.locationAddress}
-                                                        </p>
-                                                    )}
-
-                                                    {point.activity && point.locationName && (
-                                                        <p className="text-sm text-slate-600 mb-2">
-                                                            <strong>Hoạt động:</strong> {point.activity}
-                                                        </p>
-                                                    )}
-
-                                                    {point.note && (
-                                                        <p className="text-sm text-slate-600 bg-slate-50 p-3 rounded-xl">
-                                                            {point.note}
-                                                        </p>
-                                                    )}
                                                 </div>
                                             </div>
                                         </div>

@@ -124,6 +124,7 @@ public class TourService {
                 .totalTime(time)
                 .routePolyline(polyline)
                 .routeInstructions(instructionsJson)
+                .imageUrl(request.getImageUrl())  // S3 image URL
                 .createdBy(user)
                 .tourPoints(new ArrayList<>())
                 .build();
@@ -147,6 +148,7 @@ public class TourService {
                     .dayNumber(pointReq.getDayNumber() != null ? pointReq.getDayNumber() : 1)
                     .startTime(pointReq.getStartTime())
                     .activity(pointReq.getActivity())
+                    .imageUrl(pointReq.getImageUrl())  // S3 image URL
                     .build();
 
             tour.getTourPoints().add(tourPoint);
@@ -308,6 +310,7 @@ public class TourService {
                             .dayNumber(point.getDayNumber())
                             .startTime(point.getStartTime())
                             .activity(point.getActivity())
+                            .imageUrl(point.getImageUrl())  // S3 image URL
                             // Location details (can be null for free activities)
                             .locationId(loc != null ? loc.getId() : null)
                             .locationName(loc != null ? loc.getName() : null)
@@ -329,6 +332,7 @@ public class TourService {
                 .totalDistance(tour.getTotalDistance())
                 .totalTime(tour.getTotalTime())
                 .routePolyline(tour.getRoutePolyline())
+                .imageUrl(tour.getImageUrl())  // S3 image URL
                 .points(pointResponses)
                 .createdByUsername(tour.getCreatedBy().getUsername())
                 .createdAt(tour.getCreatedAt())
