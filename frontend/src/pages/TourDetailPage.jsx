@@ -143,16 +143,10 @@ const TourDetailPage = () => {
     }
 
     return (
-        <div className="min-h-screen bg-surface font-sans">
-            {/* Ambient Background */}
-            <div className="fixed top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none">
-                <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] rounded-full bg-primary/5 blur-3xl animate-pulse"></div>
-                <div className="absolute bottom-[-10%] left-[-10%] w-[600px] h-[600px] rounded-full bg-secondary/5 blur-3xl animate-pulse delay-1000"></div>
-            </div>
-
+        <div className="h-full bg-surface font-sans p-4 md:p-8">
             {/* Header */}
-            <header className="sticky top-0 bg-white/70 backdrop-blur-xl border-b border-white/40 z-50">
-                <div className="max-w-7xl mx-auto px-4 md:px-8 py-4 flex items-center justify-between">
+            <header className="sticky top-0 bg-white/70 backdrop-blur-xl border-b border-white/40 z-50 rounded-2xl mb-6">
+                <div className="px-4 md:px-8 py-4 flex items-center justify-between">
                     <div className="flex items-center gap-4">
                         <button
                             onClick={() => navigate(-1)}
@@ -187,7 +181,7 @@ const TourDetailPage = () => {
                 </div>
             </header>
 
-            <main className="max-w-7xl mx-auto px-4 md:px-8 py-6">
+            <main className="max-w-7xl mx-auto">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Main Content */}
                     <div className="lg:col-span-2 space-y-6">

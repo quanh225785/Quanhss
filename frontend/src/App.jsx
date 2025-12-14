@@ -16,6 +16,7 @@ import VerifyEmail from "./pages/VerifyEmail";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import TourDetailPage from "./pages/TourDetailPage";
+import MainLayout from "./components/layout/MainLayout";
 import { setAuthToken } from "./utils/api";
 import { registerVietmapServiceWorker } from "./utils/serviceWorker";
 import "./App.css";
@@ -107,7 +108,20 @@ function App() {
         <Route path="/verify" element={<VerifyEmail />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="/tour/:id" element={<TourDetailPage />} />
+
+        {/* Protected routes with sidebar */}
+        <Route
+          path="/tour/:id"
+          element={
+            isAuthenticated ? (
+              <MainLayout onLogout={handleLogout}>
+                <TourDetailPage />
+              </MainLayout>
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
         <Route
           path="/dashboard"
           element={

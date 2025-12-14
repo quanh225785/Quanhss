@@ -12,6 +12,10 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: true
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
 
 
 
@@ -37,7 +41,7 @@ vietmap:
   api:
     key: ec4b6f6a60186d81c08db7c3beeed4abafcd2fc367c9f746
     base-url: https://maps.vietmap.vn/api
-    
+
 aws:
   s3:
     access-key-id: tsymgkl7
