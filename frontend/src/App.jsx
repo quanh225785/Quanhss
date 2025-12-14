@@ -15,6 +15,7 @@ import UserDashboard from "./pages/UserDashboard";
 import VerifyEmail from "./pages/VerifyEmail";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
+import TourDetailPage from "./pages/TourDetailPage";
 import { setAuthToken } from "./utils/api";
 import { registerVietmapServiceWorker } from "./utils/serviceWorker";
 import "./App.css";
@@ -106,6 +107,7 @@ function App() {
         <Route path="/verify" element={<VerifyEmail />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/tour/:id" element={<TourDetailPage />} />
         <Route
           path="/dashboard"
           element={
