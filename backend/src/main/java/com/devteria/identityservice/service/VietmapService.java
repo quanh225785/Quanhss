@@ -147,12 +147,20 @@ public class VietmapService {
     /**
      * Calculate optimized route using Vietmap TSP API v3
      * Points are reordered to minimize total travel distance
+     * The first point is fixed as the starting point (sources=0)
+     * If not roundtrip, the last point is fixed as the destination
      */
     public VietmapRouteResponse getTspRoute(List<String> points, String vehicle, boolean roundtrip) {
         UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(baseUrl + "/tsp/v3")
                 .queryParam("apikey", apiKey)
                 .queryParam("points_encoded", true)
-                .queryParam("roundtrip", roundtrip);
+                .queryParam("roundtrip", roundtrip)
+                .queryParam("sources", 0); // Fix the first point as starting point
+
+        // If not roundtrip, fix the last point as destination
+        if (!roundtrip && points.size() > 1) {
+            builder.queryParam("destinations", points.size() - 1);
+        }
 
         // Add each point as a separate query param
         for (String point : points) {
@@ -166,8 +174,9 @@ public class VietmapService {
         String url = builder.toUriString();
 
         try {
-            log.info("Calling Vietmap TSP API with {} points, vehicle: {}, roundtrip: {}", 
-                    points.size(), vehicle, roundtrip);
+            log.info("Calling Vietmap TSP API with {} points, vehicle: {}, roundtrip: {}, sources: 0{}", 
+                    points.size(), vehicle, roundtrip, 
+                    (!roundtrip && points.size() > 1) ? ", destinations: " + (points.size() - 1) : "");
             VietmapRouteResponse response = restClient
                     .get()
                     .uri(url)

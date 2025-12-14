@@ -211,6 +211,66 @@ const CreateTourModal = ({ onClose, onSuccess }) => {
         }
     };
 
+    // Calculate distance between two points using Haversine formula
+    const calculateDistance = (lat1, lon1, lat2, lon2) => {
+        const R = 6371; // Earth's radius in km
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c;
+    };
+
+    // Optimize order of locations for current day using Nearest Neighbor algorithm
+    const handleOptimizeOrder = () => {
+        const dayLocs = getLocationsForDay(activeDay).filter(loc => loc.latitude && loc.longitude);
+        const otherLocs = selectedLocations.filter(l => l.dayNumber !== activeDay || !l.latitude || !l.longitude);
+
+        if (dayLocs.length < 2) {
+            setError('Cần ít nhất 2 địa điểm có tọa độ để tối ưu');
+            return;
+        }
+
+        // Nearest Neighbor algorithm - start from first point
+        const optimized = [dayLocs[0]];
+        const remaining = dayLocs.slice(1);
+
+        while (remaining.length > 0) {
+            const current = optimized[optimized.length - 1];
+            let nearestIndex = 0;
+            let minDistance = calculateDistance(
+                current.latitude, current.longitude,
+                remaining[0].latitude, remaining[0].longitude
+            );
+
+            for (let i = 1; i < remaining.length; i++) {
+                const dist = calculateDistance(
+                    current.latitude, current.longitude,
+                    remaining[i].latitude, remaining[i].longitude
+                );
+                if (dist < minDistance) {
+                    minDistance = dist;
+                    nearestIndex = i;
+                }
+            }
+
+            optimized.push(remaining[nearestIndex]);
+            remaining.splice(nearestIndex, 1);
+        }
+
+        // Update orderIndex for optimized locations
+        optimized.forEach((loc, idx) => {
+            loc.orderIndex = idx;
+        });
+
+        // Combine with other locations and update state
+        setSelectedLocations([...otherLocs, ...optimized]);
+        setRoutePreview(null);
+        setError(null);
+    };
+
     const handlePreviewRoute = async () => {
         if (selectedLocations.length < 2) {
             setError('Cần ít nhất 2 địa điểm để xem tuyến đường');
@@ -566,6 +626,16 @@ const CreateTourModal = ({ onClose, onSuccess }) => {
                                     <span className="text-xs text-zinc-500">
                                         {getLocationsForDay(activeDay).length} điểm
                                     </span>
+                                    {getLocationsForDay(activeDay).filter(loc => loc.latitude && loc.longitude).length >= 2 && (
+                                        <button
+                                            type="button"
+                                            onClick={handleOptimizeOrder}
+                                            className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded transition-colors"
+                                        >
+                                            <Sparkles size={12} />
+                                            Tối ưu thứ tự
+                                        </button>
+                                    )}
                                     <button
                                         type="button"
                                         onClick={handleAddFreeActivity}
