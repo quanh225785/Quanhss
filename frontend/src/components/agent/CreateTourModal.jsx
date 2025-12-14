@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, MapPin, Loader2, Check, AlertCircle, Plus, Trash2, Route, Sparkles, Car, Bike, Search } from 'lucide-react';
+import { X, MapPin, Loader2, Check, AlertCircle, Plus, Trash2, Route, Sparkles, Car, Bike, Search, Calendar, Clock, Coffee, Sun, Moon } from 'lucide-react';
 import { api } from '../../utils/api';
 import TourMap from './TourMap';
 
@@ -9,6 +9,7 @@ const CreateTourModal = ({ onClose, onSuccess }) => {
         name: '',
         description: '',
         price: '',
+        numberOfDays: 1,
         vehicle: 'car',
         useOptimization: false,
         roundtrip: false,
@@ -19,8 +20,11 @@ const CreateTourModal = ({ onClose, onSuccess }) => {
     const [isLoadingLocations, setIsLoadingLocations] = useState(true);
     const [searchFilter, setSearchFilter] = useState('');
 
-    // Selected locations for tour
+    // Selected locations for tour with itinerary info
     const [selectedLocations, setSelectedLocations] = useState([]);
+
+    // Active day for adding locations
+    const [activeDay, setActiveDay] = useState(1);
 
     // Route preview
     const [routePreview, setRoutePreview] = useState(null);
@@ -68,40 +72,143 @@ const CreateTourModal = ({ onClose, onSuccess }) => {
         return selectedLocations.some(loc => loc.id === locationId);
     };
 
+    // Get locations for a specific day
+    const getLocationsForDay = (day) => {
+        return selectedLocations.filter(loc => loc.dayNumber === day);
+    };
+
     const handleAddLocation = (location) => {
         if (isLocationSelected(location.id)) {
             setError('Địa điểm này đã được thêm');
             return;
         }
 
+        // Find the highest orderIndex for the current day
+        const dayLocations = getLocationsForDay(activeDay);
+        const maxOrderIndex = dayLocations.length > 0
+            ? Math.max(...dayLocations.map(l => l.orderIndex)) + 1
+            : 0;
+
+        // Generate a suggested time based on existing locations
+        const suggestedTime = generateSuggestedTime(dayLocations.length);
+
+        // Use unique ID combining location id with timestamp to allow same location on different days
+        const uniqueId = `loc_${location.id}_${Date.now()}`;
+
         setSelectedLocations(prev => [...prev, {
-            id: location.id,
+            id: uniqueId,
+            locationId: location.id,  // Store original locationId for API
             name: location.name,
             address: location.address,
             latitude: location.latitude,
             longitude: location.longitude,
-            orderIndex: prev.length,
+            orderIndex: maxOrderIndex,
+            dayNumber: activeDay,
+            startTime: suggestedTime,
+            activity: location.name, // Default activity is location name
+            isFreeActivity: false,
         }]);
         setError(null);
         setRoutePreview(null);
     };
 
-    const handleRemoveLocation = (index) => {
+    // Add a free activity (no location required)
+    const handleAddFreeActivity = () => {
+        const dayLocations = getLocationsForDay(activeDay);
+        const maxOrderIndex = dayLocations.length > 0
+            ? Math.max(...dayLocations.map(l => l.orderIndex)) + 1
+            : 0;
+        const suggestedTime = generateSuggestedTime(dayLocations.length);
+
+        const uniqueId = `free_${Date.now()}`;
+
+        setSelectedLocations(prev => [...prev, {
+            id: uniqueId,
+            locationId: null,  // No location for free activities
+            name: null,
+            address: null,
+            latitude: null,
+            longitude: null,
+            orderIndex: maxOrderIndex,
+            dayNumber: activeDay,
+            startTime: suggestedTime,
+            activity: '', // User will fill this in
+            isFreeActivity: true,
+        }]);
+        setError(null);
+    };
+
+    // Generate a suggested time based on the number of existing locations
+    const generateSuggestedTime = (existingCount) => {
+        const baseTimes = ['08:00', '10:00', '12:00', '14:00', '16:00', '18:00', '20:00'];
+        if (existingCount < baseTimes.length) {
+            return baseTimes[existingCount];
+        }
+        return '09:00';
+    };
+
+    const handleRemoveLocation = (locationId) => {
         setSelectedLocations(prev => {
-            const updated = prev.filter((_, i) => i !== index);
-            return updated.map((loc, i) => ({ ...loc, orderIndex: i }));
+            const updated = prev.filter(loc => loc.id !== locationId);
+            // Reorder within each day
+            const reordered = [];
+            for (let day = 1; day <= formData.numberOfDays; day++) {
+                const dayLocs = updated.filter(l => l.dayNumber === day);
+                dayLocs.forEach((loc, idx) => {
+                    reordered.push({ ...loc, orderIndex: idx });
+                });
+            }
+            return reordered;
         });
         setRoutePreview(null);
     };
 
-    const moveLocation = (fromIndex, toIndex) => {
+    const handleUpdateItinerary = (locationId, field, value) => {
+        setSelectedLocations(prev =>
+            prev.map(loc =>
+                loc.id === locationId ? { ...loc, [field]: value } : loc
+            )
+        );
+    };
+
+    const moveLocation = (locationId, direction) => {
         setSelectedLocations(prev => {
-            const updated = [...prev];
-            const [removed] = updated.splice(fromIndex, 1);
-            updated.splice(toIndex, 0, removed);
-            return updated.map((loc, i) => ({ ...loc, orderIndex: i }));
+            const location = prev.find(l => l.id === locationId);
+            if (!location) return prev;
+
+            const dayLocs = prev.filter(l => l.dayNumber === location.dayNumber);
+            const otherLocs = prev.filter(l => l.dayNumber !== location.dayNumber);
+
+            const currentIndex = dayLocs.findIndex(l => l.id === locationId);
+            const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+
+            if (newIndex < 0 || newIndex >= dayLocs.length) return prev;
+
+            // Swap positions
+            const reordered = [...dayLocs];
+            [reordered[currentIndex], reordered[newIndex]] = [reordered[newIndex], reordered[currentIndex]];
+
+            // Update orderIndex
+            reordered.forEach((loc, idx) => {
+                loc.orderIndex = idx;
+            });
+
+            return [...otherLocs, ...reordered];
         });
         setRoutePreview(null);
+    };
+
+    const handleNumberOfDaysChange = (newDays) => {
+        const oldDays = formData.numberOfDays;
+        setFormData(prev => ({ ...prev, numberOfDays: newDays }));
+
+        if (newDays < oldDays) {
+            // Remove locations from days that no longer exist
+            setSelectedLocations(prev => prev.filter(loc => loc.dayNumber <= newDays));
+            if (activeDay > newDays) {
+                setActiveDay(newDays);
+            }
+        }
     };
 
     const handlePreviewRoute = async () => {
@@ -114,9 +221,21 @@ const CreateTourModal = ({ onClose, onSuccess }) => {
         setError(null);
 
         try {
-            const points = selectedLocations.map(
-                loc => `${loc.latitude},${loc.longitude}`
-            );
+            // Only include locations with coordinates for route preview
+            const locationPoints = selectedLocations
+                .filter(loc => loc.latitude && loc.longitude)
+                .sort((a, b) => {
+                    if (a.dayNumber !== b.dayNumber) return a.dayNumber - b.dayNumber;
+                    return a.orderIndex - b.orderIndex;
+                });
+
+            if (locationPoints.length < 2) {
+                setError('Cần ít nhất 2 địa điểm có vị trí để xem tuyến đường');
+                setIsLoadingRoute(false);
+                return;
+            }
+
+            const points = locationPoints.map(loc => `${loc.latitude},${loc.longitude}`);
 
             const endpoint = formData.useOptimization ? '/vietmap/tsp' : '/vietmap/route';
             const response = await api.post(endpoint, {
@@ -158,18 +277,28 @@ const CreateTourModal = ({ onClose, onSuccess }) => {
         setIsSubmitting(true);
 
         try {
+            // Sort locations by day and orderIndex before submitting
+            const sortedLocations = selectedLocations.sort((a, b) => {
+                if (a.dayNumber !== b.dayNumber) return a.dayNumber - b.dayNumber;
+                return a.orderIndex - b.orderIndex;
+            });
+
             const response = await api.post('/tours', {
                 name: formData.name,
                 description: formData.description,
                 price: formData.price ? parseFloat(formData.price) : null,
+                numberOfDays: formData.numberOfDays,
                 vehicle: formData.vehicle,
                 useOptimization: formData.useOptimization,
                 roundtrip: formData.roundtrip,
-                points: selectedLocations.map((loc, index) => ({
-                    locationId: loc.id,
+                points: sortedLocations.map((loc, index) => ({
+                    locationId: loc.locationId || null,  // Can be null for free activities
                     orderIndex: index,
                     note: '',
                     stayDurationMinutes: 30,
+                    dayNumber: loc.dayNumber,
+                    startTime: loc.startTime,
+                    activity: loc.activity,
                 })),
             });
 
@@ -188,12 +317,12 @@ const CreateTourModal = ({ onClose, onSuccess }) => {
 
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg max-w-5xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="bg-white rounded-lg max-w-6xl w-full max-h-[90vh] overflow-y-auto">
                 {/* Header */}
                 <div className="sticky top-0 bg-white border-b border-zinc-200 p-6 flex items-center justify-between z-10">
                     <div>
                         <h2 className="text-xl font-bold text-zinc-900">Tạo Tour mới</h2>
-                        <p className="text-sm text-zinc-500">Chọn các địa điểm từ danh sách đã duyệt</p>
+                        <p className="text-sm text-zinc-500">Tạo lịch trình tour theo ngày và khung giờ</p>
                     </div>
                     <button
                         onClick={onClose}
@@ -206,7 +335,7 @@ const CreateTourModal = ({ onClose, onSuccess }) => {
 
                 <form onSubmit={handleSubmit} className="p-6 space-y-6">
                     {/* Tour Info */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div className="space-y-2">
                             <label className="block text-sm font-medium text-zinc-900">
                                 Tên Tour <span className="text-red-500">*</span>
@@ -215,7 +344,7 @@ const CreateTourModal = ({ onClose, onSuccess }) => {
                                 type="text"
                                 value={formData.name}
                                 onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                                placeholder="VD: Khám phá Hà Nội trong ngày"
+                                placeholder="VD: Khám phá Đà Nẵng 2N1Đ"
                                 className="w-full px-4 py-2 border border-zinc-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent"
                             />
                         </div>
@@ -229,6 +358,35 @@ const CreateTourModal = ({ onClose, onSuccess }) => {
                                 className="w-full px-4 py-2 border border-zinc-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent"
                             />
                         </div>
+                        <div className="space-y-2">
+                            <label className="block text-sm font-medium text-zinc-900">Số ngày</label>
+                            <div className="flex gap-2 items-center">
+                                {[1, 2, 3, 5, 7].map(day => (
+                                    <button
+                                        key={day}
+                                        type="button"
+                                        onClick={() => handleNumberOfDaysChange(day)}
+                                        className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${formData.numberOfDays === day
+                                            ? 'bg-zinc-900 text-white'
+                                            : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200'
+                                            }`}
+                                    >
+                                        {day}N
+                                    </button>
+                                ))}
+                                <input
+                                    type="number"
+                                    min="1"
+                                    max="30"
+                                    value={formData.numberOfDays}
+                                    onChange={(e) => {
+                                        const val = parseInt(e.target.value) || 1;
+                                        handleNumberOfDaysChange(Math.max(1, Math.min(30, val)));
+                                    }}
+                                    className="w-16 px-2 py-2 text-center border border-zinc-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent"
+                                />
+                            </div>
+                        </div>
                     </div>
 
                     <div className="space-y-2">
@@ -237,7 +395,7 @@ const CreateTourModal = ({ onClose, onSuccess }) => {
                             value={formData.description}
                             onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                             placeholder="Mô tả về tour, điểm nổi bật..."
-                            rows={3}
+                            rows={2}
                             className="w-full px-4 py-2 border border-zinc-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent resize-none"
                         />
                     </div>
@@ -251,8 +409,8 @@ const CreateTourModal = ({ onClose, onSuccess }) => {
                                     type="button"
                                     onClick={() => setFormData(prev => ({ ...prev, vehicle: 'car' }))}
                                     className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${formData.vehicle === 'car'
-                                            ? 'bg-zinc-900 text-white'
-                                            : 'bg-white border border-zinc-300 text-zinc-700 hover:bg-zinc-100'
+                                        ? 'bg-zinc-900 text-white'
+                                        : 'bg-white border border-zinc-300 text-zinc-700 hover:bg-zinc-100'
                                         }`}
                                 >
                                     <Car size={16} /> Ô tô
@@ -261,8 +419,8 @@ const CreateTourModal = ({ onClose, onSuccess }) => {
                                     type="button"
                                     onClick={() => setFormData(prev => ({ ...prev, vehicle: 'motorcycle' }))}
                                     className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${formData.vehicle === 'motorcycle'
-                                            ? 'bg-zinc-900 text-white'
-                                            : 'bg-white border border-zinc-300 text-zinc-700 hover:bg-zinc-100'
+                                        ? 'bg-zinc-900 text-white'
+                                        : 'bg-white border border-zinc-300 text-zinc-700 hover:bg-zinc-100'
                                         }`}
                                 >
                                     <Bike size={16} /> Xe máy
@@ -280,8 +438,8 @@ const CreateTourModal = ({ onClose, onSuccess }) => {
                                         setRoutePreview(null);
                                     }}
                                     className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${formData.useOptimization
-                                            ? 'bg-emerald-600 text-white'
-                                            : 'bg-white border border-zinc-300 text-zinc-700 hover:bg-zinc-100'
+                                        ? 'bg-emerald-600 text-white'
+                                        : 'bg-white border border-zinc-300 text-zinc-700 hover:bg-zinc-100'
                                         }`}
                                 >
                                     <Sparkles size={16} />
@@ -295,8 +453,8 @@ const CreateTourModal = ({ onClose, onSuccess }) => {
                                             setRoutePreview(null);
                                         }}
                                         className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${formData.roundtrip
-                                                ? 'bg-blue-600 text-white'
-                                                : 'bg-white border border-zinc-300 text-zinc-700 hover:bg-zinc-100'
+                                            ? 'bg-blue-600 text-white'
+                                            : 'bg-white border border-zinc-300 text-zinc-700 hover:bg-zinc-100'
                                             }`}
                                     >
                                         Khứ hồi
@@ -306,7 +464,31 @@ const CreateTourModal = ({ onClose, onSuccess }) => {
                         </div>
                     </div>
 
-                    {/* Two Column Layout: Available Locations & Selected Locations */}
+                    {/* Day Tabs */}
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-2 overflow-x-auto pb-2">
+                            <Calendar size={18} className="text-zinc-500 flex-shrink-0" />
+                            {Array.from({ length: formData.numberOfDays }, (_, i) => i + 1).map(day => (
+                                <button
+                                    key={day}
+                                    type="button"
+                                    onClick={() => setActiveDay(day)}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${activeDay === day
+                                        ? 'bg-blue-600 text-white'
+                                        : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200'
+                                        }`}
+                                >
+                                    Ngày {day}
+                                    <span className={`text-xs px-1.5 py-0.5 rounded-full ${activeDay === day ? 'bg-blue-500' : 'bg-zinc-200'
+                                        }`}>
+                                        {getLocationsForDay(day).length}
+                                    </span>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Two Column Layout: Available Locations & Day Itinerary */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         {/* Available Locations */}
                         <div className="space-y-3">
@@ -349,8 +531,8 @@ const CreateTourModal = ({ onClose, onSuccess }) => {
                                             onClick={() => handleAddLocation(location)}
                                             disabled={isLocationSelected(location.id)}
                                             className={`w-full px-4 py-3 text-left transition-colors ${isLocationSelected(location.id)
-                                                    ? 'bg-emerald-50 cursor-not-allowed'
-                                                    : 'hover:bg-zinc-50'
+                                                ? 'bg-emerald-50 cursor-not-allowed'
+                                                : 'hover:bg-zinc-50'
                                                 }`}
                                         >
                                             <div className="flex items-start gap-3">
@@ -374,73 +556,155 @@ const CreateTourModal = ({ onClose, onSuccess }) => {
                             )}
                         </div>
 
-                        {/* Selected Locations */}
+                        {/* Day Itinerary */}
                         <div className="space-y-3">
                             <div className="flex items-center justify-between">
                                 <label className="block text-sm font-medium text-zinc-900">
-                                    Địa điểm đã chọn <span className="text-red-500">*</span>
+                                    Lịch trình Ngày {activeDay} <span className="text-red-500">*</span>
                                 </label>
-                                <span className="text-xs text-zinc-500">
-                                    {selectedLocations.length} điểm
-                                    {!formData.useOptimization && selectedLocations.length > 0 && " (kéo để sắp xếp)"}
-                                </span>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-xs text-zinc-500">
+                                        {getLocationsForDay(activeDay).length} điểm
+                                    </span>
+                                    <button
+                                        type="button"
+                                        onClick={handleAddFreeActivity}
+                                        className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-amber-700 bg-amber-50 hover:bg-amber-100 rounded transition-colors"
+                                    >
+                                        <Coffee size={12} />
+                                        + Hoạt động tự do
+                                    </button>
+                                </div>
                             </div>
 
-                            {selectedLocations.length === 0 ? (
+                            {getLocationsForDay(activeDay).length === 0 ? (
                                 <div className="flex flex-col items-center justify-center h-64 bg-zinc-50 rounded-lg border-2 border-dashed border-zinc-200 text-center p-4">
-                                    <Plus className="text-zinc-300 mb-2" size={32} />
+                                    <Clock className="text-zinc-300 mb-2" size={32} />
                                     <p className="text-sm text-zinc-500">Chọn địa điểm từ danh sách bên trái</p>
-                                    <p className="text-xs text-zinc-400 mt-1">Cần ít nhất 2 điểm để tạo tour</p>
+                                    <p className="text-xs text-zinc-400 mt-1">hoặc thêm hoạt động tự do (nghỉ ngơi, ăn trưa...)</p>
                                 </div>
                             ) : (
-                                <div className="h-64 overflow-y-auto border border-zinc-200 rounded-lg space-y-2 p-2">
-                                    {selectedLocations.map((location, index) => (
-                                        <div
-                                            key={location.id}
-                                            className="flex items-center gap-3 p-3 bg-zinc-50 rounded-lg border border-zinc-200"
-                                        >
-                                            {!formData.useOptimization && (
-                                                <div className="flex flex-col gap-0.5">
+                                <div className="h-64 overflow-y-auto border border-zinc-200 rounded-lg p-3 space-y-3">
+                                    {getLocationsForDay(activeDay)
+                                        .sort((a, b) => a.orderIndex - b.orderIndex)
+                                        .map((location, index) => (
+                                            <div
+                                                key={location.id}
+                                                className={`border rounded-lg p-3 shadow-sm ${location.isFreeActivity
+                                                    ? 'bg-amber-50 border-amber-200'
+                                                    : 'bg-white border-zinc-200'
+                                                    }`}
+                                            >
+                                                <div className="flex items-start gap-3">
+                                                    {/* Move buttons */}
+                                                    <div className="flex flex-col gap-0.5">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => moveLocation(location.id, 'up')}
+                                                            disabled={index === 0}
+                                                            className="text-zinc-400 hover:text-zinc-600 disabled:opacity-30 text-xs"
+                                                        >
+                                                            ▲
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => moveLocation(location.id, 'down')}
+                                                            disabled={index === getLocationsForDay(activeDay).length - 1}
+                                                            className="text-zinc-400 hover:text-zinc-600 disabled:opacity-30 text-xs"
+                                                        >
+                                                            ▼
+                                                        </button>
+                                                    </div>
+
+                                                    {/* Time input */}
+                                                    <div className="flex-shrink-0">
+                                                        <input
+                                                            type="time"
+                                                            value={location.startTime || ''}
+                                                            onChange={(e) => handleUpdateItinerary(location.id, 'startTime', e.target.value)}
+                                                            className="w-24 px-2 py-1 text-sm font-medium border border-zinc-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                                        />
+                                                    </div>
+
+                                                    {/* Location info and activity */}
+                                                    <div className="flex-1 min-w-0 space-y-1">
+                                                        {location.isFreeActivity ? (
+                                                            <div className="flex items-center gap-1 text-amber-600 text-xs mb-1">
+                                                                <Coffee size={12} />
+                                                                <span>Hoạt động tự do</span>
+                                                            </div>
+                                                        ) : (
+                                                            <p className="text-sm font-medium text-zinc-900 truncate flex items-center gap-1">
+                                                                <MapPin size={12} className="text-zinc-400" />
+                                                                {location.name}
+                                                            </p>
+                                                        )}
+                                                        <input
+                                                            type="text"
+                                                            value={location.activity || ''}
+                                                            onChange={(e) => handleUpdateItinerary(location.id, 'activity', e.target.value)}
+                                                            placeholder={location.isFreeActivity ? "VD: Nghỉ ngơi, Ăn trưa..." : "Hoạt động tại đây..."}
+                                                            className={`w-full px-2 py-1 text-xs border rounded focus:outline-none focus:ring-1 focus:ring-blue-500 ${location.isFreeActivity
+                                                                ? 'border-amber-200 bg-white'
+                                                                : 'border-zinc-200'
+                                                                }`}
+                                                        />
+                                                    </div>
+
+                                                    {/* Delete button */}
                                                     <button
                                                         type="button"
-                                                        onClick={() => index > 0 && moveLocation(index, index - 1)}
-                                                        disabled={index === 0}
-                                                        className="text-zinc-400 hover:text-zinc-600 disabled:opacity-30 text-xs"
+                                                        onClick={() => handleRemoveLocation(location.id)}
+                                                        className="text-zinc-400 hover:text-red-500 transition-colors"
                                                     >
-                                                        ▲
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => index < selectedLocations.length - 1 && moveLocation(index, index + 1)}
-                                                        disabled={index === selectedLocations.length - 1}
-                                                        className="text-zinc-400 hover:text-zinc-600 disabled:opacity-30 text-xs"
-                                                    >
-                                                        ▼
+                                                        <Trash2 size={16} />
                                                     </button>
                                                 </div>
-                                            )}
-                                            <div className={`w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold ${index === 0 ? 'bg-emerald-500' :
-                                                    index === selectedLocations.length - 1 ? 'bg-red-500' : 'bg-blue-500'
-                                                }`}>
-                                                {index + 1}
                                             </div>
-                                            <div className="flex-1 min-w-0">
-                                                <p className="text-sm font-medium text-zinc-900 truncate">{location.name}</p>
-                                                <p className="text-xs text-zinc-500 truncate">{location.address}</p>
-                                            </div>
-                                            <button
-                                                type="button"
-                                                onClick={() => handleRemoveLocation(index)}
-                                                className="text-zinc-400 hover:text-red-500 transition-colors"
-                                            >
-                                                <Trash2 size={16} />
-                                            </button>
-                                        </div>
-                                    ))}
+                                        ))}
                                 </div>
                             )}
                         </div>
                     </div>
+
+                    {/* All Days Summary */}
+                    {selectedLocations.length > 0 && (
+                        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4">
+                            <h3 className="text-sm font-semibold text-zinc-800 mb-3">📅 Tổng quan lịch trình</h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {Array.from({ length: formData.numberOfDays }, (_, i) => i + 1).map(day => {
+                                    const dayLocs = getLocationsForDay(day).sort((a, b) => a.orderIndex - b.orderIndex);
+                                    return (
+                                        <div key={day} className="bg-white rounded-lg p-3 shadow-sm">
+                                            <div className="flex items-center justify-between mb-2">
+                                                <span className="text-sm font-medium text-blue-600">Ngày {day}</span>
+                                                <span className="text-xs text-zinc-500">{dayLocs.length} điểm</span>
+                                            </div>
+                                            <div className="space-y-1">
+                                                {dayLocs.length === 0 ? (
+                                                    <p className="text-xs text-zinc-400 italic">Chưa có lịch trình</p>
+                                                ) : (
+                                                    dayLocs.map(loc => (
+                                                        <div key={loc.id} className="flex items-center gap-2 text-xs">
+                                                            <span className="text-blue-500 font-medium w-12">{loc.startTime || '--:--'}</span>
+                                                            {loc.isFreeActivity ? (
+                                                                <span className="text-amber-600 truncate flex items-center gap-1">
+                                                                    <Coffee size={10} />
+                                                                    {loc.activity || 'Hoạt động tự do'}
+                                                                </span>
+                                                            ) : (
+                                                                <span className="text-zinc-600 truncate">{loc.activity || loc.name}</span>
+                                                            )}
+                                                        </div>
+                                                    ))
+                                                )}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
 
                     {/* Preview Route Button */}
                     {selectedLocations.length >= 2 && (
@@ -464,7 +728,10 @@ const CreateTourModal = ({ onClose, onSuccess }) => {
                         <div className="space-y-2">
                             <label className="block text-sm font-medium text-zinc-900">Bản đồ</label>
                             <TourMap
-                                points={selectedLocations}
+                                points={selectedLocations.sort((a, b) => {
+                                    if (a.dayNumber !== b.dayNumber) return a.dayNumber - b.dayNumber;
+                                    return a.orderIndex - b.orderIndex;
+                                })}
                                 routePolyline={routePreview?.polyline}
                                 totalDistance={routePreview?.distance}
                                 totalTime={routePreview?.time}

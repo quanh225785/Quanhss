@@ -2,6 +2,7 @@ package com.devteria.identityservice.service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -47,34 +48,46 @@ public class TourService {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
-        // Validate points
-        if (request.getPoints() == null || request.getPoints().size() < 2) {
-            throw new RuntimeException("Tour must have at least 2 points");
+        // Validate points - need at least 1 point
+        if (request.getPoints() == null || request.getPoints().isEmpty()) {
+            throw new RuntimeException("Tour must have at least 1 point or activity");
         }
 
-        // Fetch all locations
-        List<Location> locations = new ArrayList<>();
-        for (TourCreationRequest.TourPointRequest point : request.getPoints()) {
-            Location location = locationRepository.findById(point.getLocationId())
-                    .orElseThrow(() -> new RuntimeException("Location not found: " + point.getLocationId()));
-            locations.add(location);
+        // Separate location-based points and free activities
+        List<TourCreationRequest.TourPointRequest> locationPoints = request.getPoints().stream()
+                .filter(p -> p.getLocationId() != null)
+                .collect(Collectors.toList());
+        
+        // Fetch locations for location-based points
+        Map<Long, Location> locationMap = new java.util.HashMap<>();
+        for (TourCreationRequest.TourPointRequest point : locationPoints) {
+            if (!locationMap.containsKey(point.getLocationId())) {
+                Location location = locationRepository.findById(point.getLocationId())
+                        .orElseThrow(() -> new RuntimeException("Location not found: " + point.getLocationId()));
+                locationMap.put(point.getLocationId(), location);
+            }
         }
 
-        // Build coordinate strings for routing API
-        List<String> pointStrings = locations.stream()
-                .map(loc -> loc.getLatitude() + "," + loc.getLongitude())
+        // Build coordinate strings for routing API (only from location-based points)
+        List<String> pointStrings = locationPoints.stream()
+                .map(p -> {
+                    Location loc = locationMap.get(p.getLocationId());
+                    return loc.getLatitude() + "," + loc.getLongitude();
+                })
                 .collect(Collectors.toList());
 
-        // Get route from Vietmap API
-        VietmapRouteResponse routeResponse;
+        // Get route from Vietmap API (only if we have at least 2 location-based points)
+        VietmapRouteResponse routeResponse = null;
         String vehicle = request.getVehicle() != null ? request.getVehicle() : "car";
         boolean useOptimization = request.getUseOptimization() != null && request.getUseOptimization();
         boolean roundtrip = request.getRoundtrip() != null && request.getRoundtrip();
 
-        if (useOptimization) {
-            routeResponse = vietmapService.getTspRoute(pointStrings, vehicle, roundtrip);
-        } else {
-            routeResponse = vietmapService.getRoute(pointStrings, vehicle);
+        if (pointStrings.size() >= 2) {
+            if (useOptimization) {
+                routeResponse = vietmapService.getTspRoute(pointStrings, vehicle, roundtrip);
+            } else {
+                routeResponse = vietmapService.getRoute(pointStrings, vehicle);
+            }
         }
 
         // Extract route data
@@ -99,10 +112,12 @@ public class TourService {
         }
 
         // Create tour entity
+        int numberOfDays = request.getNumberOfDays() != null ? request.getNumberOfDays() : 1;
         Tour tour = Tour.builder()
                 .name(request.getName())
                 .description(request.getDescription())
                 .price(request.getPrice())
+                .numberOfDays(numberOfDays)
                 .vehicle(vehicle)
                 .isOptimized(useOptimization)
                 .totalDistance(distance)
@@ -113,17 +128,25 @@ public class TourService {
                 .tourPoints(new ArrayList<>())
                 .build();
 
-        // Create tour points
+        // Create tour points (both location-based and free activities)
         for (int i = 0; i < request.getPoints().size(); i++) {
             TourCreationRequest.TourPointRequest pointReq = request.getPoints().get(i);
-            Location location = locations.get(i);
+            
+            // Get location if locationId is provided
+            Location location = pointReq.getLocationId() != null 
+                    ? locationMap.get(pointReq.getLocationId()) 
+                    : null;
 
             TourPoint tourPoint = TourPoint.builder()
                     .tour(tour)
-                    .location(location)
+                    .location(location)  // Can be null for free activities
                     .orderIndex(pointReq.getOrderIndex() != null ? pointReq.getOrderIndex() : i)
                     .note(pointReq.getNote())
                     .stayDurationMinutes(pointReq.getStayDurationMinutes())
+                    // Itinerary fields
+                    .dayNumber(pointReq.getDayNumber() != null ? pointReq.getDayNumber() : 1)
+                    .startTime(pointReq.getStartTime())
+                    .activity(pointReq.getActivity())
                     .build();
 
             tour.getTourPoints().add(tourPoint);
@@ -274,17 +297,25 @@ public class TourService {
 
     private TourResponse mapToResponse(Tour tour) {
         List<TourResponse.TourPointResponse> pointResponses = tour.getTourPoints().stream()
-                .map(point -> TourResponse.TourPointResponse.builder()
-                        .id(point.getId())
-                        .orderIndex(point.getOrderIndex())
-                        .note(point.getNote())
-                        .stayDurationMinutes(point.getStayDurationMinutes())
-                        .locationId(point.getLocation().getId())
-                        .locationName(point.getLocation().getName())
-                        .locationAddress(point.getLocation().getAddress())
-                        .latitude(point.getLocation().getLatitude())
-                        .longitude(point.getLocation().getLongitude())
-                        .build())
+                .map(point -> {
+                    Location loc = point.getLocation();
+                    return TourResponse.TourPointResponse.builder()
+                            .id(point.getId())
+                            .orderIndex(point.getOrderIndex())
+                            .note(point.getNote())
+                            .stayDurationMinutes(point.getStayDurationMinutes())
+                            // Itinerary fields
+                            .dayNumber(point.getDayNumber())
+                            .startTime(point.getStartTime())
+                            .activity(point.getActivity())
+                            // Location details (can be null for free activities)
+                            .locationId(loc != null ? loc.getId() : null)
+                            .locationName(loc != null ? loc.getName() : null)
+                            .locationAddress(loc != null ? loc.getAddress() : null)
+                            .latitude(loc != null ? loc.getLatitude() : null)
+                            .longitude(loc != null ? loc.getLongitude() : null)
+                            .build();
+                })
                 .collect(Collectors.toList());
 
         return TourResponse.builder()
@@ -292,6 +323,7 @@ public class TourService {
                 .name(tour.getName())
                 .description(tour.getDescription())
                 .price(tour.getPrice())
+                .numberOfDays(tour.getNumberOfDays())
                 .vehicle(tour.getVehicle())
                 .isOptimized(tour.getIsOptimized())
                 .totalDistance(tour.getTotalDistance())

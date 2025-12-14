@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Route, Check, X, AlertCircle, Loader2, MapPin, Clock, Eye } from 'lucide-react';
+import { Search, Route, Check, X, AlertCircle, Loader2, MapPin, Clock, Eye, Calendar } from 'lucide-react';
 import { api } from '../../utils/api';
 import { formatDistance, formatDuration } from '../../utils/polylineUtils';
 import ConfirmModal from '../shared/ConfirmModal';
@@ -219,6 +219,12 @@ const TourManagement = () => {
               </div>
 
               <div className="grid grid-cols-2 gap-3 text-sm">
+                {tour.numberOfDays && tour.numberOfDays > 1 && (
+                  <div className="flex items-center gap-2 text-zinc-600">
+                    <Calendar className="w-4 h-4 text-blue-500" />
+                    {tour.numberOfDays} ngày
+                  </div>
+                )}
                 <div className="flex items-center gap-2 text-zinc-600">
                   <MapPin className="w-4 h-4 text-zinc-400" />
                   {tour.points?.length || 0} điểm
@@ -425,32 +431,57 @@ const TourManagement = () => {
               </div>
             </div>
 
-            {/* Points List */}
+            {/* Itinerary by Day */}
             <div>
               <h4 className="text-sm font-medium text-zinc-700 mb-2">
-                Các điểm dừng ({selectedTour.points?.length || 0})
+                📅 Lịch trình ({selectedTour.points?.length || 0} điểm)
               </h4>
-              <div className="space-y-2 max-h-48 overflow-y-auto">
-                {selectedTour.points?.map((point, index) => (
-                  <div key={point.id} className="flex items-center gap-3 p-2 bg-zinc-50 rounded-lg">
-                    <div
-                      className={`w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold ${index === 0
-                        ? 'bg-emerald-500'
-                        : index === selectedTour.points.length - 1
-                          ? 'bg-red-500'
-                          : 'bg-blue-500'
-                        }`}
-                    >
-                      {index + 1}
+              <div className="space-y-3 max-h-64 overflow-y-auto">
+                {Array.from({ length: selectedTour.numberOfDays || 1 }, (_, i) => i + 1).map(day => {
+                  const dayPoints = selectedTour.points?.filter(p => (p.dayNumber || 1) === day)
+                    .sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0)) || [];
+                  return (
+                    <div key={day} className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-3">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-sm font-semibold text-blue-700">Ngày {day}</span>
+                        <span className="text-xs text-zinc-500">({dayPoints.length} điểm)</span>
+                      </div>
+                      {dayPoints.length === 0 ? (
+                        <p className="text-xs text-zinc-400 italic">Chưa có lịch trình</p>
+                      ) : (
+                        <div className="space-y-2">
+                          {dayPoints.map((point, index) => (
+                            <div key={point.id} className={`flex items-start gap-3 rounded-lg p-2 shadow-sm ${point.locationName ? 'bg-white' : 'bg-amber-50'}`}>
+                              <div className="flex-shrink-0 w-14 text-right">
+                                <span className="text-sm font-medium text-blue-600">
+                                  {point.startTime || '--:--'}
+                                </span>
+                              </div>
+                              <div className="flex-shrink-0 w-px bg-blue-200 self-stretch min-h-[40px]"></div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-zinc-900">
+                                  {point.activity || point.locationName || 'Hoạt động tự do'}
+                                </p>
+                                {point.locationName ? (
+                                  <>
+                                    <p className="text-xs text-zinc-500 truncate">
+                                      📍 {point.locationName}
+                                    </p>
+                                    {point.locationAddress && (
+                                      <p className="text-xs text-zinc-400 truncate">{point.locationAddress}</p>
+                                    )}
+                                  </>
+                                ) : (
+                                  <p className="text-xs text-amber-600">☕ Hoạt động tự do</p>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-zinc-900 truncate">
-                        {point.locationName}
-                      </p>
-                      <p className="text-xs text-zinc-500 truncate">{point.locationAddress}</p>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 
@@ -465,6 +496,7 @@ const TourManagement = () => {
                       longitude: p.longitude,
                       name: p.locationName,
                       orderIndex: p.orderIndex,
+                      dayNumber: p.dayNumber,
                     })) || []
                   }
                   routePolyline={selectedTour.routePolyline}

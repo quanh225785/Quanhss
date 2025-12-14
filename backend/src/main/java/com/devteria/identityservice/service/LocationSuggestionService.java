@@ -97,6 +97,11 @@ public class LocationSuggestionService {
         Location location = locationMapper.toLocation(suggestion);
         location.setCreatedBy(admin);
         location.setApprovedFromSuggestion(suggestion);
+        
+        // Normalize empty refId to null to avoid unique constraint violation
+        if (location.getRefId() != null && location.getRefId().trim().isEmpty()) {
+            location.setRefId(null);
+        }
 
         // Save location
         location = locationRepository.save(location);
@@ -233,12 +238,16 @@ public class LocationSuggestionService {
             throw new AppException(ErrorCode.LOCATION_NAME_ALREADY_EXISTS);
         }
 
+        // Normalize empty refId to null to avoid unique constraint violation
+        String normalizedRefId = (request.getRefId() != null && request.getRefId().trim().isEmpty()) 
+            ? null : request.getRefId();
+
         // Create Location entity directly (bypass suggestion)
         Location location = Location.builder()
                 .name(request.getName())
                 .address(request.getAddress())
                 .description(request.getDescription())
-                .refId(request.getRefId())
+                .refId(normalizedRefId)
                 .latitude(request.getLatitude())
                 .longitude(request.getLongitude())
                 .cityId(request.getCityId())

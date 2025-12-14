@@ -31,6 +31,10 @@ public class Tour {
     Double price;
 
     @Column(nullable = false)
+    @Builder.Default
+    Integer numberOfDays = 1;  // Number of days for the tour (default 1)
+
+    @Column(nullable = false)
     String vehicle;  // car, motorcycle
 
     @Column(nullable = false)

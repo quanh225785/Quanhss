@@ -16,6 +16,7 @@ public class TourResponse {
     String name;
     String description;
     Double price;
+    Integer numberOfDays;  // Number of days for the tour
     String vehicle;
     Boolean isOptimized;
     Double totalDistance;  // meters
@@ -38,6 +39,10 @@ public class TourResponse {
         Integer orderIndex;
         String note;
         Integer stayDurationMinutes;
+        // Itinerary fields
+        Integer dayNumber;   // Which day (1, 2, 3...)
+        String startTime;    // Time slot, e.g., "08:00"
+        String activity;     // What to do at this location
         // Location details
         Long locationId;
         String locationName;

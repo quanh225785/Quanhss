@@ -213,19 +213,19 @@
 
 ## 3. Quản lý Tour (Tour Management)
 
-### ❌ 3.1 Tạo tour (Agent)
-**Trạng thái:** ❌ Chưa thực hiện
+### ✅ 3.1 Tạo tour (Agent)
+**Trạng thái:** ✅ Hoàn thành
 
 **Backend cần:**
-- ❌ Entity: `Tour.java`, `TourLocation.java`, `TourImage.java`
-- ❌ Repository: `TourRepository`, `TourLocationRepository`, `TourImageRepository`
-- ❌ Service: `TourService.createTour()`
-- ❌ Controller: POST `/tours`
-- ❌ DTO: `TourCreateRequest`, `TourResponse`
+- ✅ Entity: `Tour.java`, `TourLocation.java`, `TourImage.java`
+- ✅ Repository: `TourRepository`, `TourLocationRepository`, `TourImageRepository`
+- ✅ Service: `TourService.createTour()`
+- ✅ Controller: POST `/tours`
+- ✅ DTO: `TourCreateRequest`, `TourResponse`
 
 **Frontend cần:**
-- ❌ Component: `MyTours.jsx` - Create tour form
-- ❌ Modal: Create tour modal
+- ✅ Component: `MyTours.jsx` - Create tour form
+- ✅ Modal: Create tour modal
 
 ---
 
@@ -242,43 +242,43 @@
 
 ---
 
-### ❌ 3.3 Liên kết địa điểm với tour
-**Trạng thái:** ❌ Chưa thực hiện
+### ✅ 3.3 Liên kết địa điểm với tour
+**Trạng thái:** ✅ Hoàn thành
 
 **Backend cần:**
-- ❌ Controller: POST `/tours/{id}/locations`
-- ❌ Service: `TourService.addLocationToTour()`
-- ❌ Entity: `TourLocation.java` (bảng liên kết)
+- ✅ Controller: POST `/tours/{id}/locations`
+- ✅ Service: `TourService.addLocationToTour()`
+- ✅ Entity: `TourLocation.java` (bảng liên kết)
 
 **Frontend cần:**
-- ❌ Component: Location selection trong tour creation form
+- ✅ Component: Location selection trong tour creation form
 
 ---
 
-### ❌ 3.4 Gửi yêu cầu duyệt tour
-**Trạng thái:** ❌ Chưa thực hiện
+### ✅ 3.4 Gửi yêu cầu duyệt tour
+**Trạng thái:** ✅ Hoàn thành
 
 **Backend cần:**
-- ❌ Controller: POST `/tours/{id}/submit`
-- ❌ Service: `TourService.submitForApproval()`
-- ❌ Enum: `TourStatus.PENDING_APPROVAL`
+- ✅ Controller: POST `/tours/{id}/submit`
+- ✅ Service: `TourService.submitForApproval()`
+- ✅ Enum: `TourStatus.PENDING_APPROVAL`
 
 **Frontend cần:**
-- ❌ Component: Submit button trong `MyTours.jsx`
+- ✅ Component: Submit button trong `MyTours.jsx`
 
 ---
 
-### ❌ 3.5 Duyệt tour (Admin)
-**Trạng thái:** ❌ Chưa thực hiện
+### ✅ 3.5 Duyệt tour (Admin)
+**Trạng thái:** ✅ Hoàn thành
 
 **Backend cần:**
-- ❌ Controller: POST `/tours/{id}/approve`, POST `/tours/{id}/reject`
-- ❌ Service: `TourService.approveTour()`, `TourService.rejectTour()`
-- ❌ Enum: `TourStatus.APPROVED`, `TourStatus.REJECTED`
+- ✅ Controller: POST `/tours/{id}/approve`, POST `/tours/{id}/reject`
+- ✅ Service: `TourService.approveTour()`, `TourService.rejectTour()`
+- ✅ Enum: `TourStatus.APPROVED`, `TourStatus.REJECTED`
 
 **Frontend cần:**
-- ❌ Component: `TourManagement.jsx` - Approval interface
-- ❌ Modal: Approval/Rejection modals
+- ✅ Component: `TourManagement.jsx` - Approval interface
+- ✅ Modal: Approval/Rejection modals
 
 ---
 

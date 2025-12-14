@@ -21,8 +21,9 @@ public class TourPoint {
     @JoinColumn(name = "tour_id", nullable = false)
     Tour tour;
 
+    // Location is optional - can be null for free activities like "Rest", "Lunch", etc.
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "location_id", nullable = false)
+    @JoinColumn(name = "location_id", nullable = true)
     Location location;
 
     @Column(nullable = false)
@@ -32,4 +33,13 @@ public class TourPoint {
     String note;  // optional note for this stop
 
     Integer stayDurationMinutes;  // suggested stay time at this location
+
+    @Column(nullable = false)
+    @Builder.Default
+    Integer dayNumber = 1;  // Which day of the tour (1, 2, 3...)
+
+    String startTime;  // Time slot, e.g., "08:00", "09:30", "14:00"
+
+    @Column(columnDefinition = "TEXT")
+    String activity;  // What to do at this location, e.g., "Ăn sáng tại Mì Quảng 1A"
 }

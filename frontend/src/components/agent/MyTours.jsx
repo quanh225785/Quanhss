@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, CheckCircle, XCircle, Loader2, Route, Clock, MapPin, Trash2, Eye } from 'lucide-react';
+import { Plus, CheckCircle, XCircle, Loader2, Route, Clock, MapPin, Trash2, Eye, Calendar } from 'lucide-react';
 import { api } from '../../utils/api';
 import { formatDistance, formatDuration } from '../../utils/polylineUtils';
 import CreateTourModal from './CreateTourModal';
 import TourMap from './TourMap';
+import Modal from '../shared/Modal';
 
 const MyTours = () => {
     const [tours, setTours] = useState([]);
@@ -11,6 +12,7 @@ const MyTours = () => {
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [selectedTour, setSelectedTour] = useState(null);
     const [error, setError] = useState(null);
+    const [tourToHide, setTourToHide] = useState(null);
 
     useEffect(() => {
         fetchTours();
@@ -42,12 +44,17 @@ const MyTours = () => {
         }
     };
 
-    const handleHideTour = async (id) => {
-        if (!confirm('Ẩn tour này khỏi danh sách công khai?')) return;
+    const handleHideTour = (id) => {
+        setTourToHide(id);
+    };
+
+    const confirmHideTour = async () => {
+        if (!tourToHide) return;
 
         try {
-            await api.post(`/tours/${id}/hide`);
+            await api.post(`/tours/${tourToHide}/hide`);
             fetchTours();
+            setTourToHide(null);
         } catch (err) {
             console.error('Error hiding tour:', err);
             alert('Không thể ẩn tour');
@@ -124,12 +131,12 @@ const MyTours = () => {
                                     <div className="flex items-center gap-3 mb-2">
                                         <h3 className="text-lg font-semibold text-zinc-900">{tour.name}</h3>
                                         <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${tour.status === 'APPROVED'
-                                                ? 'bg-emerald-50 text-emerald-700'
-                                                : tour.status === 'PENDING'
-                                                    ? 'bg-amber-50 text-amber-700'
-                                                    : tour.status === 'HIDDEN'
-                                                        ? 'bg-zinc-100 text-zinc-600'
-                                                        : 'bg-red-50 text-red-700'
+                                            ? 'bg-emerald-50 text-emerald-700'
+                                            : tour.status === 'PENDING'
+                                                ? 'bg-amber-50 text-amber-700'
+                                                : tour.status === 'HIDDEN'
+                                                    ? 'bg-zinc-100 text-zinc-600'
+                                                    : 'bg-red-50 text-red-700'
                                             }`}>
                                             {tour.status === 'APPROVED' ? (
                                                 <>
@@ -165,6 +172,12 @@ const MyTours = () => {
                                     )}
 
                                     <div className="flex flex-wrap gap-4 text-sm text-zinc-600">
+                                        {tour.numberOfDays && tour.numberOfDays > 1 && (
+                                            <div className="flex items-center gap-1.5">
+                                                <Calendar size={14} className="text-blue-500" />
+                                                {tour.numberOfDays} ngày
+                                            </div>
+                                        )}
                                         <div className="flex items-center gap-1.5">
                                             <MapPin size={14} className="text-zinc-400" />
                                             {tour.points?.length || 0} điểm
@@ -237,35 +250,61 @@ const MyTours = () => {
                             {selectedTour?.id === tour.id && (
                                 <div className="mt-4 pt-4 border-t border-zinc-200">
                                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                                        {/* Points List */}
-                                        <div className="space-y-2">
-                                            <h4 className="text-sm font-medium text-zinc-700">Các điểm dừng</h4>
-                                            <div className="space-y-2">
-                                                {tour.points?.map((point, index) => (
-                                                    <div key={point.id} className="flex items-center gap-3 p-2 bg-zinc-50 rounded-lg">
-                                                        <div className={`w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold ${index === 0 ? 'bg-emerald-500' :
-                                                            index === tour.points.length - 1 ? 'bg-red-500' : 'bg-blue-500'
-                                                            }`}>
-                                                            {index + 1}
+                                        {/* Itinerary by Day */}
+                                        <div className="space-y-3">
+                                            <h4 className="text-sm font-medium text-zinc-700">📅 Lịch trình</h4>
+                                            {Array.from({ length: tour.numberOfDays || 1 }, (_, i) => i + 1).map(day => {
+                                                const dayPoints = tour.points?.filter(p => (p.dayNumber || 1) === day)
+                                                    .sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0)) || [];
+                                                return (
+                                                    <div key={day} className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-3">
+                                                        <div className="flex items-center gap-2 mb-2">
+                                                            <span className="text-sm font-semibold text-blue-700">Ngày {day}</span>
+                                                            <span className="text-xs text-zinc-500">({dayPoints.length} điểm)</span>
                                                         </div>
-                                                        <div className="flex-1 min-w-0">
-                                                            <p className="text-sm font-medium text-zinc-900 truncate">{point.locationName}</p>
-                                                            <p className="text-xs text-zinc-500 truncate">{point.locationAddress}</p>
-                                                        </div>
+                                                        {dayPoints.length === 0 ? (
+                                                            <p className="text-xs text-zinc-400 italic">Chưa có lịch trình</p>
+                                                        ) : (
+                                                            <div className="space-y-2">
+                                                                {dayPoints.map((point, index) => (
+                                                                    <div key={point.id} className={`flex items-start gap-3 rounded-lg p-2 shadow-sm ${point.locationName ? 'bg-white' : 'bg-amber-50'}`}>
+                                                                        <div className="flex-shrink-0 w-14 text-right">
+                                                                            <span className="text-sm font-medium text-blue-600">
+                                                                                {point.startTime || '--:--'}
+                                                                            </span>
+                                                                        </div>
+                                                                        <div className="flex-shrink-0 w-px h-full bg-blue-200 self-stretch min-h-[40px]"></div>
+                                                                        <div className="flex-1 min-w-0">
+                                                                            <p className="text-sm font-medium text-zinc-900">
+                                                                                {point.activity || point.locationName || 'Hoạt động tự do'}
+                                                                            </p>
+                                                                            {point.locationName ? (
+                                                                                <p className="text-xs text-zinc-500 truncate">
+                                                                                    📍 {point.locationName}
+                                                                                </p>
+                                                                            ) : (
+                                                                                <p className="text-xs text-amber-600">☕ Hoạt động tự do</p>
+                                                                            )}
+                                                                        </div>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        )}
                                                     </div>
-                                                ))}
-                                            </div>
+                                                );
+                                            })}
                                         </div>
 
                                         {/* Map */}
                                         <div>
-                                            <h4 className="text-sm font-medium text-zinc-700 mb-2">Tuyến đường</h4>
+                                            <h4 className="text-sm font-medium text-zinc-700 mb-2">🗺️ Tuyến đường</h4>
                                             <TourMap
                                                 points={tour.points?.map(p => ({
                                                     latitude: p.latitude,
                                                     longitude: p.longitude,
                                                     name: p.locationName,
                                                     orderIndex: p.orderIndex,
+                                                    dayNumber: p.dayNumber,
                                                 })) || []}
                                                 routePolyline={tour.routePolyline}
                                                 totalDistance={tour.totalDistance}
@@ -279,6 +318,35 @@ const MyTours = () => {
                     ))}
                 </div>
             )}
+
+            {/* Hide Tour Confirmation Modal */}
+            <Modal
+                isOpen={!!tourToHide}
+                onClose={() => setTourToHide(null)}
+                title="Xác nhận ẩn tour"
+                size="md"
+                footer={
+                    <>
+                        <button
+                            onClick={() => setTourToHide(null)}
+                            className="px-4 py-2 text-sm font-medium text-zinc-700 bg-white border border-zinc-300 rounded-md hover:bg-zinc-50 transition-colors"
+                        >
+                            Hủy
+                        </button>
+                        <button
+                            onClick={confirmHideTour}
+                            className="px-4 py-2 text-sm font-medium text-white bg-zinc-900 rounded-md hover:bg-zinc-800 transition-colors"
+                        >
+                            Xác nhận
+                        </button>
+                    </>
+                }
+            >
+                <p className="text-zinc-600">
+                    Bạn có chắc chắn muốn ẩn tour này khỏi danh sách công khai?
+                    Tour sẽ không hiển thị cho người dùng nữa.
+                </p>
+            </Modal>
 
             {/* Create Tour Modal */}
             {showCreateModal && (
