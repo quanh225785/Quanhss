@@ -25,7 +25,9 @@ public class SecurityConfig {
             "/users", "/auth/token", "/auth/introspect", "/auth/logout", "/auth/refresh",
             "/auth/verify", "/auth/resend-verify",
             "/users/forgot-password", "/users/reset-password",
-            "/vietmap/tiles/**" // Map tiles need to be public for Leaflet
+            "/vietmap/tiles/**", // Map tiles need to be public for Leaflet
+            "/tours/search", "/tours/approved", "/tours/{id}", // Public tour search and viewing
+            "/locations" // Public location list for filters
     };
 
     @Autowired
@@ -37,6 +39,8 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, PUBLIC_ENDPOINTS).permitAll()
                 .requestMatchers(HttpMethod.GET, "/auth/verify").permitAll()
                 .requestMatchers(HttpMethod.GET, "/vietmap/tiles/**").permitAll() // Map tiles for Leaflet
+                .requestMatchers(HttpMethod.GET, "/tours/search", "/tours/approved", "/tours/{id}").permitAll() // Public tour endpoints
+                .requestMatchers(HttpMethod.GET, "/locations").permitAll() // Public location list
                 .anyRequest().authenticated());
 
         httpSecurity.oauth2ResourceServer(oauth2 -> oauth2.jwt(jwtConfigurer -> jwtConfigurer

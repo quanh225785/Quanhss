@@ -199,8 +199,21 @@ public class LocationSuggestionService {
     /**
      * Get all approved locations
      */
+    @Transactional(readOnly = true)
     public List<LocationResponse> getAllLocations() {
-        return locationRepository.findAll().stream()
+        List<Location> locations = locationRepository.findAll();
+        
+        // Force load lazy relationships to avoid LazyInitializationException
+        locations.forEach(location -> {
+            if (location.getCreatedBy() != null) {
+                location.getCreatedBy().getUsername(); // Force load user
+            }
+            if (location.getApprovedFromSuggestion() != null) {
+                location.getApprovedFromSuggestion().getId(); // Force load suggestion
+            }
+        });
+        
+        return locations.stream()
                 .map(locationMapper::toLocationResponse)
                 .toList();
     }
