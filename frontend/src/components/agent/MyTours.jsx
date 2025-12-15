@@ -20,10 +20,16 @@ const MyTours = () => {
 
     const fetchTours = async () => {
         setIsLoading(true);
+        setError(null); // Clear any previous errors
         try {
             const response = await api.get('/tours');
             if (response.data.code === 1000) {
-                setTours(response.data.result || []);
+                const tours = response.data.result || [];
+                console.log('Tours data:', tours); // Debug: check tour data
+                if (tours.length > 0) {
+                    console.log('First tour:', tours[0]); // Debug: check first tour structure
+                }
+                setTours(tours);
             }
         } catch (err) {
             console.error('Error fetching tours:', err);
@@ -176,6 +182,36 @@ const MyTours = () => {
                                             <div className="flex items-center gap-1.5">
                                                 <Calendar size={14} className="text-blue-500" />
                                                 {tour.numberOfDays} ngày
+                                            </div>
+                                        )}
+                                        {tour.startDate && (
+                                            <div className="flex items-center gap-1.5">
+                                                <Calendar size={14} className="text-emerald-500" />
+                                                {new Date(tour.startDate).toLocaleString('vi-VN', {
+                                                    day: '2-digit',
+                                                    month: '2-digit',
+                                                    year: 'numeric',
+                                                    hour: '2-digit',
+                                                    minute: '2-digit'
+                                                })}
+                                            </div>
+                                        )}
+                                        {tour.endDate && (
+                                            <div className="flex items-center gap-1.5">
+                                                <Calendar size={14} className="text-red-500" />
+                                                {new Date(tour.endDate).toLocaleString('vi-VN', {
+                                                    day: '2-digit',
+                                                    month: '2-digit',
+                                                    year: 'numeric',
+                                                    hour: '2-digit',
+                                                    minute: '2-digit'
+                                                })}
+                                            </div>
+                                        )}
+                                        {tour.maxParticipants && (
+                                            <div className="flex items-center gap-1.5">
+                                                <span className="text-zinc-400">👥</span>
+                                                {tour.currentParticipants || 0}/{tour.maxParticipants} người
                                             </div>
                                         )}
                                         <div className="flex items-center gap-1.5">

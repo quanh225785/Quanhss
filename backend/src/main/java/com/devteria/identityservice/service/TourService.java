@@ -125,6 +125,9 @@ public class TourService {
                 .routePolyline(polyline)
                 .routeInstructions(instructionsJson)
                 .imageUrl(request.getImageUrl())  // S3 image URL
+                .startDate(request.getStartDate())  // Tour start date
+                .endDate(request.getEndDate())  // Tour end date
+                .maxParticipants(request.getMaxParticipants())  // Max participants
                 .createdBy(user)
                 .tourPoints(new ArrayList<>())
                 .build();
@@ -483,6 +486,10 @@ public class TourService {
                 .isActive(tour.getIsActive())
                 .status(tour.getStatus() != null ? tour.getStatus().name() : null)
                 .rejectionReason(tour.getRejectionReason())
+                .startDate(tour.getStartDate())  // Tour start date
+                .endDate(tour.getEndDate())  // Tour end date
+                .maxParticipants(tour.getMaxParticipants())  // Max participants
+                .currentParticipants(tour.getCurrentParticipants())  // Current participants
                 .build();
     }
 }

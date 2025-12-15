@@ -225,6 +225,36 @@ const TourManagement = () => {
                     {tour.numberOfDays} ngày
                   </div>
                 )}
+                {tour.startDate && (
+                  <div className="flex items-center gap-2 text-zinc-600">
+                    <Calendar className="w-4 h-4 text-emerald-500" />
+                    {new Date(tour.startDate).toLocaleString('vi-VN', {
+                      day: '2-digit',
+                      month: '2-digit',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </div>
+                )}
+                {tour.endDate && (
+                  <div className="flex items-center gap-2 text-zinc-600">
+                    <Calendar className="w-4 h-4 text-red-500" />
+                    {new Date(tour.endDate).toLocaleString('vi-VN', {
+                      day: '2-digit',
+                      month: '2-digit',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </div>
+                )}
+                {tour.maxParticipants && (
+                  <div className="flex items-center gap-2 text-zinc-600">
+                    <span className="text-zinc-400">👥</span>
+                    {tour.currentParticipants || 0}/{tour.maxParticipants}
+                  </div>
+                )}
                 <div className="flex items-center gap-2 text-zinc-600">
                   <MapPin className="w-4 h-4 text-zinc-400" />
                   {tour.points?.length || 0} điểm
@@ -429,6 +459,42 @@ const TourManagement = () => {
                   {selectedTour.vehicle === 'car' ? 'Ô tô' : 'Xe máy'}
                 </span>
               </div>
+              {selectedTour.startDate && (
+                <div>
+                  <span className="text-zinc-500">Ngày bắt đầu:</span>{' '}
+                  <span className="font-medium">
+                    {new Date(selectedTour.startDate).toLocaleString('vi-VN', {
+                      day: '2-digit',
+                      month: '2-digit',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </span>
+                </div>
+              )}
+              {selectedTour.endDate && (
+                <div>
+                  <span className="text-zinc-500">Ngày kết thúc:</span>{' '}
+                  <span className="font-medium">
+                    {new Date(selectedTour.endDate).toLocaleString('vi-VN', {
+                      day: '2-digit',
+                      month: '2-digit',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </span>
+                </div>
+              )}
+              {selectedTour.maxParticipants && (
+                <div>
+                  <span className="text-zinc-500">Số lượng người:</span>{' '}
+                  <span className="font-medium">
+                    {selectedTour.currentParticipants || 0}/{selectedTour.maxParticipants}
+                  </span>
+                </div>
+              )}
             </div>
 
             {/* Itinerary by Day */}

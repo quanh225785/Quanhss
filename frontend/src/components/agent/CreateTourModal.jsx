@@ -15,6 +15,9 @@ const CreateTourModal = ({ onClose, onSuccess }) => {
         useOptimization: false,
         roundtrip: false,
         imageUrl: '',  // Tour thumbnail image
+        startDate: '',  // Tour start date and time
+        endDate: '',  // Tour end date and time
+        maxParticipants: '',  // Maximum number of participants
     });
 
     // Available approved locations
@@ -355,6 +358,9 @@ const CreateTourModal = ({ onClose, onSuccess }) => {
                 useOptimization: formData.useOptimization,
                 roundtrip: formData.roundtrip,
                 imageUrl: formData.imageUrl,  // Tour thumbnail
+                startDate: formData.startDate || null,  // Tour start date
+                endDate: formData.endDate || null,  // Tour end date
+                maxParticipants: formData.maxParticipants ? parseInt(formData.maxParticipants) : null,  // Max participants
                 points: sortedLocations.map((loc, index) => ({
                     locationId: loc.locationId || null,  // Can be null for free activities
                     orderIndex: index,
@@ -463,6 +469,46 @@ const CreateTourModal = ({ onClose, onSuccess }) => {
                             rows={2}
                             className="w-full px-4 py-2 border border-zinc-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent resize-none"
                         />
+                    </div>
+
+                    {/* Tour Date Range and Max Participants */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="space-y-2">
+                            <label className="block text-sm font-medium text-zinc-900">
+                                Ngày bắt đầu
+                            </label>
+                            <input
+                                type="datetime-local"
+                                value={formData.startDate}
+                                onChange={(e) => setFormData(prev => ({ ...prev, startDate: e.target.value }))}
+                                className="w-full px-4 py-2 border border-zinc-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="block text-sm font-medium text-zinc-900">
+                                Ngày kết thúc
+                            </label>
+                            <input
+                                type="datetime-local"
+                                value={formData.endDate}
+                                onChange={(e) => setFormData(prev => ({ ...prev, endDate: e.target.value }))}
+                                min={formData.startDate}
+                                className="w-full px-4 py-2 border border-zinc-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="block text-sm font-medium text-zinc-900">
+                                Số lượng người tối đa
+                            </label>
+                            <input
+                                type="number"
+                                min="1"
+                                value={formData.maxParticipants}
+                                onChange={(e) => setFormData(prev => ({ ...prev, maxParticipants: e.target.value }))}
+                                placeholder="VD: 20"
+                                className="w-full px-4 py-2 border border-zinc-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent"
+                            />
+                        </div>
                     </div>
 
                     {/* Tour Thumbnail Image */}

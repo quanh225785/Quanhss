@@ -29,6 +29,10 @@ public class TourResponse {
     Boolean isActive;
     String status;  // PENDING, APPROVED, REJECTED
     String rejectionReason;
+    LocalDateTime startDate;  // Tour start date and time
+    LocalDateTime endDate;  // Tour end date and time
+    Integer maxParticipants;  // Maximum number of participants allowed
+    Integer currentParticipants;  // Current number of registered participants
 
     @Data
     @Builder
