@@ -12,6 +12,7 @@ import {
 import NavItem from '../components/shared/NavItem';
 import DashboardOverview from '../components/agent/DashboardOverview';
 import MyTours from '../components/agent/MyTours';
+import AgentTourDetail from '../components/agent/AgentTourDetail';
 import LocationProposals from '../components/agent/LocationProposals';
 import Reviews from '../components/agent/Reviews';
 import AgentProfile from '../components/agent/AgentProfile';
@@ -114,6 +115,7 @@ const AgentDashboard = ({ onLogout }) => {
                         <Route path="/" element={<Navigate to="/agent/dashboard" replace />} />
                         <Route path="/dashboard" element={<DashboardOverview />} />
                         <Route path="/tours" element={<MyTours />} />
+                        <Route path="/tours/:id" element={<AgentTourDetail />} />
                         <Route path="/locations" element={<LocationProposals />} />
                         <Route path="/reviews" element={<Reviews />} />
                         <Route path="/profile" element={<AgentProfile user={user} />} />

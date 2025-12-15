@@ -15,6 +15,8 @@ import {
     Loader2,
     CheckCircle,
     AlertCircle,
+    Users,
+    CalendarX,
 } from 'lucide-react';
 import { api } from '../utils/api';
 import { formatDistance, formatDuration } from '../utils/polylineUtils';
@@ -62,6 +64,40 @@ const TourDetailPage = () => {
             month: '2-digit',
             year: 'numeric',
         });
+    };
+
+    const formatDateTime = (dateString) => {
+        if (!dateString) return '';
+        return new Date(dateString).toLocaleString('vi-VN', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+        });
+    };
+
+    // Check if tour is full
+    const isTourFull = () => {
+        if (!tour.maxParticipants) return false;
+        return (tour.currentParticipants || 0) >= tour.maxParticipants;
+    };
+
+    // Check if tour has expired
+    const isTourExpired = () => {
+        if (!tour.endDate) return false;
+        return new Date(tour.endDate) < new Date();
+    };
+
+    // Check if booking is available
+    const canBook = () => {
+        return !isTourFull() && !isTourExpired();
+    };
+
+    const getBookingButtonText = () => {
+        if (isTourExpired()) return 'Tour đã kết thúc';
+        if (isTourFull()) return 'Đã đủ số lượng';
+        return 'Đặt tour ngay';
     };
 
     // Group points by day
@@ -392,6 +428,36 @@ const TourDetailPage = () => {
                             </div>
 
                             <div className="space-y-4 mb-6">
+                                {tour.startDate && (
+                                    <div className="flex items-center justify-between py-3 border-b border-slate-100">
+                                        <span className="text-slate-600 flex items-center gap-2">
+                                            <Calendar size={16} className="text-emerald-500" />
+                                            Ngày bắt đầu
+                                        </span>
+                                        <span className="font-medium text-slate-900">{formatDateTime(tour.startDate)}</span>
+                                    </div>
+                                )}
+                                {tour.endDate && (
+                                    <div className="flex items-center justify-between py-3 border-b border-slate-100">
+                                        <span className="text-slate-600 flex items-center gap-2">
+                                            <CalendarX size={16} className="text-red-500" />
+                                            Ngày kết thúc
+                                        </span>
+                                        <span className="font-medium text-slate-900">{formatDateTime(tour.endDate)}</span>
+                                    </div>
+                                )}
+                                {tour.maxParticipants && (
+                                    <div className="flex items-center justify-between py-3 border-b border-slate-100">
+                                        <span className="text-slate-600 flex items-center gap-2">
+                                            <Users size={16} className="text-blue-500" />
+                                            Số lượng
+                                        </span>
+                                        <span className={`font-medium ${isTourFull() ? 'text-red-600' : 'text-slate-900'
+                                            }`}>
+                                            {tour.currentParticipants || 0}/{tour.maxParticipants} người
+                                        </span>
+                                    </div>
+                                )}
                                 <div className="flex items-center justify-between py-3 border-b border-slate-100">
                                     <span className="text-slate-600">Thời gian</span>
                                     <span className="font-medium text-slate-900">{tour.numberOfDays || 1} ngày</span>
@@ -416,14 +482,38 @@ const TourDetailPage = () => {
                                 </div>
                             </div>
 
-                            <button className="w-full py-4 bg-gradient-to-r from-primary to-secondary text-white font-bold rounded-2xl hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center gap-2">
-                                Đặt tour ngay
-                                <ChevronRight size={20} />
+                            {/* Warning if tour is full or expired */}
+                            {(isTourFull() || isTourExpired()) && (
+                                <div className={`mb-4 p-3 rounded-xl flex items-center gap-2 text-sm ${isTourExpired()
+                                    ? 'bg-red-50 text-red-700 border border-red-200'
+                                    : 'bg-amber-50 text-amber-700 border border-amber-200'
+                                    }`}>
+                                    <AlertCircle size={16} />
+                                    <span>
+                                        {isTourExpired()
+                                            ? 'Tour này đã kết thúc'
+                                            : 'Tour đã đủ số lượng người đăng ký'}
+                                    </span>
+                                </div>
+                            )}
+
+                            <button
+                                disabled={!canBook()}
+                                onClick={() => navigate(`/booking/${id}`)}
+                                className={`w-full py-4 font-bold rounded-2xl transition-all duration-200 flex items-center justify-center gap-2 ${canBook()
+                                    ? 'bg-gradient-to-r from-primary to-secondary text-white hover:shadow-lg hover:-translate-y-0.5'
+                                    : 'bg-slate-200 text-slate-500 cursor-not-allowed'
+                                    }`}
+                            >
+                                {getBookingButtonText()}
+                                {canBook() && <ChevronRight size={20} />}
                             </button>
 
-                            <p className="text-center text-xs text-slate-500 mt-4">
-                                Miễn phí hủy trước 7 ngày
-                            </p>
+                            {canBook() && (
+                                <p className="text-center text-xs text-slate-500 mt-4">
+                                    Miễn phí hủy trước 7 ngày
+                                </p>
+                            )}
                         </div>
 
                         {/* Agent Info */}

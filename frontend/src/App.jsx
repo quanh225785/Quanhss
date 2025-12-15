@@ -16,6 +16,7 @@ import VerifyEmail from "./pages/VerifyEmail";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import TourDetailPage from "./pages/TourDetailPage";
+import BookingPage from "./pages/BookingPage";
 import MainLayout from "./components/layout/MainLayout";
 import ToursPage from "./pages/ToursPage";
 import { setAuthToken } from "./utils/api";
@@ -142,6 +143,16 @@ function App() {
               <MainLayout onLogout={handleLogout}>
                 <TourDetailPage />
               </MainLayout>
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
+        <Route
+          path="/booking/:tourId"
+          element={
+            isAuthenticated ? (
+              <BookingPage />
             ) : (
               <Navigate to="/login" replace />
             )

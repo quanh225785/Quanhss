@@ -1,0 +1,381 @@
+package com.devteria.identityservice.service;
+
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+import javax.imageio.ImageIO;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.devteria.identityservice.dto.request.BookingCreationRequest;
+import com.devteria.identityservice.dto.response.BookingResponse;
+import com.devteria.identityservice.entity.Booking;
+import com.devteria.identityservice.entity.Participant;
+import com.devteria.identityservice.entity.Tour;
+import com.devteria.identityservice.entity.User;
+import com.devteria.identityservice.enums.BookingStatus;
+import com.devteria.identityservice.enums.PaymentStatus;
+import com.devteria.identityservice.exception.AppException;
+import com.devteria.identityservice.exception.ErrorCode;
+import com.devteria.identityservice.repository.BookingRepository;
+import com.devteria.identityservice.repository.TourRepository;
+import com.devteria.identityservice.repository.UserRepository;
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.client.j2se.MatrixToImageWriter;
+import com.google.zxing.common.BitMatrix;
+import com.google.zxing.qrcode.QRCodeWriter;
+
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.experimental.NonFinal;
+import lombok.extern.slf4j.Slf4j;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+
+@Service
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@Slf4j
+public class BookingService {
+
+    BookingRepository bookingRepository;
+    TourRepository tourRepository;
+    UserRepository userRepository;
+    S3Client s3Client;
+
+    @NonFinal
+    @Value("${aws.s3.bucket-name}")
+    String bucketName;
+
+    @NonFinal
+    @Value("${aws.s3.endpoint}")
+    String endpoint;
+
+    /**
+     * Create a new booking
+     */
+    @Transactional
+    public BookingResponse createBooking(BookingCreationRequest request) {
+        // Get current user
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        // Get tour
+        Tour tour = tourRepository.findById(request.getTourId())
+                .orElseThrow(() -> new RuntimeException("Tour not found"));
+
+        // Validate participants
+        if (request.getParticipantNames() == null || request.getParticipantNames().isEmpty()) {
+            throw new RuntimeException("At least one participant is required");
+        }
+
+        int numberOfParticipants = request.getParticipantNames().size();
+
+        // Check availability
+        if (tour.getMaxParticipants() != null) {
+            int currentParticipants = tour.getCurrentParticipants() != null ? tour.getCurrentParticipants() : 0;
+            if (currentParticipants + numberOfParticipants > tour.getMaxParticipants()) {
+                throw new RuntimeException("Not enough spots available. Available: " 
+                    + (tour.getMaxParticipants() - currentParticipants));
+            }
+        }
+
+        // Check if tour has expired
+        if (tour.getEndDate() != null && tour.getEndDate().isBefore(LocalDateTime.now())) {
+            throw new RuntimeException("This tour has already ended");
+        }
+
+        // Generate booking code
+        String bookingCode = generateBookingCode();
+
+        // Calculate total price
+        Double totalPrice = tour.getPrice() != null 
+            ? tour.getPrice() * numberOfParticipants 
+            : 0.0;
+
+        // Create booking
+        Booking booking = Booking.builder()
+                .bookingCode(bookingCode)
+                .user(user)
+                .tour(tour)
+                .status(BookingStatus.PENDING)
+                .paymentStatus(PaymentStatus.PENDING)
+                .totalPrice(totalPrice)
+                .contactPhone(request.getContactPhone())
+                .note(request.getNote())
+                .build();
+
+        // Add participants
+        for (String name : request.getParticipantNames()) {
+            Participant participant = Participant.builder()
+                    .fullName(name.trim())
+                    .build();
+            booking.addParticipant(participant);
+        }
+
+        // Save booking
+        booking = bookingRepository.save(booking);
+
+        // Generate and upload QR code
+        String qrCodeUrl = generateAndUploadQRCode(bookingCode);
+        booking.setQrCodeUrl(qrCodeUrl);
+        booking = bookingRepository.save(booking);
+
+        // Update tour current participants
+        tour.setCurrentParticipants(
+            (tour.getCurrentParticipants() != null ? tour.getCurrentParticipants() : 0) + numberOfParticipants
+        );
+        tourRepository.save(tour);
+
+        log.info("Booking created: {} for tour: {} by user: {}", bookingCode, tour.getName(), username);
+
+        return mapToResponse(booking);
+    }
+
+    /**
+     * Get bookings for current user
+     */
+    @Transactional(readOnly = true)
+    public List<BookingResponse> getMyBookings() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        return bookingRepository.findByUserOrderByCreatedAtDesc(user)
+                .stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Get bookings for a tour (for agent/owner)
+     */
+    @Transactional(readOnly = true)
+    public List<BookingResponse> getBookingsForTour(Long tourId) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        Tour tour = tourRepository.findById(tourId)
+                .orElseThrow(() -> new RuntimeException("Tour not found"));
+
+        // Check if user is the owner of the tour
+        if (!tour.getCreatedBy().getId().equals(user.getId())) {
+            throw new RuntimeException("You are not authorized to view bookings for this tour");
+        }
+
+        return bookingRepository.findByTourOrderByCreatedAtDesc(tour)
+                .stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Get booking by ID
+     */
+    @Transactional(readOnly = true)
+    public BookingResponse getBookingById(Long id) {
+        Booking booking = bookingRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Booking not found"));
+
+        return mapToResponse(booking);
+    }
+
+    /**
+     * Cancel booking
+     */
+    @Transactional
+    public BookingResponse cancelBooking(Long id) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        Booking booking = bookingRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Booking not found"));
+
+        // Check if user owns this booking
+        if (!booking.getUser().getId().equals(user.getId())) {
+            throw new RuntimeException("You are not authorized to cancel this booking");
+        }
+
+        // Check if already cancelled
+        if (booking.getStatus() == BookingStatus.CANCELLED) {
+            throw new RuntimeException("Booking is already cancelled");
+        }
+
+        // Update tour current participants
+        Tour tour = booking.getTour();
+        int numberOfParticipants = booking.getNumberOfParticipants();
+        tour.setCurrentParticipants(
+            Math.max(0, (tour.getCurrentParticipants() != null ? tour.getCurrentParticipants() : 0) - numberOfParticipants)
+        );
+        tourRepository.save(tour);
+
+        // Update booking status
+        booking.setStatus(BookingStatus.CANCELLED);
+        booking = bookingRepository.save(booking);
+
+        log.info("Booking cancelled: {}", booking.getBookingCode());
+
+        return mapToResponse(booking);
+    }
+
+    /**
+     * Mock payment - confirm payment for a booking
+     */
+    @Transactional
+    public BookingResponse confirmPayment(Long id) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        Booking booking = bookingRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Booking not found"));
+
+        // Check if user owns this booking
+        if (!booking.getUser().getId().equals(user.getId())) {
+            throw new RuntimeException("You are not authorized to pay for this booking");
+        }
+
+        // Update payment status
+        booking.setPaymentStatus(PaymentStatus.PAID);
+        booking.setStatus(BookingStatus.CONFIRMED);
+        booking = bookingRepository.save(booking);
+
+        log.info("Payment confirmed for booking: {}", booking.getBookingCode());
+
+        return mapToResponse(booking);
+    }
+
+    /**
+     * Check-in using booking code (for agent)
+     */
+    @Transactional
+    public BookingResponse checkIn(String bookingCode) {
+        Booking booking = bookingRepository.findByBookingCode(bookingCode)
+                .orElseThrow(() -> new RuntimeException("Booking not found"));
+
+        // Verify tour ownership
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        if (!booking.getTour().getCreatedBy().getId().equals(user.getId())) {
+            throw new RuntimeException("You are not authorized to check-in for this tour");
+        }
+
+        // Mark as completed
+        booking.setStatus(BookingStatus.COMPLETED);
+        booking = bookingRepository.save(booking);
+
+        log.info("Check-in completed for booking: {}", bookingCode);
+
+        return mapToResponse(booking);
+    }
+
+    // ==================== Helper methods ====================
+
+    /**
+     * Generate booking code in format: BK-YYYYMMDD-XXX
+     */
+    private String generateBookingCode() {
+        LocalDate today = LocalDate.now();
+        String dateStr = today.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+
+        // Count bookings created today
+        LocalDateTime startOfDay = today.atStartOfDay();
+        long count = bookingRepository.countBookingsCreatedToday(startOfDay);
+
+        return String.format("BK-%s-%03d", dateStr, count + 1);
+    }
+
+    /**
+     * Generate QR code and upload to S3
+     */
+    private String generateAndUploadQRCode(String bookingCode) {
+        try {
+            // Generate QR code
+            QRCodeWriter qrCodeWriter = new QRCodeWriter();
+            BitMatrix bitMatrix = qrCodeWriter.encode(
+                "BOOKING:" + bookingCode,
+                BarcodeFormat.QR_CODE,
+                300, 300
+            );
+
+            BufferedImage qrImage = MatrixToImageWriter.toBufferedImage(bitMatrix);
+
+            // Convert to byte array
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ImageIO.write(qrImage, "PNG", baos);
+            byte[] imageBytes = baos.toByteArray();
+
+            // Upload to S3
+            String key = "qrcodes/" + bookingCode + ".png";
+
+            PutObjectRequest putObjectRequest = PutObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(key)
+                    .contentType("image/png")
+                    .build();
+
+            s3Client.putObject(putObjectRequest, RequestBody.fromBytes(imageBytes));
+
+            String qrUrl = endpoint + "/" + bucketName + "/" + key;
+            log.info("QR code uploaded: {}", qrUrl);
+
+            return qrUrl;
+
+        } catch (Exception e) {
+            log.error("Failed to generate QR code for booking: {}", bookingCode, e);
+            return null; // Return null if QR generation fails, booking can still proceed
+        }
+    }
+
+    /**
+     * Map Booking entity to BookingResponse
+     */
+    private BookingResponse mapToResponse(Booking booking) {
+        Tour tour = booking.getTour();
+        User user = booking.getUser();
+
+        List<String> participantNames = booking.getParticipants().stream()
+                .map(Participant::getFullName)
+                .collect(Collectors.toList());
+
+        return BookingResponse.builder()
+                .id(booking.getId())
+                .bookingCode(booking.getBookingCode())
+                .tourId(tour.getId())
+                .tourName(tour.getName())
+                .tourImageUrl(tour.getImageUrl())
+                .tourStartDate(tour.getStartDate())
+                .tourEndDate(tour.getEndDate())
+                .tourNumberOfDays(tour.getNumberOfDays())
+                .userName(user.getFirstName() != null ? user.getFirstName() + " " + user.getLastName() : user.getUsername())
+                .userEmail(user.getEmail())
+                .participantNames(participantNames)
+                .numberOfParticipants(participantNames.size())
+                .status(booking.getStatus().name())
+                .paymentStatus(booking.getPaymentStatus().name())
+                .totalPrice(booking.getTotalPrice())
+                .contactPhone(booking.getContactPhone())
+                .note(booking.getNote())
+                .qrCodeUrl(booking.getQrCodeUrl())
+                .createdAt(booking.getCreatedAt())
+                .build();
+    }
+}
