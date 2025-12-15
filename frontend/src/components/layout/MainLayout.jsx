@@ -70,7 +70,7 @@ const MainLayout = ({ children, onLogout }) => {
                         Jadoo.
                     </Link>
                     <p className="text-xs text-slate-500 mt-2 font-medium tracking-wide uppercase">
-                        {userRole === 'ADMIN' ? 'Admin Dashboard' : userRole === 'AGENT' ? 'Agent Dashboard' : 'User Dashboard'}
+                        {userRole === 'ADMIN' ? 'Admin Dashboard' : userRole === 'AGENT' ? 'Agent Dashboard' : ''}
                     </p>
                 </div>
 

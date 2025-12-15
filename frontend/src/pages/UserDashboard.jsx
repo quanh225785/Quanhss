@@ -55,9 +55,8 @@ const UserDashboard = ({ onLogout }) => {
       <aside className="w-72 bg-white/70 backdrop-blur-xl border-r border-white/40 hidden md:flex flex-col shadow-2xl shadow-slate-200/50 z-20 m-4 rounded-[2rem]">
         <div className="p-8 pb-4">
           <Link to="/" className="text-2xl font-display font-bold tracking-tighter flex items-center gap-2 text-slate-900 hover:text-primary transition-colors">
-            Jadoo.
+            Quanh.
           </Link>
-          <p className="text-xs text-slate-500 mt-2 font-medium tracking-wide uppercase">User Dashboard</p>
         </div>
 
         <nav className="flex-1 px-4 space-y-2 mt-4 overflow-y-auto custom-scrollbar">

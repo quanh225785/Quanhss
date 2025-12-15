@@ -1,0 +1,35 @@
+services:
+  backend:
+    image: maven:3.9.6-eclipse-temurin-21
+    container_name: quanhss-backend-dev
+    working_dir: /app
+    command: mvn spring-boot:run -DskipTests
+    volumes:
+      - ./backend:/app
+      - ~/.m2:/root/.m2
+      - /app/target
+    ports:
+      - "8080:8080"
+    networks:
+      - quanhss-network
+
+  frontend:
+    image: node:20-alpine
+    container_name: quanhss-frontend-dev
+    working_dir: /app
+    command: sh -c "npm install && npm run dev -- --host"  # Thêm npm install
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_BASE_URL=http://localhost:8080/api
+    depends_on:
+      - backend
+    networks:
+      - quanhss-network
+
+networks:
+  quanhss-network:
+    driver: bridge

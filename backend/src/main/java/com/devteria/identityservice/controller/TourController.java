@@ -150,4 +150,23 @@ public class TourController {
                 .result(tourService.unhideTour(id))
                 .build();
     }
+
+    /**
+     * Search tours with filters (Public - for users)
+     * GET /tours/search?keyword=...&minPrice=...&maxPrice=...&numberOfDays=...&vehicle=...&locationId=...
+     */
+    @GetMapping("/search")
+    ApiResponse<List<TourResponse>> searchTours(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) Double minPrice,
+            @RequestParam(required = false) Double maxPrice,
+            @RequestParam(required = false) Integer numberOfDays,
+            @RequestParam(required = false) String vehicle,
+            @RequestParam(required = false) Long locationId) {
+        log.info("Searching tours with filters - keyword: {}, minPrice: {}, maxPrice: {}, numberOfDays: {}, vehicle: {}, locationId: {}",
+                keyword, minPrice, maxPrice, numberOfDays, vehicle, locationId);
+        return ApiResponse.<List<TourResponse>>builder()
+                .result(tourService.searchTours(keyword, minPrice, maxPrice, numberOfDays, vehicle, locationId))
+                .build();
+    }
 }

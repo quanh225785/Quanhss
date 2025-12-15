@@ -67,7 +67,7 @@ const ChangePasswordModal = ({ isOpen, onClose, userId }) => {
       console.error("[ChangePasswordModal] Error:", err);
       setError(
         err.response?.data?.message ||
-          "Không thể đổi mật khẩu. Vui lòng kiểm tra lại mật khẩu hiện tại."
+        "Không thể đổi mật khẩu. Vui lòng kiểm tra lại mật khẩu hiện tại."
       );
     } finally {
       setIsSubmitting(false);

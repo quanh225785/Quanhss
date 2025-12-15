@@ -17,6 +17,7 @@ import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import TourDetailPage from "./pages/TourDetailPage";
 import MainLayout from "./components/layout/MainLayout";
+import ToursPage from "./pages/ToursPage";
 import { setAuthToken } from "./utils/api";
 import { registerVietmapServiceWorker } from "./utils/serviceWorker";
 import "./App.css";
@@ -122,6 +123,8 @@ function App() {
             )
           }
         />
+        <Route path="/tours" element={<ToursPage />} />
+        <Route path="/tour/:id" element={<TourDetailPage />} />
         <Route
           path="/dashboard"
           element={

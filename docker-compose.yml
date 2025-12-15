@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  # Backend (Spring Boot)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: quanhss-backend
+    ports:
+      - "8080:8080"
+    networks:
+      - quanhss-network
+    restart: unless-stopped
+
+  # Frontend (React + Vite)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: quanhss-frontend
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+    networks:
+      - quanhss-network
+    restart: unless-stopped
+
+networks:
+  quanhss-network:
+    driver: bridge
