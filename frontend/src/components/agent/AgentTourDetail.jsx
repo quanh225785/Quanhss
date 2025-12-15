@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { FaMoneyBillAlt } from "react-icons/fa";
+import { FaRegCheckCircle } from "react-icons/fa";
+import { PiKeyReturnBold } from "react-icons/pi";
+
 import {
     ArrowLeft,
     MapPin,
@@ -112,9 +116,9 @@ const AgentTourDetail = () => {
 
     const getPaymentBadge = (status) => {
         const config = {
-            PENDING: { bg: 'bg-slate-100', text: 'text-slate-600', label: '💰 Chờ TT' },
-            PAID: { bg: 'bg-green-100', text: 'text-green-700', label: '✅ Đã TT' },
-            REFUNDED: { bg: 'bg-orange-100', text: 'text-orange-700', label: '↩️ Hoàn tiền' },
+            PENDING: { bg: 'bg-slate-100', text: 'text-slate-600', label: <><FaMoneyBillAlt className="inline mr-1 text-amber-500" /> Chờ TT</> },
+            PAID: { bg: 'bg-green-100', text: 'text-green-700', label: <><FaRegCheckCircle className="inline mr-1 text-green-500" /> Đã TT</> },
+            REFUNDED: { bg: 'bg-orange-100', text: 'text-orange-700', label: <><PiKeyReturnBold className="inline mr-1 text-blue-500" /> Hoàn tiền</> },
         };
         const c = config[status] || config.PENDING;
         return <span className={`px-2 py-1 rounded-lg text-xs font-medium ${c.bg} ${c.text}`}>{c.label}</span>;

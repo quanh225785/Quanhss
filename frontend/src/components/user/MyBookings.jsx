@@ -3,6 +3,9 @@ import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { Calendar, MapPin, Clock, ArrowRight, Loader2, AlertCircle, X, Users, QrCode, ChevronLeft, ChevronRight, List } from "lucide-react";
 import { api } from "../../utils/api";
+import { FaMoneyBillAlt } from "react-icons/fa";
+import { FaRegCheckCircle } from "react-icons/fa";
+import { PiKeyReturnBold } from "react-icons/pi";
 
 const MyBookings = () => {
   const navigate = useNavigate();
@@ -13,6 +16,8 @@ const MyBookings = () => {
   const [cancellingId, setCancellingId] = useState(null);
   const [viewMode, setViewMode] = useState('list'); // 'list' or 'calendar'
   const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [popupBooking, setPopupBooking] = useState(null);
+  const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
     fetchBookings();
@@ -76,9 +81,9 @@ const MyBookings = () => {
     };
 
     const paymentConfig = {
-      PENDING: { label: '💰 Chờ thanh toán' },
-      PAID: { label: '✅ Đã thanh toán' },
-      REFUNDED: { label: '↩️ Đã hoàn tiền' },
+      PENDING: { label: <><FaMoneyBillAlt className="inline mr-1 text-amber-500" /> Chờ thanh toán</> },
+      PAID: { label: <><FaRegCheckCircle className="inline mr-1 text-green-500" /> Đã thanh toán</> },
+      REFUNDED: { label: <><PiKeyReturnBold className="inline mr-1 text-blue-500" /> Đã hoàn tiền</> },
     };
 
     const config = statusConfig[status] || statusConfig.PENDING;
@@ -122,12 +127,12 @@ const MyBookings = () => {
 
   const getBookingColor = (status) => {
     const colors = {
-      PENDING: 'bg-amber-400/70',
-      CONFIRMED: 'bg-blue-400/70',
-      COMPLETED: 'bg-green-400/70',
-      CANCELLED: 'bg-red-300/70',
+      PENDING: 'bg-amber-400/60',
+      CONFIRMED: 'bg-blue-400/60',
+      COMPLETED: 'bg-green-400/60',
+      CANCELLED: 'bg-red-300/60',
     };
-    return colors[status] || 'bg-slate-400/70';
+    return colors[status] || 'bg-slate-400/60';
   };
 
   const isStartDate = (booking, date) => {
@@ -169,7 +174,7 @@ const MyBookings = () => {
           <div className={`text-xs font-medium mb-1 ${isToday ? 'text-primary font-bold' : 'text-slate-600'}`}>
             {day}
           </div>
-          <div className="space-y-0.5">
+          <div className="space-y-1 absolute left-0 right-0 bottom-1">
             {dayBookings.map((booking, idx) => {
               const color = getBookingColor(booking.status);
               const isStart = isStartDate(booking, date);
@@ -178,21 +183,21 @@ const MyBookings = () => {
               return (
                 <div
                   key={`${booking.id}-${idx}`}
-                  onClick={() => navigate(`/tour/${booking.tourId}`)}
-                  className={`text-[9px] px-1.5 py-0.5 text-white font-medium truncate cursor-pointer hover:brightness-110 transition-all ${color} 
-                    ${isStart && isEnd ? 'rounded-md' : ''}
-                    ${isStart && !isEnd ? 'rounded-l-md -mr-1' : ''}
-                    ${isEnd && !isStart ? 'rounded-r-md -ml-1' : ''}
-                    ${!isStart && !isEnd ? '-mx-1' : ''}
-                  `}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    setPopupPosition({
+                      x: rect.left + rect.width / 2,
+                      y: rect.top
+                    });
+                    setPopupBooking(booking);
+                  }}
+                  className={`text-[10px] h-6 flex items-center text-slate-800 font-medium cursor-pointer hover:opacity-80 transition-opacity ${color} ${isStart ? 'rounded-l-lg ml-1 pl-2' : 'pl-1'
+                    } ${isEnd ? 'rounded-r-lg mr-1' : ''}`}
+                  style={{ marginLeft: isStart ? '4px' : '-1px', marginRight: isEnd ? '4px' : '-1px' }}
                   title={`${booking.tourName} - ${booking.tourNumberOfDays} ngày`}
                 >
                   {isStart ? booking.tourName.slice(0, 12) : ''}
-                </div>
-              );
-            })}
-          </div>
-                  {isStart ? booking.tourName.slice(0, 15) : ''}
                 </div>
               );
             })}
@@ -222,38 +227,134 @@ const MyBookings = () => {
         </div>
 
         {/* Week days header */}
-        <div className="grid grid-cols-7 gap-1 mb-2">
+        <div className="grid grid-cols-7 mb-2">
           {weekDays.map(day => (
-            <div key={day} className="text-center text-xs font-bold text-slate-500 py-2">
+            <div key={day} className="text-center text-xs font-bold text-slate-500 py-2 border-b border-slate-200">
               {day}
             </div>
           ))}
         </div>
 
         {/* Calendar grid */}
-        <div className="grid grid-cols-7 gap-1">
+        <div className="grid grid-cols-7">
           {days}
         </div>
 
         {/* Legend */}
         <div className="mt-6 pt-4 border-t border-slate-200 flex flex-wrap gap-3">
           <div className="flex items-center gap-2 text-xs">
-            <div className="w-3 h-3 rounded bg-amber-400"></div>
+            <div className="w-3 h-3 rounded bg-amber-400/60"></div>
             <span className="text-slate-600">Chờ xác nhận</span>
           </div>
           <div className="flex items-center gap-2 text-xs">
-            <div className="w-3 h-3 rounded bg-blue-400"></div>
+            <div className="w-3 h-3 rounded bg-blue-400/60"></div>
             <span className="text-slate-600">Đã xác nhận</span>
           </div>
           <div className="flex items-center gap-2 text-xs">
-            <div className="w-3 h-3 rounded bg-green-400"></div>
+            <div className="w-3 h-3 rounded bg-green-400/60"></div>
             <span className="text-slate-600">Hoàn thành</span>
           </div>
           <div className="flex items-center gap-2 text-xs">
-            <div className="w-3 h-3 rounded bg-red-300"></div>
+            <div className="w-3 h-3 rounded bg-red-300/60"></div>
             <span className="text-slate-600">Đã hủy</span>
           </div>
         </div>
+
+        {/* Booking Popup */}
+        {popupBooking && createPortal(
+          <div
+            className="fixed inset-0 z-[9998]"
+            onClick={() => setPopupBooking(null)}
+          >
+            <div
+              className="absolute bg-white rounded-2xl shadow-2xl border border-slate-200 p-4 w-80 animate-scale-in"
+              style={{
+                left: Math.min(popupPosition.x - 160, window.innerWidth - 340),
+                top: Math.max(popupPosition.y - 220, 10),
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Arrow */}
+              <div
+                className="absolute w-3 h-3 bg-white border-b border-r border-slate-200 transform rotate-45"
+                style={{ bottom: '-7px', left: '50%', marginLeft: '-6px' }}
+              />
+
+              <div className="flex gap-4">
+                {/* Tour Image */}
+                <div className="w-20 h-20 rounded-xl overflow-hidden bg-slate-100 flex-shrink-0">
+                  {popupBooking.tourImageUrl ? (
+                    <img
+                      src={popupBooking.tourImageUrl}
+                      alt={popupBooking.tourName}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/20 to-secondary/20">
+                      <MapPin className="text-primary/50" size={24} />
+                    </div>
+                  )}
+                </div>
+
+                {/* Info */}
+                <div className="flex-1 min-w-0">
+                  <span className="text-[10px] font-mono text-primary bg-primary/10 px-1.5 py-0.5 rounded">
+                    {popupBooking.bookingCode}
+                  </span>
+                  <h4 className="font-bold text-slate-900 text-sm mt-1 truncate">
+                    {popupBooking.tourName}
+                  </h4>
+                  <div className="flex flex-wrap gap-2 mt-1 text-xs text-slate-500">
+                    <span className="flex items-center gap-1">
+                      <Calendar className="w-3 h-3" />
+                      {formatDate(popupBooking.tourStartDate)}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Clock className="w-3 h-3" />
+                      {popupBooking.tourNumberOfDays} ngày
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1 mt-1 text-xs text-slate-500">
+                    <Users className="w-3 h-3" />
+                    {popupBooking.numberOfParticipants} người
+                  </div>
+                </div>
+              </div>
+
+              {/* Status & Price */}
+              <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-100">
+                {getStatusBadge(popupBooking.status, popupBooking.paymentStatus)}
+                <span className="text-sm font-bold text-primary">{formatPrice(popupBooking.totalPrice)}</span>
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-2 mt-3">
+                <button
+                  onClick={() => {
+                    setPopupBooking(null);
+                    navigate(`/tour/${popupBooking.tourId}`);
+                  }}
+                  className="flex-1 px-3 py-2 text-xs font-medium text-white bg-primary hover:bg-primary/90 rounded-xl transition-colors flex items-center justify-center gap-1"
+                >
+                  Xem chi tiết
+                  <ArrowRight size={14} />
+                </button>
+                {popupBooking.qrCodeUrl && (
+                  <button
+                    onClick={() => {
+                      setPopupBooking(null);
+                      setSelectedBooking(popupBooking);
+                    }}
+                    className="px-3 py-2 text-xs font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors flex items-center gap-1"
+                  >
+                    <QrCode size={14} />
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
       </div>
     );
   };

@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { X, Users, Phone, FileText, Loader2, CreditCard, Check, AlertCircle } from 'lucide-react';
 import { api } from '../../utils/api';
+import { FaMoneyBillAlt } from "react-icons/fa";
+import { FaRegCheckCircle } from "react-icons/fa";
+import { PiKeyReturnBold } from "react-icons/pi";
 
 const BookingModal = ({ tour, onClose, onSuccess }) => {
     const [step, setStep] = useState(1); // 1: Info, 2: Payment, 3: Success
