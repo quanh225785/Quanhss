@@ -18,12 +18,12 @@ import { formatDistance } from '../utils/polylineUtils';
 const ToursPage = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  
+
   const [tours, setTours] = useState([]);
   const [loading, setLoading] = useState(true);
   const [favorites, setFavorites] = useState(new Set());
   const [showFilters, setShowFilters] = useState(false);
-  
+
   // Filter states
   const [keyword, setKeyword] = useState(searchParams.get('keyword') || '');
   const [minPrice, setMinPrice] = useState(searchParams.get('minPrice') || '');
@@ -31,7 +31,7 @@ const ToursPage = () => {
   const [numberOfDays, setNumberOfDays] = useState(searchParams.get('numberOfDays') || '');
   const [vehicle, setVehicle] = useState(searchParams.get('vehicle') || '');
   const [locationId, setLocationId] = useState(searchParams.get('locationId') || '');
-  
+
   const [locations, setLocations] = useState([]);
 
   useEffect(() => {
@@ -58,7 +58,7 @@ const ToursPage = () => {
     try {
       setLoading(true);
       const params = new URLSearchParams();
-      
+
       if (keyword) params.append('keyword', keyword);
       if (minPrice) params.append('minPrice', minPrice);
       if (maxPrice) params.append('maxPrice', maxPrice);
@@ -68,10 +68,10 @@ const ToursPage = () => {
 
       const url = `/tours/search${params.toString() ? '?' + params.toString() : ''}`;
       console.log('Fetching tours from:', url);
-      
+
       const response = await api.get(url);
       console.log('API Response:', response.data);
-      
+
       if (response.data && response.data.code === 1000) {
         setTours(response.data.result || []);
       } else {
@@ -83,12 +83,12 @@ const ToursPage = () => {
       console.error('Error response:', error.response?.data);
       console.error('Error status:', error.response?.status);
       console.error('Error message:', error.message);
-      
+
       // Show error message to user
       if (error.response?.data?.message) {
         console.error('Backend error:', error.response.data.message);
       }
-      
+
       setTours([]);
     } finally {
       setLoading(false);
@@ -103,7 +103,7 @@ const ToursPage = () => {
     if (numberOfDays) params.set('numberOfDays', numberOfDays);
     if (vehicle) params.set('vehicle', vehicle);
     if (locationId) params.set('locationId', locationId);
-    
+
     setSearchParams(params);
   };
 
@@ -177,18 +177,17 @@ const ToursPage = () => {
                 value={keyword}
                 onChange={(e) => setKeyword(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                className="w-full pl-12 pr-4 py-3 bg-white/60 border border-white/60 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 text-slate-900 placeholder:text-slate-400"
+                className="w-full pl-12 pr-4 py-3 bg-white/60 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary text-slate-900 placeholder:text-slate-400"
               />
             </div>
-            
+
             {/* Filter Toggle Button */}
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className={`flex items-center gap-2 px-4 py-3 rounded-xl border transition-all ${
-                activeFiltersCount > 0
-                  ? 'bg-primary/10 border-primary text-primary'
-                  : 'bg-white/60 border-white/60 text-slate-700 hover:bg-white/80'
-              }`}
+              className={`flex items-center gap-2 px-4 py-3 rounded-xl border-2 transition-colors ${activeFiltersCount > 0
+                ? 'bg-primary/10 border-primary text-primary hover:bg-primary/20'
+                : 'bg-white/60 border-slate-200 text-slate-700 hover:bg-white hover:border-primary'
+                }`}
             >
               <SlidersHorizontal size={18} />
               <span className="hidden md:inline">Bộ lọc</span>
@@ -198,11 +197,11 @@ const ToursPage = () => {
                 </span>
               )}
             </button>
-            
+
             {/* Search Button */}
             <button
               onClick={handleSearch}
-              className="px-6 py-3 bg-gradient-to-r from-primary to-secondary text-white font-medium rounded-xl hover:shadow-lg transition-all whitespace-nowrap"
+              className="px-6 py-3 bg-gradient-to-r from-primary to-secondary text-white font-medium rounded-xl whitespace-nowrap hover:from-primary/90 hover:to-secondary/90 transition-colors"
             >
               Tìm kiếm
             </button>
@@ -219,7 +218,7 @@ const ToursPage = () => {
                   placeholder="Từ"
                   value={minPrice}
                   onChange={(e) => setMinPrice(e.target.value)}
-                  className="w-full px-3 py-2 text-sm bg-white/80 border border-white/60 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 text-slate-900"
+                  className="w-full px-3 py-2 text-sm bg-white/80 border-2 border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary text-slate-900"
                 />
               </div>
               <div className="col-span-2 md:col-span-1">
@@ -229,7 +228,7 @@ const ToursPage = () => {
                   placeholder="Đến"
                   value={maxPrice}
                   onChange={(e) => setMaxPrice(e.target.value)}
-                  className="w-full px-3 py-2 text-sm bg-white/80 border border-white/60 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 text-slate-900"
+                  className="w-full px-3 py-2 text-sm bg-white/80 border-2 border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary text-slate-900"
                 />
               </div>
 
@@ -239,7 +238,7 @@ const ToursPage = () => {
                 <select
                   value={numberOfDays}
                   onChange={(e) => setNumberOfDays(e.target.value)}
-                  className="w-full px-3 py-2 text-sm bg-white/80 border border-white/60 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 text-slate-900"
+                  className="w-full px-3 py-2 text-sm bg-white/80 border-2 border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary text-slate-900"
                 >
                   <option value="">Tất cả</option>
                   <option value="1">1 ngày</option>
@@ -256,22 +255,20 @@ const ToursPage = () => {
                 <div className="flex gap-2">
                   <button
                     onClick={() => setVehicle(vehicle === 'car' ? '' : 'car')}
-                    className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-sm rounded-lg border transition-all ${
-                      vehicle === 'car'
-                        ? 'bg-primary/10 border-primary text-primary'
-                        : 'bg-white/80 border-white/60 text-slate-700 hover:border-primary/50'
-                    }`}
+                    className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-sm rounded-lg border-2 transition-colors ${vehicle === 'car'
+                      ? 'bg-primary/10 border-primary text-primary'
+                      : 'bg-white/80 border-slate-200 text-slate-700 hover:border-primary hover:bg-primary/5'
+                      }`}
                   >
                     <Car size={16} />
                     <span>Ô tô</span>
                   </button>
                   <button
                     onClick={() => setVehicle(vehicle === 'motorcycle' ? '' : 'motorcycle')}
-                    className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-sm rounded-lg border transition-all ${
-                      vehicle === 'motorcycle'
-                        ? 'bg-primary/10 border-primary text-primary'
-                        : 'bg-white/80 border-white/60 text-slate-700 hover:border-primary/50'
-                    }`}
+                    className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-sm rounded-lg border-2 transition-colors ${vehicle === 'motorcycle'
+                      ? 'bg-primary/10 border-primary text-primary'
+                      : 'bg-white/80 border-slate-200 text-slate-700 hover:border-primary hover:bg-primary/5'
+                      }`}
                   >
                     <Bike size={16} />
                     <span>Xe máy</span>
@@ -285,7 +282,7 @@ const ToursPage = () => {
                 <select
                   value={locationId}
                   onChange={(e) => setLocationId(e.target.value)}
-                  className="w-full px-3 py-2 text-sm bg-white/80 border border-white/60 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 text-slate-900"
+                  className="w-full px-3 py-2 text-sm bg-white/80 border-2 border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary text-slate-900"
                 >
                   <option value="">Tất cả</option>
                   {locations.map((location) => (
@@ -301,7 +298,7 @@ const ToursPage = () => {
                 {activeFiltersCount > 0 && (
                   <button
                     onClick={handleResetFilters}
-                    className="w-full px-4 py-2 text-sm text-primary border border-primary rounded-lg hover:bg-primary/5 transition-colors"
+                    className="w-full px-4 py-2 text-sm text-primary border-2 border-primary rounded-lg hover:bg-primary hover:text-white transition-colors"
                   >
                     Xóa bộ lọc
                   </button>
@@ -315,123 +312,122 @@ const ToursPage = () => {
       <main className="max-w-7xl mx-auto px-4 md:px-8 py-6">
         {/* Tours List */}
         <div>
-            {loading ? (
-              <div className="flex items-center justify-center py-16">
-                <div className="text-center">
-                  <Loader2 className="w-10 h-10 animate-spin text-primary mx-auto mb-3" />
-                  <p className="text-slate-500">Đang tải tour...</p>
-                </div>
+          {loading ? (
+            <div className="flex items-center justify-center py-16">
+              <div className="text-center">
+                <Loader2 className="w-10 h-10 animate-spin text-primary mx-auto mb-3" />
+                <p className="text-slate-500">Đang tải tour...</p>
               </div>
-            ) : tours.length === 0 ? (
-              <div className="text-center py-16 bg-white/50 rounded-[2rem] border border-white/50">
-                <Search className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-                <h4 className="text-lg font-bold text-slate-700 mb-2">Không tìm thấy tour nào</h4>
-                <p className="text-slate-500 mb-4">Thử thay đổi bộ lọc để tìm thêm tour.</p>
-                {activeFiltersCount > 0 && (
-                  <button
-                    onClick={handleResetFilters}
-                    className="px-6 py-2 bg-primary text-white rounded-xl font-medium hover:bg-primary/90 transition-colors"
+            </div>
+          ) : tours.length === 0 ? (
+            <div className="text-center py-16 bg-white/50 rounded-[2rem] border border-white/50">
+              <Search className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+              <h4 className="text-lg font-bold text-slate-700 mb-2">Không tìm thấy tour nào</h4>
+              <p className="text-slate-500 mb-4">Thử thay đổi bộ lọc để tìm thêm tour.</p>
+              {activeFiltersCount > 0 && (
+                <button
+                  onClick={handleResetFilters}
+                  className="px-6 py-2 bg-primary text-white rounded-xl font-medium hover:bg-primary/90 transition-colors"
+                >
+                  Xóa bộ lọc
+                </button>
+              )}
+            </div>
+          ) : (
+            <>
+              <div className="mb-4 text-sm text-slate-600">
+                Tìm thấy <span className="font-bold text-slate-900">{tours.length}</span> tour
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {tours.map((tour) => (
+                  <div
+                    key={tour.id}
+                    onClick={() => navigate(`/tour/${tour.id}`)}
+                    className="group bg-white/60 backdrop-blur-md border-2 border-slate-200 rounded-[2rem] overflow-hidden cursor-pointer hover:bg-white hover:border-primary transition-colors"
                   >
-                    Xóa bộ lọc
-                  </button>
-                )}
-              </div>
-            ) : (
-              <>
-                <div className="mb-4 text-sm text-slate-600">
-                  Tìm thấy <span className="font-bold text-slate-900">{tours.length}</span> tour
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {tours.map((tour) => (
-                    <div
-                      key={tour.id}
-                      onClick={() => navigate(`/tour/${tour.id}`)}
-                      className="group bg-white/60 backdrop-blur-md border border-white/60 rounded-[2rem] overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer"
-                    >
-                      {/* Tour Image */}
-                      <div className="relative h-48 overflow-hidden">
-                        <img
-                          src={getTourImage(tour)}
-                          alt={tour.name}
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent"></div>
-                        
-                        {/* Tags */}
-                        <div className="absolute top-4 left-4 flex gap-2">
-                          <span className="px-3 py-1 bg-white/20 backdrop-blur-md border border-white/20 text-white text-xs font-bold rounded-full">
-                            {tour.numberOfDays || 1} ngày
-                          </span>
-                          {tour.isOptimized && (
-                            <span className="px-3 py-1 bg-primary/80 backdrop-blur-md border border-white/20 text-white text-xs font-bold rounded-full">
-                              Tối ưu
-                            </span>
-                          )}
-                        </div>
+                    {/* Tour Image */}
+                    <div className="relative h-48 overflow-hidden">
+                      <img
+                        src={getTourImage(tour)}
+                        alt={tour.name}
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent"></div>
 
-                        {/* Favorite Button */}
-                        <button
-                          onClick={(e) => toggleFavorite(e, tour.id)}
-                          className={`absolute top-4 right-4 w-10 h-10 rounded-full backdrop-blur-md border border-white/20 flex items-center justify-center transition-all ${
-                            favorites.has(tour.id)
-                              ? 'bg-red-500 text-white'
-                              : 'bg-white/10 text-white hover:bg-white hover:text-red-500'
+                      {/* Tags */}
+                      <div className="absolute top-4 left-4 flex gap-2">
+                        <span className="px-3 py-1 bg-white/20 backdrop-blur-md border border-white/20 text-white text-xs font-bold rounded-full">
+                          {tour.numberOfDays || 1} ngày
+                        </span>
+                        {tour.isOptimized && (
+                          <span className="px-3 py-1 bg-primary/80 backdrop-blur-md border border-white/20 text-white text-xs font-bold rounded-full">
+                            Tối ưu
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Favorite Button */}
+                      <button
+                        onClick={(e) => toggleFavorite(e, tour.id)}
+                        className={`absolute top-4 right-4 w-10 h-10 rounded-full backdrop-blur-md border border-white/20 flex items-center justify-center ${favorites.has(tour.id)
+                          ? 'bg-red-500 text-white'
+                          : 'bg-white/10 text-white'
                           }`}
-                        >
-                          <Heart size={18} className={favorites.has(tour.id) ? 'fill-current' : ''} />
+                      >
+                        <Heart size={18} className={favorites.has(tour.id) ? 'fill-current' : ''} />
+                      </button>
+                    </div>
+
+                    {/* Tour Info */}
+                    <div className="p-5">
+                      <h3 className="text-lg font-display font-bold text-slate-900 mb-2 line-clamp-1">
+                        {tour.name}
+                      </h3>
+                      {tour.description && (
+                        <p className="text-sm text-slate-600 line-clamp-2 mb-4">
+                          {tour.description}
+                        </p>
+                      )}
+
+                      <div className="flex items-center gap-3 text-sm text-slate-500 mb-4 flex-wrap">
+                        <span className="flex items-center gap-1">
+                          <MapPin size={14} className="text-secondary" />
+                          {tour.points?.length || 0} điểm
+                        </span>
+                        {tour.totalDistance && (
+                          <span className="flex items-center gap-1">
+                            <Route size={14} className="text-primary" />
+                            {formatDistance(tour.totalDistance)}
+                          </span>
+                        )}
+                        <span className="flex items-center gap-1">
+                          <Calendar size={14} />
+                          {tour.numberOfDays || 1} ngày
+                        </span>
+                        <span className="flex items-center gap-1 capitalize">
+                          {tour.vehicle === 'car' ? <Car size={14} /> : <Bike size={14} />}
+                          {tour.vehicle || 'N/A'}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center justify-between pt-4 border-t border-white/60">
+                        <div>
+                          <span className="block text-xs text-slate-400 font-medium mb-1">bắt đầu từ</span>
+                          <span className="text-xl font-bold text-slate-900">
+                            {formatPrice(tour.price)}đ
+                          </span>
+                        </div>
+                        <button className="flex items-center gap-1 text-primary font-medium group-hover:text-secondary transition-colors">
+                          Xem chi tiết
+                          <ChevronRight size={18} />
                         </button>
                       </div>
-
-                      {/* Tour Info */}
-                      <div className="p-5">
-                        <h3 className="text-lg font-display font-bold text-slate-900 mb-2 line-clamp-1">
-                          {tour.name}
-                        </h3>
-                        {tour.description && (
-                          <p className="text-sm text-slate-600 line-clamp-2 mb-4">
-                            {tour.description}
-                          </p>
-                        )}
-
-                        <div className="flex items-center gap-3 text-sm text-slate-500 mb-4 flex-wrap">
-                          <span className="flex items-center gap-1">
-                            <MapPin size={14} className="text-secondary" />
-                            {tour.points?.length || 0} điểm
-                          </span>
-                          {tour.totalDistance && (
-                            <span className="flex items-center gap-1">
-                              <Route size={14} className="text-primary" />
-                              {formatDistance(tour.totalDistance)}
-                            </span>
-                          )}
-                          <span className="flex items-center gap-1">
-                            <Calendar size={14} />
-                            {tour.numberOfDays || 1} ngày
-                          </span>
-                          <span className="flex items-center gap-1 capitalize">
-                            {tour.vehicle === 'car' ? <Car size={14} /> : <Bike size={14} />}
-                            {tour.vehicle || 'N/A'}
-                          </span>
-                        </div>
-
-                        <div className="flex items-center justify-between pt-4 border-t border-white/60">
-                          <div>
-                            <span className="block text-xs text-slate-400 font-medium mb-1">bắt đầu từ</span>
-                            <span className="text-xl font-bold text-slate-900">
-                              {formatPrice(tour.price)}đ
-                            </span>
-                          </div>
-                          <button className="flex items-center gap-1 text-primary font-medium hover:text-secondary transition-colors">
-                            Xem chi tiết
-                            <ChevronRight size={18} />
-                          </button>
-                        </div>
-                      </div>
                     </div>
-                  ))}
-                </div>
-              </>
-            )}
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
         </div>
       </main>
     </div>
@@ -439,5 +435,3 @@ const ToursPage = () => {
 };
 
 export default ToursPage;
-
-

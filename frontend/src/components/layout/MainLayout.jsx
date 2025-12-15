@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
     LayoutDashboard,
     Map,
@@ -13,6 +13,7 @@ import NavItem from '../shared/NavItem';
 
 const MainLayout = ({ children, onLogout }) => {
     const navigate = useNavigate();
+    const location = useLocation();
     const [user] = useState(
         JSON.parse(
             localStorage.getItem('user') ||
@@ -29,28 +30,39 @@ const MainLayout = ({ children, onLogout }) => {
         navigate('/login');
     };
 
+    // Check if a path is active
+    const isActive = (path) => {
+        if (path === '/user/dashboard') {
+            // Khám phá is active for dashboard, /tours, and /tour/:id
+            return location.pathname === '/user/dashboard' ||
+                location.pathname === '/tours' ||
+                location.pathname.startsWith('/tour/');
+        }
+        return location.pathname === path;
+    };
+
     // Navigation items based on role
     const getNavItems = () => {
         if (userRole === 'ADMIN') {
             return [
-                { icon: <LayoutDashboard size={20} />, label: 'Dashboard', path: '/dashboard' },
-                { icon: <User size={20} />, label: 'Quản lý người dùng', path: '/dashboard' },
-                { icon: <MapPin size={20} />, label: 'Quản lý địa điểm', path: '/dashboard' },
-                { icon: <Map size={20} />, label: 'Quản lý tour', path: '/dashboard' },
+                { icon: <LayoutDashboard size={20} />, label: 'Dashboard', path: '/admin/dashboard' },
+                { icon: <User size={20} />, label: 'Quản lý người dùng', path: '/admin/users' },
+                { icon: <MapPin size={20} />, label: 'Quản lý địa điểm', path: '/admin/locations' },
+                { icon: <Map size={20} />, label: 'Quản lý tour', path: '/admin/tours' },
             ];
         } else if (userRole === 'AGENT') {
             return [
-                { icon: <LayoutDashboard size={20} />, label: 'Dashboard', path: '/dashboard' },
-                { icon: <Map size={20} />, label: 'Tour của tôi', path: '/dashboard' },
-                { icon: <MapPin size={20} />, label: 'Địa điểm đề xuất', path: '/dashboard' },
+                { icon: <LayoutDashboard size={20} />, label: 'Dashboard', path: '/agent/dashboard' },
+                { icon: <Map size={20} />, label: 'Tour của tôi', path: '/agent/tours' },
+                { icon: <MapPin size={20} />, label: 'Địa điểm đề xuất', path: '/agent/locations' },
             ];
         } else {
             return [
-                { icon: <LayoutDashboard size={20} />, label: 'Khám phá', path: '/dashboard' },
-                { icon: <Calendar size={20} />, label: 'Chuyến đi của tôi', path: '/dashboard' },
-                { icon: <Map size={20} />, label: 'Lập kế hoạch', path: '/dashboard' },
-                { icon: <MapPin size={20} />, label: 'Đề xuất địa điểm', path: '/dashboard' },
-                { icon: <User size={20} />, label: 'Hồ sơ cá nhân', path: '/dashboard' },
+                { icon: <LayoutDashboard size={20} />, label: 'Khám phá', path: '/user/dashboard' },
+                { icon: <Calendar size={20} />, label: 'Chuyến đi của tôi', path: '/user/bookings' },
+                { icon: <Map size={20} />, label: 'Lập kế hoạch', path: '/user/planner' },
+                { icon: <MapPin size={20} />, label: 'Đề xuất địa điểm', path: '/user/locations' },
+                { icon: <User size={20} />, label: 'Hồ sơ cá nhân', path: '/user/profile' },
             ];
         }
     };
@@ -67,7 +79,7 @@ const MainLayout = ({ children, onLogout }) => {
             <aside className="w-72 bg-white/70 backdrop-blur-xl border-r border-white/40 hidden md:flex flex-col shadow-2xl shadow-slate-200/50 z-20 m-4 rounded-[2rem]">
                 <div className="p-8 pb-4">
                     <Link to="/" className="text-2xl font-display font-bold tracking-tighter flex items-center gap-2 text-slate-900 hover:text-primary transition-colors">
-                        Jadoo.
+                        Quanh.
                     </Link>
                     <p className="text-xs text-slate-500 mt-2 font-medium tracking-wide uppercase">
                         {userRole === 'ADMIN' ? 'Admin Dashboard' : userRole === 'AGENT' ? 'Agent Dashboard' : ''}
@@ -80,7 +92,7 @@ const MainLayout = ({ children, onLogout }) => {
                             <NavItem
                                 icon={item.icon}
                                 label={item.label}
-                                active={false}
+                                active={isActive(item.path)}
                             />
                         </div>
                     ))}
@@ -89,10 +101,14 @@ const MainLayout = ({ children, onLogout }) => {
                 <div className="p-4 m-4 bg-white/50 rounded-2xl border border-white/50">
                     <div className="flex items-center gap-3 mb-4 rounded-xl p-2 transition-colors hover:bg-white/60 cursor-default">
                         <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary text-white flex items-center justify-center text-sm font-bold shadow-md">
-                            {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                            {user.firstName ? user.firstName.charAt(0).toUpperCase() : 'U'}
                         </div>
                         <div className="flex-1 min-w-0">
-                            <p className="text-sm font-bold text-slate-900 truncate">{user.name}</p>
+                            <p className="text-sm font-bold text-slate-900 truncate">
+                                {user.firstName && user.lastName
+                                    ? `${user.firstName} ${user.lastName}`
+                                    : user.firstName || user.lastName || 'User'}
+                            </p>
                             <p className="text-xs text-slate-500 truncate">{user.email}</p>
                         </div>
                     </div>

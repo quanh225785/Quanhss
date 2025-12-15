@@ -139,13 +139,17 @@ const UserProfile = ({ user }) => {
         <div className="flex flex-col items-center mb-10">
           <div className="relative group cursor-pointer">
             <div className="w-32 h-32 rounded-full bg-gradient-to-br from-slate-100 to-slate-200 border-4 border-white shadow-lg flex items-center justify-center text-4xl font-bold text-slate-400 mb-2 overflow-hidden">
-              {user.name ? user.name.charAt(0).toUpperCase() : "U"}
+              {user.firstName ? user.firstName.charAt(0).toUpperCase() : "U"}
             </div>
             <button className="absolute bottom-2 right-2 p-2.5 bg-slate-900 text-white rounded-full hover:bg-primary transition-colors shadow-lg group-hover:scale-110">
               <Camera className="w-5 h-5" />
             </button>
           </div>
-          <h3 className="text-xl font-bold text-slate-900 mt-4">{user.name}</h3>
+          <h3 className="text-xl font-bold text-slate-900 mt-4">
+            {user.firstName && user.lastName
+              ? `${user.firstName} ${user.lastName}`
+              : user.firstName || user.lastName || "User"}
+          </h3>
           <p className="text-slate-500 font-medium">{user.email}</p>
         </div>
 

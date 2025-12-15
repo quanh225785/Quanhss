@@ -123,18 +123,74 @@ function App() {
             )
           }
         />
-        <Route path="/tours" element={<ToursPage />} />
-        <Route path="/tour/:id" element={<TourDetailPage />} />
+        <Route
+          path="/tours"
+          element={
+            isAuthenticated ? (
+              <MainLayout onLogout={handleLogout}>
+                <ToursPage />
+              </MainLayout>
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
+        <Route
+          path="/tour/:id"
+          element={
+            isAuthenticated ? (
+              <MainLayout onLogout={handleLogout}>
+                <TourDetailPage />
+              </MainLayout>
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
+        {/* Admin Dashboard Routes */}
+        <Route
+          path="/admin/*"
+          element={
+            isAuthenticated && userRole === "ADMIN" ? (
+              <AdminDashboard onLogout={handleLogout} />
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
+        {/* Agent Dashboard Routes */}
+        <Route
+          path="/agent/*"
+          element={
+            isAuthenticated && userRole === "AGENT" ? (
+              <AgentDashboard onLogout={handleLogout} />
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
+        {/* User Dashboard Routes */}
+        <Route
+          path="/user/*"
+          element={
+            isAuthenticated && userRole === "USER" ? (
+              <UserDashboard onLogout={handleLogout} />
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
+        {/* Legacy /dashboard route - redirect to role-specific dashboard */}
         <Route
           path="/dashboard"
           element={
             isAuthenticated ? (
               userRole === "ADMIN" ? (
-                <AdminDashboard onLogout={handleLogout} />
+                <Navigate to="/admin" replace />
               ) : userRole === "AGENT" ? (
-                <AgentDashboard onLogout={handleLogout} />
+                <Navigate to="/agent" replace />
               ) : (
-                <UserDashboard onLogout={handleLogout} />
+                <Navigate to="/user" replace />
               )
             ) : (
               <Navigate to="/login" replace />

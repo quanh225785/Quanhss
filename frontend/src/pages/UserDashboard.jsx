@@ -8,7 +8,7 @@ import {
   LogOut,
   Compass,
 } from "lucide-react";
-import { Link } from 'react-router-dom';
+import { Link, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 
 import NavItem from "../components/shared/NavItem";
 import UserOverview from "../components/user/UserOverview";
@@ -18,29 +18,31 @@ import TripPlanner from "../components/user/TripPlanner";
 import UserProfile from "../components/user/UserProfile";
 
 const UserDashboard = ({ onLogout }) => {
-  const [activeTab, setActiveTab] = useState("dashboard");
+  const location = useLocation();
+  const navigate = useNavigate();
   const [user] = useState(
     JSON.parse(
       localStorage.getItem("user") ||
-      '{"name": "Khách hàng", "email": "user@example.com"}'
+      '{"firstName": "Khách", "lastName": "hàng", "email": "user@example.com"}'
     )
   );
 
-  const renderContent = () => {
-    switch (activeTab) {
-      case "dashboard":
-        return <UserOverview />;
-      case "bookings":
-        return <MyBookings />;
-      case "locations":
-        return <MyLocationProposals />;
-      case "planner":
-        return <TripPlanner />;
-      case "profile":
-        return <UserProfile user={user} />;
-      default:
-        return <UserOverview />;
+  const getFullName = () => {
+    if (user.firstName && user.lastName) {
+      return `${user.firstName} ${user.lastName}`;
     }
+    return user.firstName || user.lastName || "Khách hàng";
+  };
+
+  const getInitials = () => {
+    if (user.firstName) {
+      return user.firstName.charAt(0).toUpperCase();
+    }
+    return "U";
+  };
+
+  const isActive = (path) => {
+    return location.pathname === `/user${path}` || location.pathname === `/user${path}/`;
   };
 
   return (
@@ -63,42 +65,42 @@ const UserDashboard = ({ onLogout }) => {
           <NavItem
             icon={<LayoutDashboard size={20} />}
             label="Khám phá"
-            active={activeTab === "dashboard"}
-            onClick={() => setActiveTab("dashboard")}
+            active={isActive("") || isActive("/dashboard")}
+            onClick={() => navigate('/user/dashboard')}
           />
           <NavItem
             icon={<Calendar size={20} />}
             label="Chuyến đi của tôi"
-            active={activeTab === "bookings"}
-            onClick={() => setActiveTab("bookings")}
+            active={isActive("/bookings")}
+            onClick={() => navigate('/user/bookings')}
           />
           <NavItem
             icon={<Map size={20} />}
             label="Lập kế hoạch"
-            active={activeTab === "planner"}
-            onClick={() => setActiveTab("planner")}
+            active={isActive("/planner")}
+            onClick={() => navigate('/user/planner')}
           />
           <NavItem
             icon={<MapPin size={20} />}
             label="Đề xuất địa điểm"
-            active={activeTab === "locations"}
-            onClick={() => setActiveTab("locations")}
+            active={isActive("/locations")}
+            onClick={() => navigate('/user/locations')}
           />
           <NavItem
             icon={<User size={20} />}
             label="Hồ sơ cá nhân"
-            active={activeTab === "profile"}
-            onClick={() => setActiveTab("profile")}
+            active={isActive("/profile")}
+            onClick={() => navigate('/user/profile')}
           />
         </nav>
 
         <div className="p-4 m-4 bg-white/50 rounded-2xl border border-white/50">
           <div className="flex items-center gap-3 mb-4 rounded-xl p-2 transition-colors hover:bg-white/60 cursor-default">
             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary text-white flex items-center justify-center text-sm font-bold shadow-md">
-              {user.name ? user.name.charAt(0).toUpperCase() : "U"}
+              {getInitials()}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-slate-900 truncate">{user.name}</p>
+              <p className="text-sm font-bold text-slate-900 truncate">{getFullName()}</p>
               <p className="text-xs text-slate-500 truncate">{user.email}</p>
             </div>
           </div>
@@ -115,7 +117,14 @@ const UserDashboard = ({ onLogout }) => {
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto p-4 md:p-8 relative">
         <div className="max-w-6xl mx-auto h-full rounded-[2.5rem] bg-white/40 backdrop-blur-sm border border-white/40 shadow-sm overflow-y-auto p-8 no-scrollbar">
-          {renderContent()}
+          <Routes>
+            <Route path="/" element={<Navigate to="/user/dashboard" replace />} />
+            <Route path="/dashboard" element={<UserOverview />} />
+            <Route path="/bookings" element={<MyBookings />} />
+            <Route path="/locations" element={<MyLocationProposals />} />
+            <Route path="/planner" element={<TripPlanner />} />
+            <Route path="/profile" element={<UserProfile user={user} />} />
+          </Routes>
         </div>
       </main>
     </div>
