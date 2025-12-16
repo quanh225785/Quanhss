@@ -5,7 +5,7 @@ import java.util.List;
 import org.springframework.web.bind.annotation.*;
 
 import com.devteria.identityservice.dto.request.BookingCreationRequest;
-import com.devteria.identityservice.dto.response.ApiResponse;
+import com.devteria.identityservice.dto.request.ApiResponse;
 import com.devteria.identityservice.dto.response.BookingResponse;
 import com.devteria.identityservice.service.BookingService;
 
@@ -19,7 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Slf4j
-public class BookingController 
+public class BookingController  {
     BookingService bookingService;
 
     /**
@@ -27,7 +27,7 @@ public class BookingController
      */
     @PostMapping
     public ApiResponse<BookingResponse> createBooking(@RequestBody BookingCreationRequest request) {
-        log.info("Creating booking for tour: {}", request.getTourId());
+        log.info("Creating booking for trip: {}", request.getTripId());
         return ApiResponse.<BookingResponse>builder()
                 .result(bookingService.createBooking(request))
                 .build();

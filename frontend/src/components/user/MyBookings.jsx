@@ -115,8 +115,10 @@ const MyBookings = () => {
 
   const getBookingsForDate = (date) => {
     return bookings.filter(booking => {
-      if (!booking.tourStartDate) return false;
-      const startDate = new Date(booking.tourStartDate);
+      // Use tripStartDate if available, fall back to tourStartDate for legacy bookings
+      const startDateStr = booking.tripStartDate || booking.tourStartDate;
+      if (!startDateStr) return false;
+      const startDate = new Date(startDateStr);
       const endDate = new Date(startDate);
       endDate.setDate(endDate.getDate() + (booking.tourNumberOfDays || 1) - 1);
 
@@ -136,14 +138,16 @@ const MyBookings = () => {
   };
 
   const isStartDate = (booking, date) => {
-    if (!booking.tourStartDate) return false;
-    const startDate = new Date(booking.tourStartDate);
+    const startDateStr = booking.tripStartDate || booking.tourStartDate;
+    if (!startDateStr) return false;
+    const startDate = new Date(startDateStr);
     return date.toDateString() === startDate.toDateString();
   };
 
   const isEndDate = (booking, date) => {
-    if (!booking.tourStartDate) return false;
-    const startDate = new Date(booking.tourStartDate);
+    const startDateStr = booking.tripStartDate || booking.tourStartDate;
+    if (!startDateStr) return false;
+    const startDate = new Date(startDateStr);
     const endDate = new Date(startDate);
     endDate.setDate(endDate.getDate() + (booking.tourNumberOfDays || 1) - 1);
     return date.toDateString() === endDate.toDateString();
@@ -307,7 +311,7 @@ const MyBookings = () => {
                   <div className="flex flex-wrap gap-2 mt-1 text-xs text-slate-500">
                     <span className="flex items-center gap-1">
                       <Calendar className="w-3 h-3" />
-                      {formatDate(popupBooking.tourStartDate)}
+                      {formatDate(popupBooking.tripStartDate || popupBooking.tourStartDate)}
                     </span>
                     <span className="flex items-center gap-1">
                       <Clock className="w-3 h-3" />
@@ -460,10 +464,10 @@ const MyBookings = () => {
                             {booking.tourName}
                           </h3>
                           <div className="flex flex-wrap items-center gap-3 mt-2 text-sm text-slate-500">
-                            {booking.tourStartDate && (
+                            {(booking.tripStartDate || booking.tourStartDate) && (
                               <span className="flex items-center gap-1.5">
                                 <Calendar className="w-4 h-4 text-primary" />
-                                {formatDate(booking.tourStartDate)}
+                                {formatDate(booking.tripStartDate || booking.tourStartDate)}
                               </span>
                             )}
                             <span className="flex items-center gap-1.5">

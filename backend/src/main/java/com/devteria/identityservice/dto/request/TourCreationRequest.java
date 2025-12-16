@@ -20,9 +20,6 @@ public class TourCreationRequest {
     Boolean useOptimization;  // true to use TSP, false for manual order
     Boolean roundtrip;  // for TSP: return to start point
     String imageUrl;  // S3 URL for tour thumbnail (after upload)
-    LocalDateTime startDate;  // Tour start date and time
-    LocalDateTime endDate;  // Tour end date and time
-    Integer maxParticipants;  // Maximum number of participants allowed
     List<TourPointRequest> points;
 
     @Data

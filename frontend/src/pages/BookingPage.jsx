@@ -1,14 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import {
     ArrowLeft, Users, Phone, FileText, Loader2, CreditCard, Check,
-    AlertCircle, MapPin, Calendar, Clock, ChevronRight
+    AlertCircle, MapPin, Calendar, Clock, ChevronRight, CalendarX
 } from 'lucide-react';
 import { api } from '../utils/api';
 
 const BookingPage = () => {
     const { tourId } = useParams();
     const navigate = useNavigate();
+    const location = useLocation();
+
+    // Get trip info from navigation state
+    const tripId = location.state?.tripId;
+    const tripInfo = location.state?.trip;
 
     const [tour, setTour] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -24,8 +29,13 @@ const BookingPage = () => {
     const [note, setNote] = useState('');
 
     useEffect(() => {
+        // Redirect if no tripId
+        if (!tripId) {
+            navigate(`/tours/${tourId}`, { replace: true });
+            return;
+        }
         fetchTourDetails();
-    }, [tourId]);
+    }, [tourId, tripId]);
 
     const fetchTourDetails = async () => {
         try {
@@ -44,10 +54,8 @@ const BookingPage = () => {
         }
     };
 
-    // Calculate max available spots
-    const maxSpots = tour?.maxParticipants
-        ? tour.maxParticipants - (tour.currentParticipants || 0)
-        : 10;
+    // Calculate max available spots from trip
+    const maxSpots = tripInfo?.availableSlots || 10;
 
     // Update participant names array when number changes
     useEffect(() => {
@@ -110,7 +118,7 @@ const BookingPage = () => {
 
         try {
             const response = await api.post('/bookings', {
-                tourId: parseInt(tourId),
+                tripId: parseInt(tripId),
                 participantNames: participantNames.map(n => n.trim()),
                 contactPhone: contactPhone.trim(),
                 note: note.trim() || null,
@@ -204,8 +212,8 @@ const BookingPage = () => {
                     {[1, 2, 3].map((s) => (
                         <React.Fragment key={s}>
                             <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all ${step >= s
-                                    ? 'bg-primary text-white'
-                                    : 'bg-slate-200 text-slate-500'
+                                ? 'bg-primary text-white'
+                                : 'bg-slate-200 text-slate-500'
                                 }`}>
                                 {step > s ? <Check size={18} /> : s}
                             </div>
@@ -247,9 +255,9 @@ const BookingPage = () => {
                                             <option key={n} value={n}>{n} người</option>
                                         ))}
                                     </select>
-                                    {tour?.maxParticipants && (
+                                    {tripInfo && (
                                         <p className="text-sm text-slate-500 mt-2">
-                                            Còn {maxSpots} chỗ trống (tối đa {tour.maxParticipants} người)
+                                            Còn {maxSpots} chỗ trống cho chuyến này
                                         </p>
                                     )}
                                 </div>
@@ -432,11 +440,18 @@ const BookingPage = () => {
                             <h3 className="font-bold text-lg mb-2">{tour?.name}</h3>
 
                             <div className="space-y-2 text-sm text-slate-600 mb-4">
-                                {tour?.startDate && (
-                                    <div className="flex items-center gap-2">
-                                        <Calendar size={16} className="text-primary" />
-                                        <span>{formatDate(tour.startDate)}</span>
-                                    </div>
+                                {/* Trip Info */}
+                                {tripInfo && (
+                                    <>
+                                        <div className="flex items-center gap-2">
+                                            <Calendar size={16} className="text-emerald-500" />
+                                            <span>Bắt đầu: {formatDate(tripInfo.startDate)}</span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <CalendarX size={16} className="text-red-500" />
+                                            <span>Kết thúc: {formatDate(tripInfo.endDate)}</span>
+                                        </div>
+                                    </>
                                 )}
                                 <div className="flex items-center gap-2">
                                     <Clock size={16} className="text-secondary" />

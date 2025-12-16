@@ -19,9 +19,12 @@ public class BookingResponse {
     Long tourId;
     String tourName;
     String tourImageUrl;
-    LocalDateTime tourStartDate;
-    LocalDateTime tourEndDate;
     Integer tourNumberOfDays;
+    
+    // Trip info (chuyến)
+    Long tripId;
+    LocalDateTime tripStartDate;
+    LocalDateTime tripEndDate;
     
     // User info (người đặt)
     String userName;

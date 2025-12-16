@@ -23,6 +23,7 @@ import com.devteria.identityservice.dto.response.BookingResponse;
 import com.devteria.identityservice.entity.Booking;
 import com.devteria.identityservice.entity.Participant;
 import com.devteria.identityservice.entity.Tour;
+import com.devteria.identityservice.entity.Trip;
 import com.devteria.identityservice.entity.User;
 import com.devteria.identityservice.enums.BookingStatus;
 import com.devteria.identityservice.enums.PaymentStatus;
@@ -30,6 +31,7 @@ import com.devteria.identityservice.exception.AppException;
 import com.devteria.identityservice.exception.ErrorCode;
 import com.devteria.identityservice.repository.BookingRepository;
 import com.devteria.identityservice.repository.TourRepository;
+import com.devteria.identityservice.repository.TripRepository;
 import com.devteria.identityservice.repository.UserRepository;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.client.j2se.MatrixToImageWriter;
@@ -53,6 +55,7 @@ public class BookingService {
 
     BookingRepository bookingRepository;
     TourRepository tourRepository;
+    TripRepository tripRepository;
     UserRepository userRepository;
     S3Client s3Client;
 
@@ -65,7 +68,7 @@ public class BookingService {
     String endpoint;
 
     /**
-     * Create a new booking
+     * Create a new booking for a trip
      */
     @Transactional
     public BookingResponse createBooking(BookingCreationRequest request) {
@@ -74,9 +77,16 @@ public class BookingService {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
-        // Get tour
-        Tour tour = tourRepository.findById(request.getTourId())
-                .orElseThrow(() -> new RuntimeException("Tour not found"));
+        // Get trip
+        Trip trip = tripRepository.findById(request.getTripId())
+                .orElseThrow(() -> new RuntimeException("Trip not found"));
+
+        Tour tour = trip.getTour();
+
+        // Validate trip is active
+        if (!trip.getIsActive()) {
+            throw new RuntimeException("This trip is not available for booking");
+        }
 
         // Validate participants
         if (request.getParticipantNames() == null || request.getParticipantNames().isEmpty()) {
@@ -86,17 +96,15 @@ public class BookingService {
         int numberOfParticipants = request.getParticipantNames().size();
 
         // Check availability
-        if (tour.getMaxParticipants() != null) {
-            int currentParticipants = tour.getCurrentParticipants() != null ? tour.getCurrentParticipants() : 0;
-            if (currentParticipants + numberOfParticipants > tour.getMaxParticipants()) {
-                throw new RuntimeException("Not enough spots available. Available: " 
-                    + (tour.getMaxParticipants() - currentParticipants));
-            }
+        int currentParticipants = trip.getCurrentParticipants() != null ? trip.getCurrentParticipants() : 0;
+        if (currentParticipants + numberOfParticipants > trip.getMaxParticipants()) {
+            throw new RuntimeException("Not enough spots available. Available: " 
+                + (trip.getMaxParticipants() - currentParticipants));
         }
 
-        // Check if tour has expired
-        if (tour.getEndDate() != null && tour.getEndDate().isBefore(LocalDateTime.now())) {
-            throw new RuntimeException("This tour has already ended");
+        // Check if trip has expired
+        if (trip.getEndDate().isBefore(LocalDateTime.now())) {
+            throw new RuntimeException("This trip has already ended");
         }
 
         // Generate booking code
@@ -112,6 +120,7 @@ public class BookingService {
                 .bookingCode(bookingCode)
                 .user(user)
                 .tour(tour)
+                .trip(trip)
                 .status(BookingStatus.PENDING)
                 .paymentStatus(PaymentStatus.PENDING)
                 .totalPrice(totalPrice)
@@ -135,13 +144,14 @@ public class BookingService {
         booking.setQrCodeUrl(qrCodeUrl);
         booking = bookingRepository.save(booking);
 
-        // Update tour current participants
-        tour.setCurrentParticipants(
-            (tour.getCurrentParticipants() != null ? tour.getCurrentParticipants() : 0) + numberOfParticipants
+        // Update trip current participants
+        trip.setCurrentParticipants(
+            (trip.getCurrentParticipants() != null ? trip.getCurrentParticipants() : 0) + numberOfParticipants
         );
-        tourRepository.save(tour);
+        tripRepository.save(trip);
 
-        log.info("Booking created: {} for tour: {} by user: {}", bookingCode, tour.getName(), username);
+        log.info("Booking created: {} for trip: {} (tour: {}) by user: {}", 
+            bookingCode, trip.getId(), tour.getName(), username);
 
         return mapToResponse(booking);
     }
@@ -217,13 +227,13 @@ public class BookingService {
             throw new RuntimeException("Booking is already cancelled");
         }
 
-        // Update tour current participants
-        Tour tour = booking.getTour();
+        // Update trip current participants
+        Trip trip = booking.getTrip();
         int numberOfParticipants = booking.getNumberOfParticipants();
-        tour.setCurrentParticipants(
-            Math.max(0, (tour.getCurrentParticipants() != null ? tour.getCurrentParticipants() : 0) - numberOfParticipants)
+        trip.setCurrentParticipants(
+            Math.max(0, (trip.getCurrentParticipants() != null ? trip.getCurrentParticipants() : 0) - numberOfParticipants)
         );
-        tourRepository.save(tour);
+        tripRepository.save(trip);
 
         // Update booking status
         booking.setStatus(BookingStatus.CANCELLED);
@@ -350,6 +360,7 @@ public class BookingService {
      */
     private BookingResponse mapToResponse(Booking booking) {
         Tour tour = booking.getTour();
+        Trip trip = booking.getTrip();
         User user = booking.getUser();
 
         List<String> participantNames = booking.getParticipants().stream()
@@ -362,9 +373,11 @@ public class BookingService {
                 .tourId(tour.getId())
                 .tourName(tour.getName())
                 .tourImageUrl(tour.getImageUrl())
-                .tourStartDate(tour.getStartDate())
-                .tourEndDate(tour.getEndDate())
                 .tourNumberOfDays(tour.getNumberOfDays())
+                // Trip info
+                .tripId(trip != null ? trip.getId() : null)
+                .tripStartDate(trip != null ? trip.getStartDate() : null)
+                .tripEndDate(trip != null ? trip.getEndDate() : null)
                 .userName(user.getFirstName() != null ? user.getFirstName() + " " + user.getLastName() : user.getUsername())
                 .userEmail(user.getEmail())
                 .participantNames(participantNames)

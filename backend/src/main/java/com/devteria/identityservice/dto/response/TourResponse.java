@@ -27,12 +27,14 @@ public class TourResponse {
     String createdByUsername;
     LocalDateTime createdAt;
     Boolean isActive;
-    String status;  // PENDING, APPROVED, REJECTED
+    String status;  // PENDING, APPROVED, REJECTED, HIDDEN
     String rejectionReason;
-    LocalDateTime startDate;  // Tour start date and time
-    LocalDateTime endDate;  // Tour end date and time
-    Integer maxParticipants;  // Maximum number of participants allowed
-    Integer currentParticipants;  // Current number of registered participants
+    
+    // Trip statistics (thống kê chuyến)
+    List<TripResponse> trips;  // Danh sách các chuyến
+    Integer totalTrips;  // Tổng số chuyến
+    Integer activeTrips;  // Số chuyến còn mở
+
 
     @Data
     @Builder

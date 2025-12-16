@@ -58,6 +58,11 @@ public class Tour {
     @OrderBy("orderIndex ASC")
     List<TourPoint> tourPoints;
 
+    // Trips (Chuyến) - mỗi tour có thể có nhiều chuyến với ngày khác nhau
+    @OneToMany(mappedBy = "tour", cascade = CascadeType.ALL)
+    @OrderBy("startDate ASC")
+    List<Trip> trips;
+
     @Column(nullable = false)
     LocalDateTime createdAt;
 
@@ -65,7 +70,7 @@ public class Tour {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    TourStatus status;  // PENDING, APPROVED, REJECTED
+    TourStatus status;  // PENDING, APPROVED, REJECTED, HIDDEN
 
     @Column(columnDefinition = "TEXT")
     String rejectionReason;  // Reason if rejected by admin
@@ -73,27 +78,11 @@ public class Tour {
     String imageUrl;  // S3 URL for tour thumbnail image
     Boolean isActive;
 
-    @Column(nullable = true)
-    LocalDateTime startDate;  // Tour start date and time
-
-    @Column(nullable = true)
-    LocalDateTime endDate;  // Tour end date and time
-
-    @Column(nullable = true)
-    Integer maxParticipants;  // Maximum number of participants allowed
-
-    @Column(nullable = false)
-    @Builder.Default
-    Integer currentParticipants = 0;  // Current number of registered participants
-
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         isActive = true;
         status = TourStatus.PENDING;  // New tours need approval
-        if (currentParticipants == null) {
-            currentParticipants = 0;
-        }
     }
 
     @PreUpdate

@@ -11,10 +11,11 @@ import {
   EyeOff,
   ChevronDown,
   ChevronUp,
+  LogOut,
 } from "lucide-react";
 import { api } from "../../utils/api";
 
-const UserProfile = ({ user }) => {
+const UserProfile = ({ user, onLogout }) => {
   const [formData, setFormData] = useState({
     firstName: user.firstName || "",
     lastName: user.lastName || "",
@@ -418,6 +419,15 @@ const UserProfile = ({ user }) => {
             </div>
           </form>
         )}
+      </div>
+      <div className="bg-white/60 backdrop-blur-md p-6 rounded-[2rem] border border-white/60 shadow-sm">
+        <button
+          onClick={onLogout}
+          className="w-full flex items-center justify-center gap-2 px-4 py-4 text-red-600 bg-red-50 hover:bg-red-100 rounded-xl font-bold transition-all duration-200 group"
+        >
+          <LogOut size={20} className="group-hover:-translate-x-1 transition-transform" />
+          Đăng xuất tài khoản
+        </button>
       </div>
     </div>
   );

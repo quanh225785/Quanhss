@@ -62,20 +62,20 @@ const MainLayout = ({ children, onLogout }) => {
                 { icon: <Calendar size={20} />, label: 'Chuyến đi của tôi', path: '/user/bookings' },
                 { icon: <Map size={20} />, label: 'Lập kế hoạch', path: '/user/planner' },
                 { icon: <MapPin size={20} />, label: 'Đề xuất địa điểm', path: '/user/locations' },
-                { icon: <User size={20} />, label: 'Hồ sơ cá nhân', path: '/user/profile' },
+                { icon: <User size={20} />, label: 'Hồ sơ', path: '/user/profile' },
             ];
         }
     };
 
     return (
-        <div className="flex h-screen bg-surface font-sans overflow-hidden relative">
+        <div className="flex flex-col md:flex-row h-screen bg-surface font-sans overflow-hidden relative">
             {/* Ambient Background Elements */}
             <div className="fixed top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none">
                 <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] rounded-full bg-primary/5 blur-3xl animate-pulse"></div>
                 <div className="absolute bottom-[-10%] left-[-10%] w-[600px] h-[600px] rounded-full bg-secondary/5 blur-3xl animate-pulse delay-1000"></div>
             </div>
 
-            {/* Sidebar - Glassmorphism */}
+            {/* Sidebar - Glassmorphism (Hidden on mobile, visible on md+) */}
             <aside className="w-72 bg-white/70 backdrop-blur-xl border-r border-white/40 hidden md:flex flex-col shadow-2xl shadow-slate-200/50 z-20 m-4 rounded-[2rem]">
                 <div className="p-8 pb-4">
                     <Link to="/" className="text-2xl font-display font-bold tracking-tighter flex items-center gap-2 text-slate-900 hover:text-primary transition-colors">
@@ -123,9 +123,40 @@ const MainLayout = ({ children, onLogout }) => {
             </aside>
 
             {/* Main Content */}
-            <main className="flex-1 overflow-y-auto relative">
+            <main className="flex-1 overflow-y-auto relative pb-20 md:pb-0">
                 {children}
             </main>
+
+            {/* Mobile Bottom Navigation Bar (Visible on mobile, hidden on md+) */}
+            <nav className="fixed bottom-0 left-0 right-0 md:hidden bg-white/80 backdrop-blur-xl border-t border-white/40 shadow-lg shadow-slate-200/50 z-50">
+                <div className="flex items-center justify-around px-2 py-2 safe-area-inset-bottom">
+                    {getNavItems().slice(0, 5).map((item, index) => (
+                        <button
+                            key={index}
+                            onClick={() => navigate(item.path)}
+                            className={`flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-xl transition-all duration-200 min-w-[60px] ${isActive(item.path)
+                                    ? 'bg-primary/10 text-primary'
+                                    : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+                                }`}
+                        >
+                            <span className={`transition-transform duration-200 ${isActive(item.path) ? 'scale-110' : ''}`}>
+                                {React.cloneElement(item.icon, { size: 22 })}
+                            </span>
+                            <span className="text-[10px] font-medium truncate max-w-[60px]">
+                                {item.label}
+                            </span>
+                        </button>
+                    ))}
+                    {/* Logout button for mobile */}
+                    {/* <button
+                        onClick={handleLogout}
+                        className="flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-xl transition-all duration-200 min-w-[60px] text-red-500 hover:bg-red-50"
+                    >
+                        <LogOut size={22} />
+                        <span className="text-[10px] font-medium">Thoát</span>
+                    </button> */}
+                </div>
+            </nav>
         </div>
     );
 };

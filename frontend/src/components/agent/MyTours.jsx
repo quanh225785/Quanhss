@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, CheckCircle, XCircle, Loader2, Route, Clock, MapPin, Trash2, Eye, Calendar } from 'lucide-react';
+import { Plus, CheckCircle, XCircle, Loader2, Route, Clock, MapPin, Trash2, Eye, Calendar, Users } from 'lucide-react';
 import { api } from '../../utils/api';
 import { formatDistance, formatDuration } from '../../utils/polylineUtils';
 import CreateTourModal from './CreateTourModal';
+import TripManagement from './TripManagement';
 import Modal from '../shared/Modal';
 
 const MyTours = () => {
@@ -13,6 +14,7 @@ const MyTours = () => {
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [error, setError] = useState(null);
     const [tourToHide, setTourToHide] = useState(null);
+    const [managingTrips, setManagingTrips] = useState(null);  // Tour đang quản lý chuyến
 
     useEffect(() => {
         fetchTours();
@@ -184,34 +186,16 @@ const MyTours = () => {
                                                 {tour.numberOfDays} ngày
                                             </div>
                                         )}
-                                        {tour.startDate && (
+                                        {/* Trip statistics */}
+                                        {tour.status === 'APPROVED' && (
                                             <div className="flex items-center gap-1.5">
-                                                <Calendar size={14} className="text-emerald-500" />
-                                                {new Date(tour.startDate).toLocaleString('vi-VN', {
-                                                    day: '2-digit',
-                                                    month: '2-digit',
-                                                    year: 'numeric',
-                                                    hour: '2-digit',
-                                                    minute: '2-digit'
-                                                })}
-                                            </div>
-                                        )}
-                                        {tour.endDate && (
-                                            <div className="flex items-center gap-1.5">
-                                                <Calendar size={14} className="text-red-500" />
-                                                {new Date(tour.endDate).toLocaleString('vi-VN', {
-                                                    day: '2-digit',
-                                                    month: '2-digit',
-                                                    year: 'numeric',
-                                                    hour: '2-digit',
-                                                    minute: '2-digit'
-                                                })}
-                                            </div>
-                                        )}
-                                        {tour.maxParticipants && (
-                                            <div className="flex items-center gap-1.5">
-                                                <span className="text-zinc-400">👥</span>
-                                                {tour.currentParticipants || 0}/{tour.maxParticipants} người
+                                                <Users size={14} className="text-emerald-500" />
+                                                {tour.activeTrips || 0} chuyến đang mở
+                                                {tour.totalTrips > 0 && (
+                                                    <span className="text-zinc-400">
+                                                        / {tour.totalTrips} tổng
+                                                    </span>
+                                                )}
                                             </div>
                                         )}
                                         <div className="flex items-center gap-1.5">
@@ -247,13 +231,25 @@ const MyTours = () => {
                                         <Eye size={18} />
                                     </button>
                                     {tour.status === 'APPROVED' && (
-                                        <button
-                                            onClick={() => handleHideTour(tour.id)}
-                                            className="p-2 text-zinc-500 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
-                                            title="Ẩn tour"
-                                        >
-                                            <XCircle size={18} />
-                                        </button>
+                                        <>
+                                            <button
+                                                onClick={() => setManagingTrips(tour)}
+                                                className="px-3 py-1.5 text-sm font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors"
+                                                title="Quản lý chuyến"
+                                            >
+                                                <span className="flex items-center gap-1">
+                                                    <Calendar size={14} />
+                                                    Quản lý chuyến
+                                                </span>
+                                            </button>
+                                            <button
+                                                onClick={() => handleHideTour(tour.id)}
+                                                className="p-2 text-zinc-500 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
+                                                title="Ẩn tour"
+                                            >
+                                                <XCircle size={18} />
+                                            </button>
+                                        </>
                                     )}
                                     {tour.status === 'HIDDEN' && (
                                         <button
@@ -320,6 +316,15 @@ const MyTours = () => {
                 <CreateTourModal
                     onClose={() => setShowCreateModal(false)}
                     onSuccess={handleTourCreated}
+                />
+            )}
+
+            {/* Trip Management Modal */}
+            {managingTrips && (
+                <TripManagement
+                    tour={managingTrips}
+                    onClose={() => setManagingTrips(null)}
+                    onSuccess={fetchTours}
                 />
             )}
         </div>

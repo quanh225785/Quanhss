@@ -34,7 +34,11 @@ public class Booking {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "tour_id", nullable = false)
-    Tour tour;  // Tour được đặt
+    Tour tour;  // Tour được đặt (giữ lại để tiện truy vấn)
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "trip_id", nullable = false)
+    Trip trip;  // Chuyến được đặt
 
     @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default

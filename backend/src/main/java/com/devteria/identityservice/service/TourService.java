@@ -21,7 +21,9 @@ import com.devteria.identityservice.exception.AppException;
 import com.devteria.identityservice.exception.ErrorCode;
 import com.devteria.identityservice.repository.LocationRepository;
 import com.devteria.identityservice.repository.TourRepository;
+import com.devteria.identityservice.repository.TripRepository;
 import com.devteria.identityservice.repository.UserRepository;
+import com.devteria.identityservice.dto.response.TripResponse;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -36,6 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class TourService {
     TourRepository tourRepository;
+    TripRepository tripRepository;
     LocationRepository locationRepository;
     UserRepository userRepository;
     VietmapService vietmapService;
@@ -125,9 +128,6 @@ public class TourService {
                 .routePolyline(polyline)
                 .routeInstructions(instructionsJson)
                 .imageUrl(request.getImageUrl())  // S3 image URL
-                .startDate(request.getStartDate())  // Tour start date
-                .endDate(request.getEndDate())  // Tour end date
-                .maxParticipants(request.getMaxParticipants())  // Max participants
                 .createdBy(user)
                 .tourPoints(new ArrayList<>())
                 .build();
@@ -486,10 +486,31 @@ public class TourService {
                 .isActive(tour.getIsActive())
                 .status(tour.getStatus() != null ? tour.getStatus().name() : null)
                 .rejectionReason(tour.getRejectionReason())
-                .startDate(tour.getStartDate())  // Tour start date
-                .endDate(tour.getEndDate())  // Tour end date
-                .maxParticipants(tour.getMaxParticipants())  // Max participants
-                .currentParticipants(tour.getCurrentParticipants())  // Current participants
+                // Trip statistics
+                .trips(mapTripsToResponse(tour))
+                .totalTrips(tour.getTrips() != null ? tour.getTrips().size() : 0)
+                .activeTrips(tour.getTrips() != null ? (int) tour.getTrips().stream().filter(t -> t.getIsActive() && !t.isFull()).count() : 0)
                 .build();
+    }
+
+    private List<TripResponse> mapTripsToResponse(Tour tour) {
+        if (tour.getTrips() == null || tour.getTrips().isEmpty()) {
+            return new ArrayList<>();
+        }
+        return tour.getTrips().stream()
+                .map(trip -> TripResponse.builder()
+                        .id(trip.getId())
+                        .tourId(tour.getId())
+                        .tourName(tour.getName())
+                        .startDate(trip.getStartDate())
+                        .endDate(trip.getEndDate())
+                        .maxParticipants(trip.getMaxParticipants())
+                        .currentParticipants(trip.getCurrentParticipants())
+                        .availableSlots(trip.getAvailableSlots())
+                        .isActive(trip.getIsActive())
+                        .isFull(trip.isFull())
+                        .createdAt(trip.getCreatedAt())
+                        .build())
+                .collect(Collectors.toList());
     }
 }

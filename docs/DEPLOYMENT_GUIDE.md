@@ -1,17 +1,18 @@
 # 🚀 Hướng Dẫn Deploy Chi Tiết - QuanhSS Travel Platform
 
-**Kiến trúc**: CloudFront + S3 + GitHub Actions + Docker + EC2 + RDS
+**Kiến trúc**: CloudFront + S3 + GitHub Actions + Docker + EC2 + Aiven MySQL
 
 ---
 
 ## 📋 Mục Lục
 1. [Tổng Quan Kiến Trúc](#tổng-quan-kiến-trúc)
 2. [Yêu Cầu Chuẩn Bị](#yêu-cầu-chuẩn-bị)
-3. [Phase 1: Setup AWS Infrastructure](#phase-1-setup-aws-infrastructure)
-4. [Phase 2: Setup CI/CD Pipeline](#phase-2-setup-cicd-pipeline)
-5. [Phase 3: Deploy Backend](#phase-3-deploy-backend)
-6. [Phase 4: Deploy Frontend](#phase-4-deploy-frontend)
-7. [Phase 5: DNS & SSL Configuration](#phase-5-dns--ssl-configuration)
+3. [Database: Aiven MySQL](#database-aiven-mysql)
+4. [Phase 1: Setup AWS Infrastructure](#phase-1-setup-aws-infrastructure)
+5. [Phase 2: Setup CI/CD Pipeline](#phase-2-setup-cicd-pipeline)
+6. [Phase 3: Deploy Backend](#phase-3-deploy-backend)
+7. [Phase 4: Deploy Frontend](#phase-4-deploy-frontend)
+8. [Phase 5: DNS & SSL Configuration](#phase-5-dns--ssl-configuration)
 8. [Troubleshooting](#troubleshooting)
 
 ---
@@ -25,29 +26,37 @@
                                     │
                                     ▼
                             ┌──────────────┐
-                            │   Route 53   │  (DNS)
-                            │  yourdomain  │
+                            │ Domain (DNS) │  
+                            │ Namecheap/   │
+                            │ GoDaddy/etc  │
                             └──────┬───────┘
                                    │
                     ┌──────────────┴──────────────┐
                     ▼                              ▼
             ┌──────────────┐              ┌──────────────┐
             │  CloudFront  │              │  Nginx EC2   │
-            │   (Frontend) │              │  (API Proxy) │
+            │   (Frontend) │              │ (Public IP)  │
             └──────┬───────┘              └──────┬───────┘
                    │                              │
                    ▼                              ▼
             ┌──────────────┐         ┌────────────────────────┐
             │   S3 Bucket  │         │   Backend EC2 (Docker) │
-            │ Static Files │         │   EC2-1    │   EC2-2   │
-            └──────────────┘         └────────────┬───────────┘
+            │ Static Files │         │  EC2-1  │  EC2-2       │
+            └──────────────┘         │ (Public Subnet)        │
+                                     └────────────┬───────────┘
                                                   │
                                                   ▼
                                           ┌──────────────┐
-                                          │  Amazon RDS  │
-                                          │    MySQL     │
+                                          │ Aiven MySQL  │
+                                          │   (Cloud)    │
                                           └──────────────┘
 ```
+
+**Kiến trúc đơn giản hóa:**
+- ✅ Tất cả EC2 đều ở **Public Subnet** → Không cần NAT Gateway
+- ✅ Security Groups kiểm soát traffic → Vẫn an toàn
+- ✅ Tiết kiệm ~$32/tháng (NAT Gateway cost)
+- ✅ Nginx reverse proxy vẫn load balance giữa 2 backend
 
 ---
 
@@ -55,12 +64,13 @@
 
 ### AWS Account
 - Tài khoản AWS với quyền truy cập:
-  - EC2, RDS, S3, CloudFront, Route 53
+  - EC2, S3, CloudFront, ACM (Certificate Manager)
   - IAM (để tạo access keys)
+  - **Không cần Route 53** - dùng DNS từ nhà cung cấp domain
 
-### Domain
-- Một domain đã mua (VD: `yourdomain.com`)
-- Hoặc sử dụng subdomain của Route 53
+### Domain (Đã có sẵn)
+- Domain đã đăng ký ở nhà cung cấp bên thứ 3 (Namecheap, GoDaddy, etc.)
+- Quyền truy cập vào DNS Management panel
 
 ### Tools cần cài đặt
 ```bash
@@ -98,9 +108,9 @@ git --version
 
 | Variable | Description | Ví dụ |
 |----------|-------------|-------|
-| `SPRING_DATASOURCE_URL` | JDBC URL cho RDS | `jdbc:mysql://rds-endpoint:3306/quanhss` |
-| `SPRING_DATASOURCE_USERNAME` | DB username | `admin` |
-| `SPRING_DATASOURCE_PASSWORD` | DB password | `securepassword123` |
+| `SPRING_DATASOURCE_URL` | JDBC URL cho Aiven MySQL | `jdbc:mysql://mysql-xxx.aivencloud.com:10404/quanh` |
+| `SPRING_DATASOURCE_USERNAME` | DB username | `avnadmin` |
+| `SPRING_DATASOURCE_PASSWORD` | DB password | `AVNS_xxxxx` |
 | `JWT_SIGNER_KEY` | Secret key cho JWT | `random-32-char-string` |
 | `AWS_S3_ACCESS_KEY_ID` | S3 Access Key | `AKIAXXXXXXXX` |
 | `AWS_S3_SECRET_ACCESS_KEY` | S3 Secret Key | `xxxxxxxxxxxxxxx` |
@@ -111,91 +121,164 @@ git --version
 
 ---
 
-## 🔧 Phase 1: Setup AWS Infrastructure
+## 🗄️ Database: Aiven MySQL (Dịch vụ đã có sẵn)
 
-### 1.1 Tạo VPC (Virtual Private Cloud)
+Bạn đang sử dụng **Aiven Cloud MySQL** - một managed database service. Đây là lựa chọn tốt vì:
+
+### ✅ Ưu điểm của Aiven so với AWS RDS
+- **Không cần setup trên AWS** - giảm phức tạp
+- **Free tier** khá rộng rãi (1 node, 1GB RAM)
+- **Cross-cloud** - có thể kết nối từ bất kỳ đâu
+- **Automatic backups** đã được cấu hình
+
+### 📝 Thông tin kết nối Aiven MySQL
+
+```yaml
+# Connection Details (Lưu vào GitHub Secrets)
+Host: mysql-192be37d-vietlinh1482004-83dd.g.aivencloud.com
+Port: 10404
+Database: quanh
+Username: avnadmin
+Password: AVNS_lMHHQZnQlVaKNWFxbgP
+
+# JDBC URL
+jdbc:mysql://mysql-192be37d-vietlinh1482004-83dd.g.aivencloud.com:10404/quanh
+```
+
+### 🔒 Lưu ý Bảo mật
+
+> ⚠️ **QUAN TRỌNG**: Không commit credentials vào code!
+> Lưu tất cả thông tin này vào **GitHub Secrets** hoặc **Environment Variables**.
+
+### 🛠️ Kiểm tra kết nối
 
 ```bash
-# Sử dụng AWS Console hoặc CLI
+# Test kết nối với MySQL CLI
+mysql -h mysql-192be37d-vietlinh1482004-83dd.g.aivencloud.com \
+      -P 10404 \
+      -u avnadmin \
+      -p \
+      quanh
 
+# Hoặc dùng Docker
+docker run -it --rm mysql:8 mysql \
+  -h mysql-192be37d-vietlinh1482004-83dd.g.aivencloud.com \
+  -P 10404 \
+  -u avnadmin \
+  -pAVNS_lMHHQZnQlVaKNWFxbgP \
+  quanh
+```
+
+### 📊 Aiven Console
+
+Để quản lý database, truy cập:
+- **URL**: https://console.aiven.io/
+- Xem metrics, logs, backups tại đây
+
+---
+
+## 🔧 Phase 1: Setup AWS Infrastructure
+
+> **Lưu ý**: 
+> - Vì dùng Aiven MySQL, bạn **không cần tạo RDS** trên AWS
+> - Tất cả EC2 đặt ở **Public Subnet** → Không cần NAT Gateway (tiết kiệm chi phí)
+> - Security Groups sẽ kiểm soát traffic → Vẫn đảm bảo bảo mật
+
+### 1.1 Tạo VPC (Simplified)
+
+**Cách nhanh nhất - Dùng AWS Console:**
+1. Vào **VPC Dashboard** → **Create VPC**
+2. Chọn **"VPC and more"** (tự động tạo subnets, internet gateway)
+3. Cấu hình:
+   - Name: `quanhss-vpc`
+   - IPv4 CIDR: `10.0.0.0/16`
+   - Number of AZs: `1` (tiết kiệm)
+   - Number of public subnets: `1`
+   - Number of private subnets: `0` ← **Quan trọng: Không cần private subnet**
+   - NAT gateways: `None` ← **Tiết kiệm $32/tháng**
+   - VPC endpoints: `None`
+4. Click **Create VPC**
+
+**Hoặc dùng CLI:**
+```bash
 # Tạo VPC
 aws ec2 create-vpc --cidr-block 10.0.0.0/16 --tag-specifications 'ResourceType=vpc,Tags=[{Key=Name,Value=quanhss-vpc}]'
 
-# Tạo Subnets
-# Public Subnet (cho Nginx EC2)
-aws ec2 create-subnet --vpc-id vpc-xxx --cidr-block 10.0.1.0/24 --availability-zone ap-southeast-1a
+# Lưu VPC ID
+VPC_ID=vpc-xxxxxxxxx
 
-# Private Subnet (cho Backend EC2, RDS)
-aws ec2 create-subnet --vpc-id vpc-xxx --cidr-block 10.0.2.0/24 --availability-zone ap-southeast-1a
+# Tạo Public Subnet (cho tất cả EC2)
+aws ec2 create-subnet \
+  --vpc-id $VPC_ID \
+  --cidr-block 10.0.1.0/24 \
+  --availability-zone ap-southeast-1a \
+  --tag-specifications 'ResourceType=subnet,Tags=[{Key=Name,Value=quanhss-public-subnet}]'
+
+# Lưu Subnet ID
+SUBNET_ID=subnet-xxxxxxxxx
+
+# Tạo Internet Gateway
+aws ec2 create-internet-gateway --tag-specifications 'ResourceType=internet-gateway,Tags=[{Key=Name,Value=quanhss-igw}]'
+IGW_ID=igw-xxxxxxxxx
+
+# Attach Internet Gateway vào VPC
+aws ec2 attach-internet-gateway --vpc-id $VPC_ID --internet-gateway-id $IGW_ID
+
+# Tạo Route Table cho public subnet
+aws ec2 create-route-table --vpc-id $VPC_ID --tag-specifications 'ResourceType=route-table,Tags=[{Key=Name,Value=quanhss-public-rt}]'
+RT_ID=rtb-xxxxxxxxx
+
+# Thêm route đến Internet Gateway
+aws ec2 create-route --route-table-id $RT_ID --destination-cidr-block 0.0.0.0/0 --gateway-id $IGW_ID
+
+# Associate route table với subnet
+aws ec2 associate-route-table --subnet-id $SUBNET_ID --route-table-id $RT_ID
 ```
-
-**Hoặc dùng AWS Console:**
-1. Vào VPC Dashboard → Create VPC
-2. Chọn "VPC and more" để tự động tạo subnets, internet gateway
 
 ### 1.2 Tạo Security Groups
 
-#### Security Group cho Nginx EC2 (Public)
+#### Security Group cho Nginx EC2
 ```bash
 aws ec2 create-security-group \
   --group-name quanhss-nginx-sg \
   --description "Security group for Nginx reverse proxy" \
-  --vpc-id vpc-xxx
+  --vpc-id $VPC_ID
+
+# Lưu SG ID
+NGINX_SG=sg-xxxxxxxxx
 
 # Inbound rules
-aws ec2 authorize-security-group-ingress --group-id sg-xxx --protocol tcp --port 80 --cidr 0.0.0.0/0
-aws ec2 authorize-security-group-ingress --group-id sg-xxx --protocol tcp --port 443 --cidr 0.0.0.0/0
-aws ec2 authorize-security-group-ingress --group-id sg-xxx --protocol tcp --port 22 --cidr YOUR_IP/32
+aws ec2 authorize-security-group-ingress --group-id $NGINX_SG --protocol tcp --port 80 --cidr 0.0.0.0/0
+aws ec2 authorize-security-group-ingress --group-id $NGINX_SG --protocol tcp --port 443 --cidr 0.0.0.0/0
+aws ec2 authorize-security-group-ingress --group-id $NGINX_SG --protocol tcp --port 22 --cidr YOUR_IP/32
 ```
 
-#### Security Group cho Backend EC2 (Private)
+#### Security Group cho Backend EC2 (Public Subnet)
 ```bash
 aws ec2 create-security-group \
   --group-name quanhss-backend-sg \
-  --description "Security group for Backend" \
-  --vpc-id vpc-xxx
+  --description "Security group for Backend EC2" \
+  --vpc-id $VPC_ID
 
-# Chỉ cho phép từ Nginx SG
-aws ec2 authorize-security-group-ingress --group-id sg-backend --protocol tcp --port 8080 --source-group sg-nginx
-aws ec2 authorize-security-group-ingress --group-id sg-backend --protocol tcp --port 22 --source-group sg-nginx
+# Lưu SG ID
+BACKEND_SG=sg-xxxxxxxxx
+
+# Inbound rules
+# Cho phép port 8080 từ Nginx SG (load balancing)
+aws ec2 authorize-security-group-ingress --group-id $BACKEND_SG --protocol tcp --port 8080 --source-group $NGINX_SG
+
+# Cho phép SSH từ IP của bạn (để deploy)
+aws ec2 authorize-security-group-ingress --group-id $BACKEND_SG --protocol tcp --port 22 --cidr YOUR_IP/32
+
+# Outbound: Mặc định allow all (cần để kết nối Aiven MySQL qua internet)
 ```
 
-#### Security Group cho RDS
-```bash
-aws ec2 create-security-group \
-  --group-name quanhss-rds-sg \
-  --description "Security group for RDS" \
-  --vpc-id vpc-xxx
+**Lưu ý bảo mật:**
+- ✅ Backend chỉ nhận traffic port 8080 từ Nginx
+- ✅ SSH chỉ từ IP của bạn
+- ✅ Không expose port 8080 ra internet trực tiếp
 
-# Chỉ cho phép từ Backend SG
-aws ec2 authorize-security-group-ingress --group-id sg-rds --protocol tcp --port 3306 --source-group sg-backend
-```
-
-### 1.3 Tạo Amazon RDS (MySQL)
-
-**Qua AWS Console:**
-1. RDS → Create database
-2. Chọn **MySQL 8.0**
-3. Template: **Free tier** (development) hoặc **Production**
-4. Settings:
-   - DB Instance Identifier: `quanhss-db`
-   - Master username: `admin`
-   - Master password: `[Strong password]`
-5. Instance: `db.t3.micro` (Free tier) hoặc `db.t3.small`
-6. Storage: 20 GB GP3
-7. Connectivity:
-   - VPC: `quanhss-vpc`
-   - Subnet group: Private subnets
-   - Public access: **No**
-   - Security group: `quanhss-rds-sg`
-8. Database name: `quanhss`
-
-**Lưu lại RDS Endpoint:**
-```
-quanhss-db.xxxxxxxxx.ap-southeast-1.rds.amazonaws.com
-```
-
-### 1.4 Tạo S3 Buckets
+### 1.3 Tạo S3 Buckets
 
 #### Bucket cho Frontend Static Files
 ```bash
@@ -224,17 +307,18 @@ aws s3api put-bucket-cors --bucket quanhss-uploads --cors-configuration '{
 }'
 ```
 
-### 1.5 Tạo EC2 Instances
+### 1.4 Tạo EC2 Instances (Tất cả ở Public Subnet)
 
-#### Backend EC2 (2 instances)
+#### Backend EC2 (2 instances - Public Subnet)
 ```bash
-# Launch EC2 với Amazon Linux 2023
+# Launch 2 Backend EC2 instances
 aws ec2 run-instances \
   --image-id ami-0c55b159cbfafe1f0 \
   --instance-type t3.small \
   --key-name your-key-pair \
-  --security-group-ids sg-backend \
-  --subnet-id subnet-private \
+  --security-group-ids $BACKEND_SG \
+  --subnet-id $SUBNET_ID \
+  --associate-public-ip-address \
   --count 2 \
   --tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=quanhss-backend}]' \
   --user-data file://backend-userdata.sh
@@ -264,8 +348,8 @@ aws ec2 run-instances \
   --image-id ami-0c55b159cbfafe1f0 \
   --instance-type t3.micro \
   --key-name your-key-pair \
-  --security-group-ids sg-nginx \
-  --subnet-id subnet-public \
+  --security-group-ids $NGINX_SG \
+  --subnet-id $SUBNET_ID \
   --associate-public-ip-address \
   --count 1 \
   --tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=quanhss-nginx}]' \
@@ -276,23 +360,36 @@ aws ec2 run-instances \
 ```bash
 #!/bin/bash
 yum update -y
-amazon-linux-extras install nginx1 -y
+sudo yum install nginx -y
 systemctl start nginx
 systemctl enable nginx
 ```
 
-### 1.6 Cấu hình Nginx Reverse Proxy
+### 1.5 Cấu hình Nginx Reverse Proxy
 
 SSH vào Nginx EC2:
 ```bash
 ssh -i your-key.pem ec2-user@<NGINX_PUBLIC_IP>
 ```
 
+**Lấy Private IP của Backend EC2s:**
+```bash
+# Từ AWS Console hoặc CLI
+aws ec2 describe-instances \
+  --filters "Name=tag:Name,Values=quanhss-backend" \
+  --query 'Reservations[*].Instances[*].[PrivateIpAddress,InstanceId]' \
+  --output table
+
+# Ví dụ output:
+# 10.0.1.10  i-xxxxxxxxx (Backend-1)
+# 10.0.1.11  i-yyyyyyyyy (Backend-2)
+```
+
 Tạo file config `/etc/nginx/conf.d/api.conf`:
 ```nginx
 upstream backend_servers {
-    server <BACKEND_EC2_1_PRIVATE_IP>:8080;
-    server <BACKEND_EC2_2_PRIVATE_IP>:8080;
+    server 10.0.1.10:8080;  # Backend EC2-1 Private IP
+    server 10.0.1.11:8080;  # Backend EC2-2 Private IP
 }
 
 server {
@@ -374,9 +471,9 @@ Thêm các secrets:
 | `EC2_HOST_2` | Backend EC2-2 Private IP |
 | `NGINX_HOST` | Nginx EC2 Public IP |
 | `SSH_PRIVATE_KEY` | Private key content |
-| `DB_URL` | `jdbc:mysql://rds-endpoint:3306/quanhss` |
-| `DB_USERNAME` | `admin` |
-| `DB_PASSWORD` | RDS password |
+| `DB_URL` | `jdbc:mysql://mysql-192be37d-vietlinh1482004-83dd.g.aivencloud.com:10404/quanh` |
+| `DB_USERNAME` | `avnadmin` |
+| `DB_PASSWORD` | Aiven password |
 | `JWT_SIGNER_KEY` | JWT secret key |
 | `S3_ACCESS_KEY` | S3 Access Key |
 | `S3_SECRET_KEY` | S3 Secret Key |
@@ -618,13 +715,10 @@ logging:
 
 ### 3.2 Deploy thủ công lần đầu
 
-SSH vào Backend EC2 qua Nginx (bastion):
+**Cách 1: SSH trực tiếp vào Backend EC2 (vì đã có Public IP)**
 ```bash
-# SSH to Nginx first
-ssh -i key.pem ec2-user@<NGINX_PUBLIC_IP>
-
-# From Nginx, SSH to Backend
-ssh ec2-user@<BACKEND_PRIVATE_IP>
+# SSH trực tiếp vào Backend EC2
+ssh -i key.pem ec2-user@<BACKEND_EC2_PUBLIC_IP>
 
 # Pull and run Docker
 docker pull yourdockerhub/quanhss-backend:latest
@@ -633,9 +727,9 @@ docker run -d \
   --name quanhss-backend \
   --restart unless-stopped \
   -p 8080:8080 \
-  -e SPRING_DATASOURCE_URL="jdbc:mysql://quanhss-db.xxx.rds.amazonaws.com:3306/quanhss" \
-  -e SPRING_DATASOURCE_USERNAME="admin" \
-  -e SPRING_DATASOURCE_PASSWORD="yourpassword" \
+  -e SPRING_DATASOURCE_URL="jdbc:mysql://mysql-192be37d-vietlinh1482004-83dd.g.aivencloud.com:10404/quanh" \
+  -e SPRING_DATASOURCE_USERNAME="avnadmin" \
+  -e SPRING_DATASOURCE_PASSWORD="AVNS_lMHHQZnQlVaKNWFxbgP" \
   -e JWT_SIGNERKEY="your-32-char-secret-key" \
   -e AWS_S3_ACCESS_KEY_ID="AKIAXXXX" \
   -e AWS_S3_SECRET_ACCESS_KEY="xxxxx" \
@@ -651,8 +745,12 @@ docker logs -f quanhss-backend
 
 ### 3.3 Kiểm tra Backend
 ```bash
-# Từ Nginx EC2
-curl http://<BACKEND_PRIVATE_IP>:8080/identity/auth/token
+# Test từ Nginx EC2 (qua private IP)
+ssh -i key.pem ec2-user@<NGINX_PUBLIC_IP>
+curl http://<BACKEND_PRIVATE_IP>:8080/api/
+
+# Hoặc test trực tiếp từ máy local (qua public IP - chỉ để test)
+curl http://<BACKEND_PUBLIC_IP>:8080/api/
 
 # Response should be 401 or proper error (not connection refused)
 ```
@@ -722,50 +820,209 @@ Sau khi tạo CloudFront với OAC, cập nhật S3 Bucket Policy:
 
 ---
 
-## 🔐 Phase 5: DNS & SSL Configuration
+## 🌐 Phase 5: DNS & SSL Configuration
 
-### 5.1 Route 53 Setup
+### 5.1 Cấu hình DNS tại nhà cung cấp Domain
 
-1. Route 53 → Hosted zones → Create hosted zone
-2. Domain name: `yourdomain.com`
-3. Tạo các records:
+**Bước 1: Lấy thông tin cần thiết từ AWS**
 
-| Name | Type | Value |
-|------|------|-------|
-| `yourdomain.com` | A | Alias to CloudFront |
-| `www.yourdomain.com` | A | Alias to CloudFront |
-| `api.yourdomain.com` | A | Nginx EC2 Public IP |
-
-### 5.2 SSL Certificate (ACM)
-
-1. ACM → Request certificate
-2. Domain names:
-   - `yourdomain.com`
-   - `*.yourdomain.com`
-3. Validation method: DNS validation
-4. Thêm CNAME records vào Route 53 (AWS có thể tự động)
-
-### 5.3 Cấu hình SSL cho Nginx
-
-Cài Certbot trên Nginx EC2:
 ```bash
-sudo yum install -y certbot python3-certbot-nginx
-sudo certbot --nginx -d api.yourdomain.com
+# 1. CloudFront Domain Name
+# Vào CloudFront Console → Distributions → Copy "Distribution domain name"
+# Ví dụ: d111111abcdef8.cloudfront.net
+
+# 2. Nginx EC2 Public IP
+aws ec2 describe-instances \
+  --filters "Name=tag:Name,Values=quanhss-nginx" \
+  --query 'Reservations[*].Instances[*].PublicIpAddress' \
+  --output text
+# Ví dụ: 13.250.123.45
 ```
 
-Hoặc sử dụng ACM + ALB (khuyến nghị cho production).
+**Bước 2: Cấu hình DNS Records**
+
+Đăng nhập vào **DNS Management** của nhà cung cấp domain (Namecheap, GoDaddy, etc.) và tạo các records:
+
+#### Option A: Sử dụng CNAME (Khuyến nghị)
+
+| Type | Host/Name | Value/Points To | TTL |
+|------|-----------|-----------------|-----|
+| CNAME | `www` | `d111111abcdef8.cloudfront.net` | 300 |
+| CNAME | `@` hoặc để trống | `www.yourdomain.com` | 300 |
+| A | `api` | `13.250.123.45` (Nginx EC2 IP) | 300 |
+
+#### Option B: Sử dụng A Record với ALIAS (nếu provider hỗ trợ)
+
+| Type | Host/Name | Value/Points To | TTL |
+|------|-----------|-----------------|-----|
+| ALIAS | `@` | `d111111abcdef8.cloudfront.net` | 300 |
+| CNAME | `www` | `yourdomain.com` | 300 |
+| A | `api` | `13.250.123.45` (Nginx EC2 IP) | 300 |
+
+**Lưu ý theo từng nhà cung cấp:**
+
+<details>
+<summary><b>Namecheap</b></summary>
+
+1. Đăng nhập Namecheap → Domain List
+2. Click **Manage** bên cạnh domain
+3. Tab **Advanced DNS**
+4. Add New Record:
+   - **CNAME Record**: Host = `www`, Value = CloudFront domain
+   - **URL Redirect**: Host = `@`, Value = `http://www.yourdomain.com`
+   - **A Record**: Host = `api`, Value = Nginx EC2 IP
+
+</details>
+
+<details>
+<summary><b>GoDaddy</b></summary>
+
+1. Đăng nhập GoDaddy → My Products → DNS
+2. Click domain của bạn
+3. Add Records:
+   - **CNAME**: Name = `www`, Value = CloudFront domain
+   - **Forwarding**: Forward `yourdomain.com` to `www.yourdomain.com`
+   - **A**: Name = `api`, Value = Nginx EC2 IP
+
+</details>
+
+<details>
+<summary><b>Cloudflare (nếu dùng)</b></summary>
+
+1. Cloudflare Dashboard → DNS → Records
+2. Add record:
+   - **CNAME**: Name = `www`, Target = CloudFront domain, **Proxy status: DNS only** (tắt orange cloud)
+   - **CNAME**: Name = `@`, Target = `www.yourdomain.com`
+   - **A**: Name = `api`, IPv4 = Nginx EC2 IP
+
+⚠️ **Quan trọng**: Phải tắt Cloudflare proxy (grey cloud) cho CloudFront CNAME!
+
+</details>
+
+**Bước 3: Verify DNS Propagation**
+
+```bash
+# Kiểm tra DNS đã propagate chưa
+nslookup www.yourdomain.com
+nslookup api.yourdomain.com
+
+# Hoặc dùng online tool
+# https://dnschecker.org
+```
+
+DNS có thể mất **5-30 phút** để propagate toàn cầu.
+
+### 5.2 SSL Certificate (AWS Certificate Manager)
+
+**Bước 1: Request Certificate**
+
+1. Vào **AWS Certificate Manager (ACM)** → **Request certificate**
+2. Certificate type: **Request a public certificate**
+3. Domain names:
+   ```
+   yourdomain.com
+   *.yourdomain.com
+   ```
+4. Validation method: **DNS validation** (khuyến nghị)
+5. Click **Request**
+
+**Bước 2: Validate Certificate qua DNS**
+
+Sau khi request, ACM sẽ hiển thị CNAME records cần thêm:
+
+```
+Name: _abc123.yourdomain.com
+Value: _xyz456.acm-validations.aws.
+```
+
+**Thêm CNAME record này vào DNS provider của bạn:**
+
+- **Namecheap**: Advanced DNS → Add New Record → CNAME
+- **GoDaddy**: DNS Management → Add → CNAME
+- **Cloudflare**: DNS → Add record → CNAME
+
+**Lưu ý:**
+- Copy chính xác Name và Value từ ACM
+- Bỏ domain root nếu provider tự động thêm (VD: chỉ nhập `_abc123` thay vì `_abc123.yourdomain.com`)
+- TTL: 300 hoặc Auto
+
+**Bước 3: Đợi Validation**
+
+Validation thường mất **5-30 phút**. Kiểm tra status trong ACM Console.
+
+✅ Khi status = **Issued**, certificate đã sẵn sàng!
+
+**Bước 4: Attach Certificate vào CloudFront**
+
+1. CloudFront → Distributions → Chọn distribution của bạn → **Edit**
+2. **Alternate domain names (CNAMEs)**:
+   ```
+   yourdomain.com
+   www.yourdomain.com
+   ```
+3. **Custom SSL certificate**: Chọn certificate vừa tạo
+4. **Save changes**
+
+⏳ CloudFront deployment mất ~10-15 phút.
+
+### 5.3 Cấu hình SSL cho Nginx (Let's Encrypt)
+
+**Option A: Sử dụng Certbot (Khuyến nghị - Free SSL)**
+
+SSH vào Nginx EC2:
+```bash
+ssh -i key.pem ec2-user@<NGINX_PUBLIC_IP>
+
+# Cài đặt Certbot
+sudo yum install -y certbot python3-certbot-nginx
+
+# Request SSL certificate
+sudo certbot --nginx -d api.yourdomain.com
+
+# Certbot sẽ hỏi:
+# 1. Email: nhập email của bạn
+# 2. Terms of Service: A (Agree)
+# 3. Share email: N (No)
+# 4. Redirect HTTP to HTTPS: 2 (Yes, redirect)
+
+# Verify SSL
+curl https://api.yourdomain.com
+```
+
+**Auto-renewal:**
+```bash
+# Test auto-renewal
+sudo certbot renew --dry-run
+
+# Certbot tự động tạo cron job để renew
+# Kiểm tra:
+sudo systemctl status certbot-renew.timer
+```
+
+**Option B: Sử dụng AWS Certificate Manager + Application Load Balancer**
+
+Nếu muốn dùng ACM cho API (tốn thêm tiền cho ALB ~$16/tháng):
+
+1. Tạo Application Load Balancer
+2. Target Group → Backend EC2 instances
+3. Listener HTTPS:443 → Attach ACM certificate
+4. Update DNS: `api.yourdomain.com` → ALB DNS name
+
+💡 **Khuyến nghị**: Dùng Certbot (Option A) để tiết kiệm chi phí!
 
 ---
 
 ## 🔍 Troubleshooting
 
-### Backend không kết nối được RDS
+### Backend không kết nối được Aiven MySQL
 ```bash
-# Check Security Group
-# RDS SG phải allow inbound từ Backend SG trên port 3306
+# Kiểm tra kết nối từ EC2
+telnet mysql-192be37d-vietlinh1482004-83dd.g.aivencloud.com 10404
 
-# Test connection từ Backend EC2
-telnet <RDS_ENDPOINT> 3306
+# Nếu không kết nối được:
+# 1. Kiểm tra Security Group - outbound rule phải allow traffic ra internet
+# 2. Kiểm tra NAT Gateway nếu EC2 ở private subnet
+# 3. Kiểm tra Aiven IP whitelist (nếu đã cấu hình)
 ```
 
 ### CloudFront 403/404 Error
@@ -805,11 +1062,17 @@ docker inspect quanhss-backend
 |---------|------|-------------------|
 | EC2 (Nginx) | t3.micro | ~$8 |
 | EC2 (Backend x2) | t3.small | ~$30 |
-| RDS (MySQL) | db.t3.micro | ~$15 |
+| ~~RDS (MySQL)~~ | ~~db.t3.micro~~ | ~~$15~~ **FREE (Aiven)** |
+| ~~NAT Gateway~~ | | ~~$32~~ **SAVED!** |
 | S3 | 10 GB | ~$0.25 |
 | CloudFront | 100 GB transfer | ~$10 |
-| Route 53 | Hosted zone | ~$0.50 |
-| **Total** | | **~$64/month** |
+| ~~Route 53~~ | ~~Hosted zone~~ | ~~$0.50~~ **FREE (External DNS)** |
+| **Total** | | **~$48.75/month** |
+
+**Tiết kiệm được:**
+- ✅ Không dùng RDS → Dùng Aiven free tier: **-$15/tháng**
+- ✅ Không cần NAT Gateway (EC2 ở public subnet): **-$32/tháng**
+- 💰 **Tổng tiết kiệm: ~$47/tháng** so với kiến trúc full AWS!
 
 *Note: Giá tham khảo, có thể thay đổi.*
 

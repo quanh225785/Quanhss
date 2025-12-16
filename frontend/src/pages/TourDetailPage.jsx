@@ -30,6 +30,7 @@ const TourDetailPage = () => {
     const [error, setError] = useState(null);
     const [isFavorite, setIsFavorite] = useState(false);
     const [activeDay, setActiveDay] = useState(1);
+    const [selectedTrip, setSelectedTrip] = useState(null);  // Selected trip for booking
 
     useEffect(() => {
         fetchTourDetails();
@@ -77,26 +78,33 @@ const TourDetailPage = () => {
         });
     };
 
-    // Check if tour is full
-    const isTourFull = () => {
-        if (!tour.maxParticipants) return false;
-        return (tour.currentParticipants || 0) >= tour.maxParticipants;
+    // Check if selected trip is full
+    const isTripFull = () => {
+        if (!selectedTrip) return false;
+        return selectedTrip.isFull;
     };
 
-    // Check if tour has expired
-    const isTourExpired = () => {
-        if (!tour.endDate) return false;
-        return new Date(tour.endDate) < new Date();
+    // Check if selected trip has expired
+    const isTripExpired = () => {
+        if (!selectedTrip?.endDate) return false;
+        return new Date(selectedTrip.endDate) < new Date();
     };
 
     // Check if booking is available
     const canBook = () => {
-        return !isTourFull() && !isTourExpired();
+        if (!selectedTrip) return false;
+        return !isTripFull() && !isTripExpired() && selectedTrip.isActive;
+    };
+
+    // Check if there are any available trips
+    const hasAvailableTrips = () => {
+        return tour?.trips?.some(t => t.isActive && !t.isFull && new Date(t.endDate) > new Date());
     };
 
     const getBookingButtonText = () => {
-        if (isTourExpired()) return 'Tour đã kết thúc';
-        if (isTourFull()) return 'Đã đủ số lượng';
+        if (!selectedTrip) return 'Chọn chuyến để đặt';
+        if (isTripExpired()) return 'Chuyến đã kết thúc';
+        if (isTripFull()) return 'Đã đủ số lượng';
         return 'Đặt tour ngay';
     };
 
@@ -427,82 +435,136 @@ const TourDetailPage = () => {
                                 )}
                             </div>
 
-                            <div className="space-y-4 mb-6">
-                                {tour.startDate && (
-                                    <div className="flex items-center justify-between py-3 border-b border-slate-100">
-                                        <span className="text-slate-600 flex items-center gap-2">
-                                            <Calendar size={16} className="text-emerald-500" />
-                                            Ngày bắt đầu
-                                        </span>
-                                        <span className="font-medium text-slate-900">{formatDateTime(tour.startDate)}</span>
+                            {/* Available Trips Section */}
+                            {tour.trips && tour.trips.length > 0 ? (
+                                <div className="mb-6">
+                                    <h4 className="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
+                                        <Calendar size={16} className="text-primary" />
+                                        Chọn chuyến
+                                    </h4>
+                                    <div className="space-y-2 max-h-48 overflow-y-auto">
+                                        {tour.trips.filter(trip => trip.isActive).map((trip) => {
+                                            const tripExpired = new Date(trip.endDate) < new Date();
+                                            const isSelected = selectedTrip?.id === trip.id;
+
+                                            return (
+                                                <button
+                                                    key={trip.id}
+                                                    onClick={() => setSelectedTrip(trip)}
+                                                    disabled={trip.isFull || tripExpired}
+                                                    className={`w-full p-3 rounded-xl text-left transition-all border ${isSelected
+                                                            ? 'border-primary bg-primary/10 ring-2 ring-primary/30'
+                                                            : trip.isFull || tripExpired
+                                                                ? 'border-slate-200 bg-slate-50 opacity-60 cursor-not-allowed'
+                                                                : 'border-slate-200 bg-white/80 hover:border-primary/50'
+                                                        }`}
+                                                >
+                                                    <div className="flex justify-between items-start mb-1">
+                                                        <span className="text-sm font-medium text-slate-900">
+                                                            {formatDateTime(trip.startDate)}
+                                                        </span>
+                                                        <span className={`text-xs px-2 py-0.5 rounded-full ${trip.isFull
+                                                                ? 'bg-red-100 text-red-700'
+                                                                : tripExpired
+                                                                    ? 'bg-slate-100 text-slate-500'
+                                                                    : 'bg-green-100 text-green-700'
+                                                            }`}>
+                                                            {trip.isFull ? 'Đầy' : tripExpired ? 'Hết hạn' : `Còn ${trip.availableSlots} chỗ`}
+                                                        </span>
+                                                    </div>
+                                                    <div className="text-xs text-slate-500 flex items-center gap-1">
+                                                        <Users size={12} />
+                                                        {trip.currentParticipants || 0}/{trip.maxParticipants} người
+                                                    </div>
+                                                </button>
+                                            );
+                                        })}
                                     </div>
-                                )}
-                                {tour.endDate && (
-                                    <div className="flex items-center justify-between py-3 border-b border-slate-100">
-                                        <span className="text-slate-600 flex items-center gap-2">
-                                            <CalendarX size={16} className="text-red-500" />
-                                            Ngày kết thúc
+                                    {!hasAvailableTrips() && (
+                                        <p className="text-sm text-amber-600 mt-2 flex items-center gap-1">
+                                            <AlertCircle size={14} />
+                                            Hiện tại không có chuyến nào còn trống
+                                        </p>
+                                    )}
+                                </div>
+                            ) : (
+                                <div className="mb-6 p-4 bg-slate-50 rounded-xl text-center">
+                                    <Calendar size={24} className="mx-auto mb-2 text-slate-400" />
+                                    <p className="text-sm text-slate-500">Chưa có chuyến nào được mở</p>
+                                </div>
+                            )}
+
+                            {/* Selected Trip Info */}
+                            {selectedTrip && (
+                                <div className="space-y-3 mb-6 p-4 bg-primary/5 rounded-xl border border-primary/20">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-sm text-slate-600 flex items-center gap-2">
+                                            <Calendar size={14} className="text-emerald-500" />
+                                            Bắt đầu
                                         </span>
-                                        <span className="font-medium text-slate-900">{formatDateTime(tour.endDate)}</span>
+                                        <span className="text-sm font-medium text-slate-900">{formatDateTime(selectedTrip.startDate)}</span>
                                     </div>
-                                )}
-                                {tour.maxParticipants && (
-                                    <div className="flex items-center justify-between py-3 border-b border-slate-100">
-                                        <span className="text-slate-600 flex items-center gap-2">
-                                            <Users size={16} className="text-blue-500" />
-                                            Số lượng
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-sm text-slate-600 flex items-center gap-2">
+                                            <CalendarX size={14} className="text-red-500" />
+                                            Kết thúc
                                         </span>
-                                        <span className={`font-medium ${isTourFull() ? 'text-red-600' : 'text-slate-900'
-                                            }`}>
-                                            {tour.currentParticipants || 0}/{tour.maxParticipants} người
+                                        <span className="text-sm font-medium text-slate-900">{formatDateTime(selectedTrip.endDate)}</span>
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-sm text-slate-600 flex items-center gap-2">
+                                            <Users size={14} className="text-blue-500" />
+                                            Còn trống
+                                        </span>
+                                        <span className={`text-sm font-medium ${selectedTrip.isFull ? 'text-red-600' : 'text-green-600'}`}>
+                                            {selectedTrip.availableSlots} chỗ
                                         </span>
                                     </div>
-                                )}
-                                <div className="flex items-center justify-between py-3 border-b border-slate-100">
+                                </div>
+                            )}
+
+                            <div className="space-y-3 mb-6">
+                                <div className="flex items-center justify-between py-2 border-b border-slate-100">
                                     <span className="text-slate-600">Thời gian</span>
                                     <span className="font-medium text-slate-900">{tour.numberOfDays || 1} ngày</span>
                                 </div>
-                                <div className="flex items-center justify-between py-3 border-b border-slate-100">
+                                <div className="flex items-center justify-between py-2 border-b border-slate-100">
                                     <span className="text-slate-600">Số điểm đến</span>
                                     <span className="font-medium text-slate-900">{tour.points?.length || 0} điểm</span>
                                 </div>
-                                <div className="flex items-center justify-between py-3 border-b border-slate-100">
+                                <div className="flex items-center justify-between py-2 border-b border-slate-100">
                                     <span className="text-slate-600">Phương tiện</span>
                                     <span className="font-medium text-slate-900 capitalize">{tour.vehicle || 'N/A'}</span>
                                 </div>
                                 {tour.totalTime && (
-                                    <div className="flex items-center justify-between py-3 border-b border-slate-100">
+                                    <div className="flex items-center justify-between py-2 border-b border-slate-100">
                                         <span className="text-slate-600">Thời gian di chuyển</span>
                                         <span className="font-medium text-slate-900">{formatDuration(tour.totalTime)}</span>
                                     </div>
                                 )}
-                                <div className="flex items-center justify-between py-3">
-                                    <span className="text-slate-600">Ngày tạo</span>
-                                    <span className="font-medium text-slate-900">{formatDate(tour.createdAt)}</span>
-                                </div>
                             </div>
 
-                            {/* Warning if tour is full or expired */}
-                            {(isTourFull() || isTourExpired()) && (
-                                <div className={`mb-4 p-3 rounded-xl flex items-center gap-2 text-sm ${isTourExpired()
-                                    ? 'bg-red-50 text-red-700 border border-red-200'
-                                    : 'bg-amber-50 text-amber-700 border border-amber-200'
+                            {/* Warning if trip is full or expired */}
+                            {selectedTrip && (isTripFull() || isTripExpired()) && (
+                                <div className={`mb-4 p-3 rounded-xl flex items-center gap-2 text-sm ${isTripExpired()
+                                        ? 'bg-red-50 text-red-700 border border-red-200'
+                                        : 'bg-amber-50 text-amber-700 border border-amber-200'
                                     }`}>
                                     <AlertCircle size={16} />
                                     <span>
-                                        {isTourExpired()
-                                            ? 'Tour này đã kết thúc'
-                                            : 'Tour đã đủ số lượng người đăng ký'}
+                                        {isTripExpired()
+                                            ? 'Chuyến này đã kết thúc'
+                                            : 'Chuyến đã đủ số lượng người đăng ký'}
                                     </span>
                                 </div>
                             )}
 
                             <button
                                 disabled={!canBook()}
-                                onClick={() => navigate(`/booking/${id}`)}
+                                onClick={() => navigate(`/booking/${id}`, { state: { tripId: selectedTrip.id, trip: selectedTrip } })}
                                 className={`w-full py-4 font-bold rounded-2xl transition-all duration-200 flex items-center justify-center gap-2 ${canBook()
-                                    ? 'bg-gradient-to-r from-primary to-secondary text-white hover:shadow-lg hover:-translate-y-0.5'
-                                    : 'bg-slate-200 text-slate-500 cursor-not-allowed'
+                                        ? 'bg-gradient-to-r from-primary to-secondary text-white hover:shadow-lg hover:-translate-y-0.5'
+                                        : 'bg-slate-200 text-slate-500 cursor-not-allowed'
                                     }`}
                             >
                                 {getBookingButtonText()}

@@ -11,7 +11,7 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class BookingCreationRequest {
-    Long tourId;
+    Long tripId;  // ID của chuyến được đặt (thay vì tourId)
     List<String> participantNames;  // Danh sách họ tên người tham gia
     String contactPhone;
     String note;
