@@ -13,16 +13,15 @@ export const registerVietmapServiceWorker = async () => {
                 scope: '/'
             });
 
-            console.log('[Vietmap SW] Service Worker registered successfully:', registration.scope);
+
 
             // Listen for updates
             registration.addEventListener('updatefound', () => {
                 const newWorker = registration.installing;
-                console.log('[Vietmap SW] New service worker found, installing...');
 
                 newWorker.addEventListener('statechange', () => {
                     if (newWorker.state === 'activated') {
-                        console.log('[Vietmap SW] New service worker activated');
+                        if (onActivated) onActivated();
                     }
                 });
             });

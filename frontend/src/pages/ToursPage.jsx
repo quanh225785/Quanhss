@@ -67,10 +67,8 @@ const ToursPage = () => {
       if (locationId) params.append('locationId', locationId);
 
       const url = `/tours/search${params.toString() ? '?' + params.toString() : ''}`;
-      console.log('Fetching tours from:', url);
 
       const response = await api.get(url);
-      console.log('API Response:', response.data);
 
       if (response.data && response.data.code === 1000) {
         setTours(response.data.result || []);

@@ -29,6 +29,10 @@ public enum ErrorCode {
     COORDINATES_REQUIRED(1017, "Latitude and longitude are required for location suggestion", HttpStatus.BAD_REQUEST),
     USER_LOCATION_REQUIRED(1018, "User current location is required for searching nearby places",
             HttpStatus.BAD_REQUEST),
+    TOUR_NOT_FOUND(1019, "Tour not found", HttpStatus.NOT_FOUND),
+    CONVERSATION_NOT_FOUND(1020, "Conversation not found", HttpStatus.NOT_FOUND),
+    USER_NOT_AGENT(1021, "User is not an agent", HttpStatus.BAD_REQUEST),
+    MESSAGE_EMPTY(1022, "Message content or image is required", HttpStatus.BAD_REQUEST),
             ;
 
     ErrorCode(int code, String message, HttpStatusCode statusCode) {

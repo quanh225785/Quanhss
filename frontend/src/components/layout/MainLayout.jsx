@@ -1,15 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import {
-    LayoutDashboard,
-    Map,
-    MapPin,
-    Calendar,
-    User,
-    LogOut,
-    Home,
-} from 'lucide-react';
+import { LogOut } from 'lucide-react';
 import NavItem from '../shared/NavItem';
+import { userNavItems, agentNavItems, adminNavItems } from '../../utils/navConfig';
 
 const MainLayout = ({ children, onLogout }) => {
     const navigate = useNavigate();
@@ -30,41 +23,36 @@ const MainLayout = ({ children, onLogout }) => {
         navigate('/login');
     };
 
+    // Get nav items based on role
+    const getNavItems = () => {
+        if (userRole === 'ADMIN') {
+            return { items: adminNavItems, prefix: '/admin' };
+        } else if (userRole === 'AGENT') {
+            return { items: agentNavItems, prefix: '/agent' };
+        } else {
+            return { items: userNavItems, prefix: '/user' };
+        }
+    };
+
+    const { items: navItems, prefix } = getNavItems();
+
     // Check if a path is active
     const isActive = (path) => {
-        if (path === '/user/dashboard') {
+        const fullPath = `${prefix}${path}`;
+        if (path === '/dashboard') {
             // Khám phá is active for dashboard, /tours, and /tour/:id
-            return location.pathname === '/user/dashboard' ||
+            return location.pathname === fullPath ||
                 location.pathname === '/tours' ||
                 location.pathname.startsWith('/tour/');
         }
-        return location.pathname === path;
+        return location.pathname === fullPath;
     };
 
-    // Navigation items based on role
-    const getNavItems = () => {
-        if (userRole === 'ADMIN') {
-            return [
-                { icon: <LayoutDashboard size={20} />, label: 'Dashboard', path: '/admin/dashboard' },
-                { icon: <User size={20} />, label: 'Quản lý người dùng', path: '/admin/users' },
-                { icon: <MapPin size={20} />, label: 'Quản lý địa điểm', path: '/admin/locations' },
-                { icon: <Map size={20} />, label: 'Quản lý tour', path: '/admin/tours' },
-            ];
-        } else if (userRole === 'AGENT') {
-            return [
-                { icon: <LayoutDashboard size={20} />, label: 'Dashboard', path: '/agent/dashboard' },
-                { icon: <Map size={20} />, label: 'Tour của tôi', path: '/agent/tours' },
-                { icon: <MapPin size={20} />, label: 'Địa điểm đề xuất', path: '/agent/locations' },
-            ];
-        } else {
-            return [
-                { icon: <LayoutDashboard size={20} />, label: 'Khám phá', path: '/user/dashboard' },
-                { icon: <Calendar size={20} />, label: 'Chuyến đi của tôi', path: '/user/bookings' },
-                { icon: <Map size={20} />, label: 'Lập kế hoạch', path: '/user/planner' },
-                { icon: <MapPin size={20} />, label: 'Đề xuất địa điểm', path: '/user/locations' },
-                { icon: <User size={20} />, label: 'Hồ sơ', path: '/user/profile' },
-            ];
+    const isNavItemActive = (item) => {
+        if (item.checkPaths) {
+            return item.checkPaths.some(p => isActive(p));
         }
+        return isActive(item.path);
     };
 
     return (
@@ -87,12 +75,12 @@ const MainLayout = ({ children, onLogout }) => {
                 </div>
 
                 <nav className="flex-1 px-4 space-y-2 mt-4 overflow-y-auto custom-scrollbar">
-                    {getNavItems().map((item, index) => (
-                        <div key={index} onClick={() => navigate(item.path)}>
+                    {navItems.map((item, index) => (
+                        <div key={index} onClick={() => navigate(`${prefix}${item.path}`)}>
                             <NavItem
                                 icon={item.icon}
                                 label={item.label}
-                                active={isActive(item.path)}
+                                active={isNavItemActive(item)}
                             />
                         </div>
                     ))}
@@ -130,31 +118,23 @@ const MainLayout = ({ children, onLogout }) => {
             {/* Mobile Bottom Navigation Bar (Visible on mobile, hidden on md+) */}
             <nav className="fixed bottom-0 left-0 right-0 md:hidden bg-white/80 backdrop-blur-xl border-t border-white/40 shadow-lg shadow-slate-200/50 z-50">
                 <div className="flex items-center justify-around px-2 py-2 safe-area-inset-bottom">
-                    {getNavItems().slice(0, 5).map((item, index) => (
+                    {navItems.slice(0, 6).map((item, index) => (
                         <button
                             key={index}
-                            onClick={() => navigate(item.path)}
-                            className={`flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-xl transition-all duration-200 min-w-[60px] ${isActive(item.path)
-                                    ? 'bg-primary/10 text-primary'
-                                    : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+                            onClick={() => navigate(`${prefix}${item.path}`)}
+                            className={`flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-xl transition-all duration-200 min-w-[60px] ${isNavItemActive(item)
+                                ? 'bg-primary/10 text-primary'
+                                : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
                                 }`}
                         >
-                            <span className={`transition-transform duration-200 ${isActive(item.path) ? 'scale-110' : ''}`}>
+                            <span className={`transition-transform duration-200 ${isNavItemActive(item) ? 'scale-110' : ''}`}>
                                 {React.cloneElement(item.icon, { size: 22 })}
                             </span>
                             <span className="text-[10px] font-medium truncate max-w-[60px]">
-                                {item.label}
+                                {item.shortLabel}
                             </span>
                         </button>
                     ))}
-                    {/* Logout button for mobile */}
-                    {/* <button
-                        onClick={handleLogout}
-                        className="flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-xl transition-all duration-200 min-w-[60px] text-red-500 hover:bg-red-50"
-                    >
-                        <LogOut size={22} />
-                        <span className="text-[10px] font-medium">Thoát</span>
-                    </button> */}
                 </div>
             </nav>
         </div>

@@ -57,13 +57,10 @@ const UserProfile = ({ user, onLogout }) => {
     setIsSubmitting(true);
 
     try {
-      console.log("[UserProfile] Updating user:", user.id, formData);
       const response = await api.put(`/users/${user.id}`, {
         ...formData,
         roles: user.roles?.map((r) => r.name) || ["USER"],
       });
-
-      console.log("[UserProfile] Update successful:", response.data);
 
       if (response.data.code === 1000) {
         // Update localStorage

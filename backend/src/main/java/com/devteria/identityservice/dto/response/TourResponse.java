@@ -25,6 +25,7 @@ public class TourResponse {
     String imageUrl;  // S3 URL for tour thumbnail
     List<TourPointResponse> points;
     String createdByUsername;
+    String createdById;  // User ID of the agent who created this tour
     LocalDateTime createdAt;
     Boolean isActive;
     String status;  // PENDING, APPROVED, REJECTED, HIDDEN

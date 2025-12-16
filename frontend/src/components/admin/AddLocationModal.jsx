@@ -302,7 +302,7 @@ const AddLocationModal = ({ onClose, onSuccess }) => {
         );
         setSuccess(true);
         setTimeout(() => {
-          console.log("[AddLocationModal] Calling onSuccess callback");
+
           onSuccess();
         }, 1500);
       } else {
@@ -317,7 +317,7 @@ const AddLocationModal = ({ onClose, onSuccess }) => {
       console.error("[AddLocationModal] Error status:", err.response?.status);
       setError(
         err.response?.data?.message ||
-          "Không thể tạo địa điểm. Vui lòng thử lại."
+        "Không thể tạo địa điểm. Vui lòng thử lại."
       );
     } finally {
       console.log("[AddLocationModal] Submit finished, isSubmitting = false");
@@ -393,11 +393,10 @@ const AddLocationModal = ({ onClose, onSuccess }) => {
             <button
               type="button"
               onClick={() => setShowMap(false)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                !showMap
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${!showMap
                   ? "bg-zinc-900 text-white"
                   : "bg-zinc-100 text-zinc-700 hover:bg-zinc-200"
-              }`}
+                }`}
             >
               <Search size={16} />
               Tìm kiếm
@@ -405,11 +404,10 @@ const AddLocationModal = ({ onClose, onSuccess }) => {
             <button
               type="button"
               onClick={() => setShowMap(true)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                showMap
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${showMap
                   ? "bg-zinc-900 text-white"
                   : "bg-zinc-100 text-zinc-700 hover:bg-zinc-200"
-              }`}
+                }`}
             >
               <Map size={16} />
               Bản đồ

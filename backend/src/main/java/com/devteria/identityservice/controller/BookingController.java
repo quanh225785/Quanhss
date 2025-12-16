@@ -19,7 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Slf4j
-public class BookingController  {
+public class BookingController {
     BookingService bookingService;
 
     /**
@@ -83,6 +83,17 @@ public class BookingController  {
         log.info("Getting bookings for tour: {}", tourId);
         return ApiResponse.<List<BookingResponse>>builder()
                 .result(bookingService.getBookingsForTour(tourId))
+                .build();
+    }
+
+    /**
+     * Get bookings for a specific trip (AGENT - owner only)
+     */
+    @GetMapping("/trip/{tripId}")
+    public ApiResponse<List<BookingResponse>> getBookingsForTrip(@PathVariable Long tripId) {
+        log.info("Getting bookings for trip: {}", tripId);
+        return ApiResponse.<List<BookingResponse>>builder()
+                .result(bookingService.getBookingsForTrip(tripId))
                 .build();
     }
 

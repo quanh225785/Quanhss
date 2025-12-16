@@ -26,13 +26,10 @@ const AgentProfile = ({ user }) => {
     setIsSubmitting(true);
 
     try {
-      console.log("[AgentProfile] Updating user:", user.id, formData);
       const response = await api.put(`/users/${user.id}`, {
         ...formData,
         roles: user.roles?.map((r) => r.name) || ["AGENT"],
       });
-
-      console.log("[AgentProfile] Update successful:", response.data);
 
       if (response.data.code === 1000) {
         // Update localStorage
@@ -46,7 +43,7 @@ const AgentProfile = ({ user }) => {
       console.error("[AgentProfile] Update error:", err);
       setError(
         err.response?.data?.message ||
-          "Không thể cập nhật thông tin. Vui lòng thử lại."
+        "Không thể cập nhật thông tin. Vui lòng thử lại."
       );
     } finally {
       setIsSubmitting(false);

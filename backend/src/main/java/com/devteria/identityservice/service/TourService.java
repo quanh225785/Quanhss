@@ -482,6 +482,7 @@ public class TourService {
                 .imageUrl(tour.getImageUrl())  // S3 image URL
                 .points(pointResponses)
                 .createdByUsername(tour.getCreatedBy() != null ? tour.getCreatedBy().getUsername() : null)
+                .createdById(tour.getCreatedBy() != null ? tour.getCreatedBy().getId() : null)
                 .createdAt(tour.getCreatedAt())
                 .isActive(tour.getIsActive())
                 .status(tour.getStatus() != null ? tour.getStatus().name() : null)

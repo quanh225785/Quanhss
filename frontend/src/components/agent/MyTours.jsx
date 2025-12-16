@@ -4,7 +4,6 @@ import { Plus, CheckCircle, XCircle, Loader2, Route, Clock, MapPin, Trash2, Eye,
 import { api } from '../../utils/api';
 import { formatDistance, formatDuration } from '../../utils/polylineUtils';
 import CreateTourModal from './CreateTourModal';
-import TripManagement from './TripManagement';
 import Modal from '../shared/Modal';
 
 const MyTours = () => {
@@ -14,7 +13,6 @@ const MyTours = () => {
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [error, setError] = useState(null);
     const [tourToHide, setTourToHide] = useState(null);
-    const [managingTrips, setManagingTrips] = useState(null);  // Tour đang quản lý chuyến
 
     useEffect(() => {
         fetchTours();
@@ -27,10 +25,6 @@ const MyTours = () => {
             const response = await api.get('/tours');
             if (response.data.code === 1000) {
                 const tours = response.data.result || [];
-                console.log('Tours data:', tours); // Debug: check tour data
-                if (tours.length > 0) {
-                    console.log('First tour:', tours[0]); // Debug: check first tour structure
-                }
                 setTours(tours);
             }
         } catch (err) {
@@ -233,7 +227,7 @@ const MyTours = () => {
                                     {tour.status === 'APPROVED' && (
                                         <>
                                             <button
-                                                onClick={() => setManagingTrips(tour)}
+                                                onClick={() => navigate(`/agent/tours/${tour.id}/trips`)}
                                                 className="px-3 py-1.5 text-sm font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors"
                                                 title="Quản lý chuyến"
                                             >
@@ -316,15 +310,6 @@ const MyTours = () => {
                 <CreateTourModal
                     onClose={() => setShowCreateModal(false)}
                     onSuccess={handleTourCreated}
-                />
-            )}
-
-            {/* Trip Management Modal */}
-            {managingTrips && (
-                <TripManagement
-                    tour={managingTrips}
-                    onClose={() => setManagingTrips(null)}
-                    onSuccess={fetchTours}
                 />
             )}
         </div>

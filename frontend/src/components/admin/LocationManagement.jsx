@@ -66,40 +66,28 @@ const LocationManagement = () => {
   };
 
   const fetchSuggestions = async () => {
-    console.log("[LocationManagement] fetchSuggestions called");
     try {
       setLoading(true);
       setError(null);
       const response = await api.get("/locations/suggestions");
-      console.log(
-        "[LocationManagement] Suggestions fetched:",
-        response.data.result?.length,
-        "items"
-      );
       setSuggestions(response.data.result || []);
     } catch (err) {
       console.error("[LocationManagement] Error fetching suggestions:", err);
       setError(
         err.response?.data?.message ||
-          "Không thể tải danh sách địa điểm đề xuất"
+        "Không thể tải danh sách địa điểm đề xuất"
       );
     } finally {
       setLoading(false);
-      console.log("[LocationManagement] fetchSuggestions finished");
+
     }
   };
 
   const fetchLocations = async () => {
-    console.log("[LocationManagement] fetchLocations called");
     try {
       setLoading(true);
       setError(null);
       const response = await api.get("/locations");
-      console.log(
-        "[LocationManagement] Locations fetched:",
-        response.data.result?.length,
-        "items"
-      );
       setLocations(response.data.result || []);
     } catch (err) {
       console.error("[LocationManagement] Error fetching locations:", err);
@@ -108,7 +96,7 @@ const LocationManagement = () => {
       );
     } finally {
       setLoading(false);
-      console.log("[LocationManagement] fetchLocations finished");
+
     }
   };
 
@@ -178,9 +166,7 @@ const LocationManagement = () => {
   };
 
   const handleAddLocationSuccess = () => {
-    console.log("[LocationManagement] handleAddLocationSuccess called");
     setShowAddLocationModal(false);
-    console.log("[LocationManagement] Modal closed, fetching data...");
     fetchData(); // Refresh both suggestions and locations
   };
 
@@ -224,7 +210,7 @@ const LocationManagement = () => {
         </div>
         <button
           onClick={() => {
-            console.log('[LocationManagement] "Thêm địa điểm" button clicked');
+
             setShowAddLocationModal(true);
           }}
           className="flex items-center gap-2 px-4 py-2 bg-zinc-900 text-white rounded-lg font-medium hover:bg-zinc-800 transition-colors"
@@ -249,21 +235,19 @@ const LocationManagement = () => {
         <div className="flex gap-4">
           <button
             onClick={() => setActiveTab("suggestions")}
-            className={`pb-3 px-1 text-sm font-medium border-b-2 transition-colors ${
-              activeTab === "suggestions"
-                ? "border-zinc-900 text-zinc-900"
-                : "border-transparent text-zinc-500 hover:text-zinc-700"
-            }`}
+            className={`pb-3 px-1 text-sm font-medium border-b-2 transition-colors ${activeTab === "suggestions"
+              ? "border-zinc-900 text-zinc-900"
+              : "border-transparent text-zinc-500 hover:text-zinc-700"
+              }`}
           >
             Địa điểm đề xuất ({suggestions.length})
           </button>
           <button
             onClick={() => setActiveTab("locations")}
-            className={`pb-3 px-1 text-sm font-medium border-b-2 transition-colors ${
-              activeTab === "locations"
-                ? "border-zinc-900 text-zinc-900"
-                : "border-transparent text-zinc-500 hover:text-zinc-700"
-            }`}
+            className={`pb-3 px-1 text-sm font-medium border-b-2 transition-colors ${activeTab === "locations"
+              ? "border-zinc-900 text-zinc-900"
+              : "border-transparent text-zinc-500 hover:text-zinc-700"
+              }`}
           >
             Địa điểm hiện có ({locations.length})
           </button>

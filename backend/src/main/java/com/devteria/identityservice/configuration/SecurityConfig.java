@@ -27,7 +27,8 @@ public class SecurityConfig {
             "/users/forgot-password", "/users/reset-password",
             "/vietmap/tiles/**", // Map tiles need to be public for Leaflet
             "/tours/search", "/tours/approved", "/tours/{id}", // Public tour search and viewing
-            "/locations" // Public location list for filters
+            "/locations", // Public location list for filters
+            "/ws/**" // WebSocket endpoint
     };
 
     @Autowired
@@ -35,13 +36,16 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
-        httpSecurity.authorizeHttpRequests(request -> request
-                .requestMatchers(HttpMethod.POST, PUBLIC_ENDPOINTS).permitAll()
-                .requestMatchers(HttpMethod.GET, "/auth/verify").permitAll()
-                .requestMatchers(HttpMethod.GET, "/vietmap/tiles/**").permitAll() // Map tiles for Leaflet
-                .requestMatchers(HttpMethod.GET, "/tours/search", "/tours/approved", "/tours/{id}").permitAll() // Public tour endpoints
-                .requestMatchers(HttpMethod.GET, "/locations").permitAll() // Public location list
-                .anyRequest().authenticated());
+        httpSecurity
+                .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Enable CORS
+                .authorizeHttpRequests(request -> request
+                        .requestMatchers(HttpMethod.POST, PUBLIC_ENDPOINTS).permitAll()
+                        .requestMatchers(HttpMethod.GET, "/auth/verify").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/vietmap/tiles/**").permitAll() // Map tiles for Leaflet
+                        .requestMatchers(HttpMethod.GET, "/tours/search", "/tours/approved", "/tours/{id}").permitAll() // Public tour endpoints
+                        .requestMatchers(HttpMethod.GET, "/locations").permitAll() // Public location list
+                        .requestMatchers("/ws/**").permitAll() // WebSocket endpoint
+                        .anyRequest().authenticated());
 
         httpSecurity.oauth2ResourceServer(oauth2 -> oauth2.jwt(jwtConfigurer -> jwtConfigurer
                 .decoder(customJwtDecoder)
@@ -50,6 +54,19 @@ public class SecurityConfig {
         httpSecurity.csrf(AbstractHttpConfigurer::disable);
 
         return httpSecurity.build();
+    }
+
+    @Bean
+    public UrlBasedCorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration corsConfiguration = new CorsConfiguration();
+        corsConfiguration.addAllowedOriginPattern("*");
+        corsConfiguration.addAllowedMethod("*");
+        corsConfiguration.addAllowedHeader("*");
+        corsConfiguration.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", corsConfiguration);
+        return source;
     }
 
     @Bean

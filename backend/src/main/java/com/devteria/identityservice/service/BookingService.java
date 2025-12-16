@@ -98,8 +98,8 @@ public class BookingService {
         // Check availability
         int currentParticipants = trip.getCurrentParticipants() != null ? trip.getCurrentParticipants() : 0;
         if (currentParticipants + numberOfParticipants > trip.getMaxParticipants()) {
-            throw new RuntimeException("Not enough spots available. Available: " 
-                + (trip.getMaxParticipants() - currentParticipants));
+            throw new RuntimeException("Not enough spots available. Available: "
+                    + (trip.getMaxParticipants() - currentParticipants));
         }
 
         // Check if trip has expired
@@ -111,9 +111,9 @@ public class BookingService {
         String bookingCode = generateBookingCode();
 
         // Calculate total price
-        Double totalPrice = tour.getPrice() != null 
-            ? tour.getPrice() * numberOfParticipants 
-            : 0.0;
+        Double totalPrice = tour.getPrice() != null
+                ? tour.getPrice() * numberOfParticipants
+                : 0.0;
 
         // Create booking
         Booking booking = Booking.builder()
@@ -146,12 +146,11 @@ public class BookingService {
 
         // Update trip current participants
         trip.setCurrentParticipants(
-            (trip.getCurrentParticipants() != null ? trip.getCurrentParticipants() : 0) + numberOfParticipants
-        );
+                (trip.getCurrentParticipants() != null ? trip.getCurrentParticipants() : 0) + numberOfParticipants);
         tripRepository.save(trip);
 
-        log.info("Booking created: {} for trip: {} (tour: {}) by user: {}", 
-            bookingCode, trip.getId(), tour.getName(), username);
+        log.info("Booking created: {} for trip: {} (tour: {}) by user: {}",
+                bookingCode, trip.getId(), tour.getName(), username);
 
         return mapToResponse(booking);
     }
@@ -195,6 +194,31 @@ public class BookingService {
     }
 
     /**
+     * Get bookings for a trip (for agent/owner)
+     */
+    @Transactional(readOnly = true)
+    public List<BookingResponse> getBookingsForTrip(Long tripId) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        Trip trip = tripRepository.findById(tripId)
+                .orElseThrow(() -> new RuntimeException("Trip not found"));
+
+        Tour tour = trip.getTour();
+
+        // Check if user is the owner of the tour
+        if (!tour.getCreatedBy().getId().equals(user.getId())) {
+            throw new RuntimeException("You are not authorized to view bookings for this trip");
+        }
+
+        return bookingRepository.findByTripOrderByCreatedAtDesc(trip)
+                .stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    /**
      * Get booking by ID
      */
     @Transactional(readOnly = true)
@@ -231,8 +255,8 @@ public class BookingService {
         Trip trip = booking.getTrip();
         int numberOfParticipants = booking.getNumberOfParticipants();
         trip.setCurrentParticipants(
-            Math.max(0, (trip.getCurrentParticipants() != null ? trip.getCurrentParticipants() : 0) - numberOfParticipants)
-        );
+                Math.max(0, (trip.getCurrentParticipants() != null ? trip.getCurrentParticipants() : 0)
+                        - numberOfParticipants));
         tripRepository.save(trip);
 
         // Update booking status
@@ -321,10 +345,9 @@ public class BookingService {
             // Generate QR code
             QRCodeWriter qrCodeWriter = new QRCodeWriter();
             BitMatrix bitMatrix = qrCodeWriter.encode(
-                "BOOKING:" + bookingCode,
-                BarcodeFormat.QR_CODE,
-                300, 300
-            );
+                    "BOOKING:" + bookingCode,
+                    BarcodeFormat.QR_CODE,
+                    300, 300);
 
             BufferedImage qrImage = MatrixToImageWriter.toBufferedImage(bitMatrix);
 
@@ -378,7 +401,8 @@ public class BookingService {
                 .tripId(trip != null ? trip.getId() : null)
                 .tripStartDate(trip != null ? trip.getStartDate() : null)
                 .tripEndDate(trip != null ? trip.getEndDate() : null)
-                .userName(user.getFirstName() != null ? user.getFirstName() + " " + user.getLastName() : user.getUsername())
+                .userName(user.getFirstName() != null ? user.getFirstName() + " " + user.getLastName()
+                        : user.getUsername())
                 .userEmail(user.getEmail())
                 .participantNames(participantNames)
                 .numberOfParticipants(participantNames.size())

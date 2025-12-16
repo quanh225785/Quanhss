@@ -20,7 +20,6 @@ self.addEventListener('activate', (event) => {
                 cacheNames
                     .filter((name) => name.startsWith('vietmap-tiles-') && name !== CACHE_NAME)
                     .map((name) => {
-                        console.log('[Service Worker] Deleting old cache:', name);
                         return caches.delete(name);
                     })
             );

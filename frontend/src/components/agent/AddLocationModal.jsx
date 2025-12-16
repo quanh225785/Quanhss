@@ -152,7 +152,6 @@ const AddLocationModal = ({ onClose, onSuccess }) => {
 
                 // Get full details
                 const ref = extractRefId(location);
-                console.log('Reverse-geocode found refId=', ref);
                 const details = ref ? await getPlaceDetails(ref) : null;
 
                 if (details) {

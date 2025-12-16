@@ -17,10 +17,12 @@ import {
     AlertCircle,
     Users,
     CalendarX,
+    MessageCircle,
 } from 'lucide-react';
 import { api } from '../utils/api';
 import { formatDistance, formatDuration } from '../utils/polylineUtils';
 import TourMap from '../components/agent/TourMap';
+import { startConversation } from '../utils/chatApi';
 
 const TourDetailPage = () => {
     const { id } = useParams();
@@ -31,6 +33,7 @@ const TourDetailPage = () => {
     const [isFavorite, setIsFavorite] = useState(false);
     const [activeDay, setActiveDay] = useState(1);
     const [selectedTrip, setSelectedTrip] = useState(null);  // Selected trip for booking
+    const [contactingAgent, setContactingAgent] = useState(false);
 
     useEffect(() => {
         fetchTourDetails();
@@ -453,10 +456,10 @@ const TourDetailPage = () => {
                                                     onClick={() => setSelectedTrip(trip)}
                                                     disabled={trip.isFull || tripExpired}
                                                     className={`w-full p-3 rounded-xl text-left transition-all border ${isSelected
-                                                            ? 'border-primary bg-primary/10 ring-2 ring-primary/30'
-                                                            : trip.isFull || tripExpired
-                                                                ? 'border-slate-200 bg-slate-50 opacity-60 cursor-not-allowed'
-                                                                : 'border-slate-200 bg-white/80 hover:border-primary/50'
+                                                        ? 'border-primary bg-primary/10 ring-2 ring-primary/30'
+                                                        : trip.isFull || tripExpired
+                                                            ? 'border-slate-200 bg-slate-50 opacity-60 cursor-not-allowed'
+                                                            : 'border-slate-200 bg-white/80 hover:border-primary/50'
                                                         }`}
                                                 >
                                                     <div className="flex justify-between items-start mb-1">
@@ -464,10 +467,10 @@ const TourDetailPage = () => {
                                                             {formatDateTime(trip.startDate)}
                                                         </span>
                                                         <span className={`text-xs px-2 py-0.5 rounded-full ${trip.isFull
-                                                                ? 'bg-red-100 text-red-700'
-                                                                : tripExpired
-                                                                    ? 'bg-slate-100 text-slate-500'
-                                                                    : 'bg-green-100 text-green-700'
+                                                            ? 'bg-red-100 text-red-700'
+                                                            : tripExpired
+                                                                ? 'bg-slate-100 text-slate-500'
+                                                                : 'bg-green-100 text-green-700'
                                                             }`}>
                                                             {trip.isFull ? 'Đầy' : tripExpired ? 'Hết hạn' : `Còn ${trip.availableSlots} chỗ`}
                                                         </span>
@@ -547,8 +550,8 @@ const TourDetailPage = () => {
                             {/* Warning if trip is full or expired */}
                             {selectedTrip && (isTripFull() || isTripExpired()) && (
                                 <div className={`mb-4 p-3 rounded-xl flex items-center gap-2 text-sm ${isTripExpired()
-                                        ? 'bg-red-50 text-red-700 border border-red-200'
-                                        : 'bg-amber-50 text-amber-700 border border-amber-200'
+                                    ? 'bg-red-50 text-red-700 border border-red-200'
+                                    : 'bg-amber-50 text-amber-700 border border-amber-200'
                                     }`}>
                                     <AlertCircle size={16} />
                                     <span>
@@ -563,8 +566,8 @@ const TourDetailPage = () => {
                                 disabled={!canBook()}
                                 onClick={() => navigate(`/booking/${id}`, { state: { tripId: selectedTrip.id, trip: selectedTrip } })}
                                 className={`w-full py-4 font-bold rounded-2xl transition-all duration-200 flex items-center justify-center gap-2 ${canBook()
-                                        ? 'bg-gradient-to-r from-primary to-secondary text-white hover:shadow-lg hover:-translate-y-0.5'
-                                        : 'bg-slate-200 text-slate-500 cursor-not-allowed'
+                                    ? 'bg-gradient-to-r from-primary to-secondary text-white hover:shadow-lg hover:-translate-y-0.5'
+                                    : 'bg-slate-200 text-slate-500 cursor-not-allowed'
                                     }`}
                             >
                                 {getBookingButtonText()}
@@ -590,7 +593,29 @@ const TourDetailPage = () => {
                                     <p className="text-sm text-slate-500">Đại lý du lịch</p>
                                 </div>
                             </div>
-                            <button className="w-full mt-4 py-3 border border-primary text-primary font-medium rounded-xl hover:bg-primary/5 transition-colors">
+                            <button
+                                onClick={async () => {
+                                    try {
+                                        setContactingAgent(true);
+                                        // Start a conversation with the agent about this tour
+                                        // Backend will resolve agent from tour.createdBy
+                                        await startConversation(null, tour.id, `Xin chào, tôi muốn hỏi về tour "${tour.name}"`);
+                                        navigate('/user/chat');
+                                    } catch (error) {
+                                        console.error('Failed to start conversation:', error);
+                                        alert('Không thể liên hệ đại lý. Vui lòng thử lại.');
+                                    } finally {
+                                        setContactingAgent(false);
+                                    }
+                                }}
+                                disabled={contactingAgent}
+                                className="w-full mt-4 py-3 border border-primary text-primary font-medium rounded-xl hover:bg-primary/5 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                            >
+                                {contactingAgent ? (
+                                    <Loader2 size={18} className="animate-spin" />
+                                ) : (
+                                    <MessageCircle size={18} />
+                                )}
                                 Liên hệ đại lý
                             </button>
                         </div>
