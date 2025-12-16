@@ -174,8 +174,8 @@ const AgentTourDetail = () => {
             {/* Check-in Status Alert */}
             {checkInStatus && (
                 <div className={`fixed top-4 right-4 z-50 max-w-md p-4 rounded-lg shadow-lg border ${checkInStatus.type === 'success' ? 'bg-green-50 border-green-200' :
-                        checkInStatus.type === 'error' ? 'bg-red-50 border-red-200' :
-                            'bg-blue-50 border-blue-200'
+                    checkInStatus.type === 'error' ? 'bg-red-50 border-red-200' :
+                        'bg-blue-50 border-blue-200'
                     }`}>
                     <div className="flex items-start gap-3">
                         {checkInStatus.type === 'success' && <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />}
@@ -183,8 +183,8 @@ const AgentTourDetail = () => {
                         {checkInStatus.type === 'loading' && <Loader2 className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5 animate-spin" />}
                         <div className="flex-1">
                             <p className={`font-medium ${checkInStatus.type === 'success' ? 'text-green-900' :
-                                    checkInStatus.type === 'error' ? 'text-red-900' :
-                                        'text-blue-900'
+                                checkInStatus.type === 'error' ? 'text-red-900' :
+                                    'text-blue-900'
                                 }`}>
                                 {checkInStatus.message}
                             </p>
