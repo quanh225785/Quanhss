@@ -10,10 +10,13 @@ import {
     Loader2,
     AlertCircle,
     CheckCircle,
+    QrCode,
+    X,
 } from 'lucide-react';
 import { api } from '../../utils/api';
 import { formatDistance, formatDuration } from '../../utils/polylineUtils';
 import TourMap from './TourMap';
+import QrScanner from './QrScanner';
 
 const AgentTourDetail = () => {
     const { id } = useParams();
@@ -23,6 +26,8 @@ const AgentTourDetail = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [activeDay, setActiveDay] = useState(1);
+    const [showQrScanner, setShowQrScanner] = useState(false);
+    const [checkInStatus, setCheckInStatus] = useState(null);
 
     useEffect(() => {
         fetchTourDetails();
@@ -81,6 +86,45 @@ const AgentTourDetail = () => {
         });
     };
 
+    const handleScanSuccess = async (scannedCode) => {
+        try {
+            setShowQrScanner(false);
+            setCheckInStatus({ type: 'loading', message: 'Đang xử lý check-in...' });
+
+            // Remove "BOOKING:" prefix if exists
+            const bookingCode = scannedCode.replace(/^BOOKING:/i, '');
+
+            const response = await api.put(`/bookings/checkin/${bookingCode}`);
+
+            if (response.data.code === 1000) {
+                setCheckInStatus({
+                    type: 'success',
+                    message: `Check-in thành công! Mã đặt chỗ: ${bookingCode}`,
+                    data: response.data.result
+                });
+                // Auto hide success message after 5 seconds
+                setTimeout(() => setCheckInStatus(null), 5000);
+            }
+        } catch (err) {
+            console.error('Check-in error:', err);
+            setCheckInStatus({
+                type: 'error',
+                message: err.response?.data?.message || 'Có lỗi xảy ra khi check-in. Vui lòng thử lại.'
+            });
+            // Auto hide error message after 5 seconds
+            setTimeout(() => setCheckInStatus(null), 5000);
+        }
+    };
+
+    const handleScanError = (error) => {
+        console.error('QR Scan error:', error);
+        setCheckInStatus({
+            type: 'error',
+            message: 'Có lỗi xảy ra khi quét mã QR. Vui lòng thử lại.'
+        });
+        setTimeout(() => setCheckInStatus(null), 3000);
+    };
+
     // Group points by day
     const getPointsByDay = () => {
         if (!tour?.points) return {};
@@ -127,6 +171,48 @@ const AgentTourDetail = () => {
 
     return (
         <div className="space-y-6">
+            {/* Check-in Status Alert */}
+            {checkInStatus && (
+                <div className={`fixed top-4 right-4 z-50 max-w-md p-4 rounded-lg shadow-lg border ${checkInStatus.type === 'success' ? 'bg-green-50 border-green-200' :
+                        checkInStatus.type === 'error' ? 'bg-red-50 border-red-200' :
+                            'bg-blue-50 border-blue-200'
+                    }`}>
+                    <div className="flex items-start gap-3">
+                        {checkInStatus.type === 'success' && <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />}
+                        {checkInStatus.type === 'error' && <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />}
+                        {checkInStatus.type === 'loading' && <Loader2 className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5 animate-spin" />}
+                        <div className="flex-1">
+                            <p className={`font-medium ${checkInStatus.type === 'success' ? 'text-green-900' :
+                                    checkInStatus.type === 'error' ? 'text-red-900' :
+                                        'text-blue-900'
+                                }`}>
+                                {checkInStatus.message}
+                            </p>
+                            {checkInStatus.data && (
+                                <div className="mt-2 text-sm text-green-700">
+                                    <p>Người đặt: {checkInStatus.data.userName}</p>
+                                    <p>Số người: {checkInStatus.data.numberOfParticipants || 1}</p>
+                                </div>
+                            )}
+                        </div>
+                        <button
+                            onClick={() => setCheckInStatus(null)}
+                            className="text-zinc-400 hover:text-zinc-600"
+                        >
+                            <X size={16} />
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* QR Scanner Modal */}
+            <QrScanner
+                isOpen={showQrScanner}
+                onClose={() => setShowQrScanner(false)}
+                onScanSuccess={handleScanSuccess}
+                onScanError={handleScanError}
+            />
+
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
@@ -142,13 +228,22 @@ const AgentTourDetail = () => {
                     </div>
                 </div>
                 {tour.status === 'APPROVED' && (
-                    <button
-                        onClick={() => navigate(`/agent/tours/${id}/trips`)}
-                        className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
-                    >
-                        <Calendar size={16} />
-                        Quản lý chuyến
-                    </button>
+                    <div className="flex gap-2">
+                        <button
+                            onClick={() => setShowQrScanner(true)}
+                            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                        >
+                            <QrCode size={16} />
+                            Quét QR Check-in
+                        </button>
+                        <button
+                            onClick={() => navigate(`/agent/tours/${id}/trips`)}
+                            className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
+                        >
+                            <Calendar size={16} />
+                            Quản lý chuyến
+                        </button>
+                    </div>
                 )}
             </div>
 
