@@ -109,29 +109,29 @@ Secrets được truyền qua:
                     ┌──────────────┴──────────────┐
                     ▼                              ▼
             ┌──────────────┐              ┌──────────────┐
-            │  CloudFront  │              │  Nginx EC2   │
-            │   (Frontend) │              │ (Public IP)  │
-            └──────┬───────┘              └──────┬───────┘
-                   │                              │
-                   ▼                              ▼
-            ┌──────────────┐         ┌────────────────────────┐
-            │   S3 Bucket  │         │   Backend EC2 (Docker) │
-            │ Static Files │         │  EC2-1  │  EC2-2       │
-            └──────────────┘         │ (Public Subnet)        │
-                                     └────────────┬───────────┘
-                                                  │
-                                                  ▼
-                                          ┌──────────────┐
-                                          │ Aiven MySQL  │
-                                          │   (Cloud)    │
-                                          └──────────────┘
+            │ S3 Website   │              │  Nginx EC2   │
+            │ (Frontend)   │              │ (API Proxy)  │
+            └──────────────┘              └──────┬───────┘
+                                               │
+                                               ▼
+                                  ┌────────────────────────┐
+                                  │   Backend EC2 (Docker) │
+                                  │  EC2-1  │  EC2-2       │
+                                  │ (Public Subnet)        │
+                                  └────────────┬───────────┘
+                                               │
+                                               ▼
+                                       ┌──────────────┐
+                                       │ Aiven MySQL  │
+                                       │   (Cloud)    │
+                                       └──────────────┘
 ```
 
-**Kiến trúc đơn giản hóa:**
-- ✅ Tất cả EC2 đều ở **Public Subnet** → Không cần NAT Gateway
-- ✅ Security Groups kiểm soát traffic → Vẫn an toàn
-- ✅ Tiết kiệm ~$32/tháng (NAT Gateway cost)
-- ✅ Nginx reverse proxy vẫn load balance giữa 2 backend
+**Kiến trúc đơn giản hóa (không CloudFront):**
+- ✅ Frontend: **S3 Static Website Hosting** (trực tiếp, không CDN)
+- ✅ Backend: Nginx load balancing giữa 2 EC2
+- ✅ Tất cả EC2 ở **Public Subnet** → Không cần NAT Gateway
+- ✅ Tiết kiệm thêm ~$10/tháng (không dùng CloudFront)
 
 ---
 
@@ -139,9 +139,10 @@ Secrets được truyền qua:
 
 ### AWS Account
 - Tài khoản AWS với quyền truy cập:
-  - EC2, S3, CloudFront, ACM (Certificate Manager)
+  - EC2, S3
   - IAM (để tạo access keys)
   - **Không cần Route 53** - dùng DNS từ nhà cung cấp domain
+  - **Không cần CloudFront** - dùng S3 Static Website Hosting
 
 ### Domain (Đã có sẵn)
 - Domain đã đăng ký ở nhà cung cấp bên thứ 3 (Namecheap, GoDaddy, etc.)
@@ -355,15 +356,43 @@ aws ec2 authorize-security-group-ingress --group-id $BACKEND_SG --protocol tcp -
 
 ### 1.3 Tạo S3 Buckets
 
-#### Bucket cho Frontend Static Files
+#### Bucket cho Frontend (Static Website Hosting)
 ```bash
-aws s3 mb s3://quanhss-frontend --region ap-southeast-1
+# Tạo bucket (tên bucket phải unique toàn cầu)
+aws s3 mb s3://quanhss-frontend-YOURNAME --region ap-southeast-1
 
 # Enable static website hosting
-aws s3 website s3://quanhss-frontend --index-document index.html --error-document index.html
+aws s3 website s3://quanhss-frontend-YOURNAME \
+  --index-document index.html \
+  --error-document index.html
 
-# Bucket policy cho CloudFront access (sẽ thêm OAI sau)
+# Disable Block Public Access (cần thiết cho static website)
+aws s3api put-public-access-block \
+  --bucket quanhss-frontend-YOURNAME \
+  --public-access-block-configuration "BlockPublicAcls=false,IgnorePublicAcls=false,BlockPublicPolicy=false,RestrictPublicBuckets=false"
+
+# Bucket Policy - cho phép public read
+aws s3api put-bucket-policy --bucket quanhss-frontend-YOURNAME --policy '{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "PublicReadGetObject",
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": "s3:GetObject",
+      "Resource": "arn:aws:s3:::quanhss-frontend-YOURNAME/*"
+    }
+  ]
+}'
 ```
+
+**Lưu lại S3 Website Endpoint:**
+```
+http://quanhss-frontend-YOURNAME.s3-website-ap-southeast-1.amazonaws.com
+```
+
+⚠️ **Lưu ý**: S3 Static Website Hosting chỉ hỗ trợ HTTP, không HTTPS. 
+Nếu cần HTTPS cho frontend, có thể dùng **Cloudflare** phía trước (free tier có SSL).
 
 #### Bucket cho User Uploads (Tours, QR Codes)
 ```bash
@@ -373,7 +402,7 @@ aws s3 mb s3://quanhss-uploads --region ap-southeast-1
 aws s3api put-bucket-cors --bucket quanhss-uploads --cors-configuration '{
   "CORSRules": [
     {
-      "AllowedOrigins": ["https://yourdomain.com", "http://localhost:5173"],
+      "AllowedOrigins": ["*"],
       "AllowedMethods": ["GET", "PUT", "POST"],
       "AllowedHeaders": ["*"],
       "ExposeHeaders": ["ETag"]
@@ -463,8 +492,8 @@ aws ec2 describe-instances \
 Tạo file config `/etc/nginx/conf.d/api.conf`:
 ```nginx
 upstream backend_servers {
-    server 10.0.1.10:8080;  # Backend EC2-1 Private IP
-    server 10.0.1.11:8080;  # Backend EC2-2 Private IP
+    server 10.0.1.10:8080;  # Backend EC2-1 Private IP Nhớ thay bằng private IP của backend 1 
+    server 10.0.1.11:8080;  # Backend EC2-2 Private IP Nhớ thay bằng private IP của backend 2
 }
 
 server {
@@ -500,28 +529,16 @@ server {
 Restart Nginx:
 ```bash
 sudo nginx -t
-sudo systemctl reload nginx
+sudo systemctl start nginx
 ```
 
-### 1.7 Tạo CloudFront Distribution
+**Test Nginx:**
+```bash
+# Từ bên ngoài
+curl http://<NGINX_PUBLIC_IP>/
 
-1. CloudFront → Create Distribution
-2. Origin:
-   - Origin domain: `quanhss-frontend.s3.ap-southeast-1.amazonaws.com`
-   - Origin access: **Origin Access Control (OAC)**
-   - Create OAC → Sign requests
-3. Default cache behavior:
-   - Viewer protocol policy: **Redirect HTTP to HTTPS**
-   - Allowed HTTP methods: **GET, HEAD**
-   - Cache policy: **CachingOptimized**
-4. Settings:
-   - Alternate domain name (CNAME): `www.yourdomain.com`, `yourdomain.com`
-   - Custom SSL certificate: Request từ ACM
-5. Default root object: `index.html`
-
-**Error Pages (cho SPA routing):**
-- 403 → `/index.html` → 200
-- 404 → `/index.html` → 200
+# Expected: 502 Bad Gateway (vì chưa có backend)
+```
 
 ---
 
@@ -538,22 +555,25 @@ Thêm các secrets:
 | `AWS_ACCESS_KEY_ID` | IAM User Access Key |
 | `AWS_SECRET_ACCESS_KEY` | IAM User Secret Key |
 | `AWS_REGION` | `ap-southeast-1` |
-| `S3_BUCKET_FRONTEND` | `quanhss-frontend` |
-| `CLOUDFRONT_DISTRIBUTION_ID` | `EXXXXXXXXX` |
+| `S3_BUCKET_FRONTEND` | `quanhss-frontend-YOURNAME` (tên bucket S3) |
+| `VITE_API_BASE_URL` | `http://api.yourdomain.com` hoặc `http://<NGINX_IP>` |
 | `DOCKER_USERNAME` | Docker Hub username |
 | `DOCKER_PASSWORD` | Docker Hub password/token |
-| `EC2_HOST_1` | Backend EC2-1 Private IP |
-| `EC2_HOST_2` | Backend EC2-2 Private IP |
-| `NGINX_HOST` | Nginx EC2 Public IP |
-| `SSH_PRIVATE_KEY` | Private key content |
-| `DB_URL` | `jdbc:mysql://mysql-192be37d-vietlinh1482004-83dd.g.aivencloud.com:10404/quanh` |
+| `EC2_HOST_1` | Backend EC2-1 Public IP |
+| `EC2_HOST_2` | Backend EC2-2 Public IP |
+| `SSH_PRIVATE_KEY` | Private key content (toàn bộ file .pem) |
+| `DB_URL` | `jdbc:mysql://mysql-xxx.aivencloud.com:10404/quanh` |
 | `DB_USERNAME` | `avnadmin` |
 | `DB_PASSWORD` | Aiven password |
-| `JWT_SIGNER_KEY` | JWT secret key |
-| `S3_ACCESS_KEY` | S3 Access Key |
+| `JWT_SIGNER_KEY` | JWT secret key (32+ chars) |
+| `S3_ACCESS_KEY` | S3 Access Key (cho uploads) |
 | `S3_SECRET_KEY` | S3 Secret Key |
 | `S3_BUCKET_UPLOADS` | `quanhss-uploads` |
 | `S3_ENDPOINT` | `https://s3.ap-southeast-1.amazonaws.com` |
+| `NGINX_HOST` | Nginx EC2 Public IP (bastion host) |
+| `MAIL_EMAIL` | `forgot.pass.bid@gmail.com` (email gửi OTP) |
+| `MAIL_PASSWORD` | `xsiq grfy wyil myzp` (Gmail App Password) |
+| `VIETMAP_API_KEY` | `ec4b6f6a60186d81c08db7c3beeed4abafcd2fc367c9f746` |
 
 ### 2.2 Tạo GitHub Actions Workflows
 
@@ -575,6 +595,7 @@ env:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+    environment: Deploy # Chỉ định môi trường của github actions
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -613,6 +634,7 @@ jobs:
   deploy-ec2-1:
     needs: build-and-push
     runs-on: ubuntu-latest
+    environment: Deploy # Chỉ định môi trường của github actions
     steps:
       - name: Deploy to EC2-1
         uses: appleboy/ssh-action@v1.0.3
@@ -646,6 +668,7 @@ jobs:
   deploy-ec2-2:
     needs: build-and-push
     runs-on: ubuntu-latest
+    environment: Deploy # Chỉ định môi trường của github actions
     steps:
       - name: Deploy to EC2-2
         uses: appleboy/ssh-action@v1.0.3
@@ -679,68 +702,88 @@ jobs:
 #### Frontend Workflow: `.github/workflows/deploy-frontend.yml`
 
 ```yaml
-name: Deploy Frontend
+name: 🌐 Deploy Frontend
 
 on:
   push:
     branches: [main]
     paths:
       - 'frontend/**'
+      - '.github/workflows/deploy-frontend.yml'
   workflow_dispatch:
+
+env:
+  NODE_VERSION: '20'
+  S3_BUCKET: ${{ secrets.S3_BUCKET_FRONTEND }}
+  AWS_REGION: ${{ secrets.AWS_REGION }}
 
 jobs:
   build-and-deploy:
+    name: 🚀 Build & Deploy to S3
     runs-on: ubuntu-latest
+    
     steps:
-      - name: Checkout code
+      - name: 📥 Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: 📦 Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
           cache-dependency-path: ./frontend/package-lock.json
 
-      - name: Install dependencies
+      - name: 📥 Install dependencies
         working-directory: ./frontend
         run: npm ci
 
-      - name: Build frontend
+      - name: 🧪 Run Lint
+        working-directory: ./frontend
+        run: npm run lint || true
+
+      - name: 🏗️ Build
         working-directory: ./frontend
         run: npm run build
         env:
-          VITE_API_BASE_URL: https://api.yourdomain.com
+          VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
 
-      - name: Configure AWS credentials
+      - name: 🔑 Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          aws-region: ${{ env.AWS_REGION }}
 
-      - name: Deploy to S3
+      - name: 📤 Deploy to S3
         working-directory: ./frontend
         run: |
-          aws s3 sync dist/ s3://${{ secrets.S3_BUCKET_FRONTEND }} \
+          # Sync all files to S3
+          aws s3 sync dist/ s3://${{ env.S3_BUCKET }} \
             --delete \
             --cache-control "max-age=31536000,public" \
             --exclude "index.html" \
             --exclude "*.json"
           
-          # Upload index.html and JSON files with no-cache
-          aws s3 cp dist/index.html s3://${{ secrets.S3_BUCKET_FRONTEND }}/index.html \
-            --cache-control "no-cache,no-store,must-revalidate"
+          # Upload index.html with no-cache (for SPA routing)
+          aws s3 cp dist/index.html s3://${{ env.S3_BUCKET }}/index.html \
+            --cache-control "no-cache,no-store,must-revalidate" \
+            --content-type "text/html"
           
-          # Upload any JSON files (like manifest)
-          find dist -name "*.json" -exec aws s3 cp {} s3://${{ secrets.S3_BUCKET_FRONTEND }}/ \
-            --cache-control "no-cache" \;
+          # Upload any JSON files with short cache
+          find dist -name "*.json" -type f | while read file; do
+            aws s3 cp "$file" s3://${{ env.S3_BUCKET }}/$(basename "$file") \
+              --cache-control "max-age=3600"
+          done
 
-      - name: Invalidate CloudFront cache
+      - name: ✅ Deployment Summary
         run: |
-          aws cloudfront create-invalidation \
-            --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
-            --paths "/*"
+          echo "## 🌐 Frontend Deployment Complete!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "🔗 **S3 Website URL**: http://${{ env.S3_BUCKET }}.s3-website-${{ env.AWS_REGION }}.amazonaws.com" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch**: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+
 ```
 
 ---
@@ -752,6 +795,10 @@ jobs:
 Cập nhật `backend/src/main/resources/application-prod.yaml`:
 
 ```yaml
+server:
+  port: 8080
+  servlet:
+    context-path: /api
 spring:
   datasource:
     url: ${SPRING_DATASOURCE_URL}
@@ -779,13 +826,24 @@ aws:
     region: ${AWS_S3_REGION}
     endpoint: ${AWS_S3_ENDPOINT}
 
-server:
-  port: 8080
+mailServer:
+  host: ${MAIL_HOST:smtp.gmail.com}
+  port: ${MAIL_PORT:587}
+  email: ${MAIL_EMAIL}
+  password: ${MAIL_PASSWORD}
+  protocol: ${MAIL_PROTOCOL:smtp}
+  isSSL: ${MAIL_SSL:false}
+
+vietmap:
+  api:
+    key: ${VIETMAP_API_KEY}
+    base-url: ${VIETMAP_BASE_URL:https://maps.vietmap.vn/api}
 
 logging:
   level:
     root: INFO
     com.devteria: INFO
+
 ```
 
 ### 3.2 Deploy thủ công lần đầu
@@ -839,8 +897,11 @@ curl http://<BACKEND_PUBLIC_IP>:8080/api/
 ```bash
 cd frontend
 
-# Tạo .env.production
-echo "VITE_API_BASE_URL=https://api.yourdomain.com" > .env.production
+# Tạo .env.production (dùng HTTP cho API nếu chưa có SSL)
+echo "VITE_API_BASE_URL=http://api.yourdomain.com" > .env.production
+
+# Hoặc nếu dùng IP trực tiếp
+echo "VITE_API_BASE_URL=http://<NGINX_PUBLIC_IP>" > .env.production
 
 # Build
 npm run build
@@ -849,49 +910,21 @@ npm run build
 ### 4.2 Upload lên S3
 
 ```bash
-# Sync static files
-aws s3 sync dist/ s3://quanhss-frontend --delete
+# Sync static files lên S3 (thay YOURNAME bằng tên bucket thực tế)
+aws s3 sync dist/ s3://quanhss-frontend-YOURNAME --delete
 
-# Set permissions (nếu không dùng OAC)
-aws s3api put-bucket-policy --bucket quanhss-frontend --policy '{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "PublicReadGetObject",
-      "Effect": "Allow",
-      "Principal": "*",
-      "Action": "s3:GetObject",
-      "Resource": "arn:aws:s3:::quanhss-frontend/*"
-    }
-  ]
-}'
+# Verify
+aws s3 ls s3://quanhss-frontend-YOURNAME/
 ```
 
-### 4.3 Cấu hình CloudFront S3 Bucket Policy (OAC)
+### 4.3 Test Frontend
 
-Sau khi tạo CloudFront với OAC, cập nhật S3 Bucket Policy:
-
-```json
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Sid": "AllowCloudFrontServicePrincipal",
-            "Effect": "Allow",
-            "Principal": {
-                "Service": "cloudfront.amazonaws.com"
-            },
-            "Action": "s3:GetObject",
-            "Resource": "arn:aws:s3:::quanhss-frontend/*",
-            "Condition": {
-                "StringEquals": {
-                    "AWS:SourceArn": "arn:aws:cloudfront::YOUR_ACCOUNT_ID:distribution/DISTRIBUTION_ID"
-                }
-            }
-        }
-    ]
-}
+Truy cập S3 Website Endpoint:
 ```
+http://quanhss-frontend-YOURNAME.s3-website-ap-southeast-1.amazonaws.com
+```
+
+✅ Nếu thấy app hoạt động = **Thành công!**
 
 ---
 
@@ -899,14 +932,14 @@ Sau khi tạo CloudFront với OAC, cập nhật S3 Bucket Policy:
 
 ### 5.1 Cấu hình DNS tại nhà cung cấp Domain
 
-**Bước 1: Lấy thông tin cần thiết từ AWS**
+**Bước 1: Lấy thông tin cần thiết**
 
 ```bash
-# 1. CloudFront Domain Name
-# Vào CloudFront Console → Distributions → Copy "Distribution domain name"
-# Ví dụ: d111111abcdef8.cloudfront.net
+# 1. S3 Website Endpoint (Frontend)
+# Format: http://BUCKET-NAME.s3-website-REGION.amazonaws.com
+# Ví dụ: http://quanhss-frontend-YOURNAME.s3-website-ap-southeast-1.amazonaws.com
 
-# 2. Nginx EC2 Public IP
+# 2. Nginx EC2 Public IP (API)
 aws ec2 describe-instances \
   --filters "Name=tag:Name,Values=quanhss-nginx" \
   --query 'Reservations[*].Instances[*].PublicIpAddress' \
@@ -916,25 +949,18 @@ aws ec2 describe-instances \
 
 **Bước 2: Cấu hình DNS Records**
 
-Đăng nhập vào **DNS Management** của nhà cung cấp domain (Namecheap, GoDaddy, etc.) và tạo các records:
-
-#### Option A: Sử dụng CNAME (Khuyến nghị)
+Đăng nhập vào **DNS Management** của nhà cung cấp domain:
 
 | Type | Host/Name | Value/Points To | TTL |
 |------|-----------|-----------------|-----|
-| CNAME | `www` | `d111111abcdef8.cloudfront.net` | 300 |
-| CNAME | `@` hoặc để trống | `www.yourdomain.com` | 300 |
+| CNAME | `www` | `quanhss-frontend-YOURNAME.s3-website-ap-southeast-1.amazonaws.com` | 300 |
 | A | `api` | `13.250.123.45` (Nginx EC2 IP) | 300 |
 
-#### Option B: Sử dụng A Record với ALIAS (nếu provider hỗ trợ)
+**Lưu ý:**
+- ⚠️ Root domain (`@`) không thể dùng CNAME. Dùng URL Redirect tới `www`
+- ⚠️ S3 Website chỉ hỗ trợ HTTP. Xem bên dưới về SSL options
 
-| Type | Host/Name | Value/Points To | TTL |
-|------|-----------|-----------------|-----|
-| ALIAS | `@` | `d111111abcdef8.cloudfront.net` | 300 |
-| CNAME | `www` | `yourdomain.com` | 300 |
-| A | `api` | `13.250.123.45` (Nginx EC2 IP) | 300 |
-
-**Lưu ý theo từng nhà cung cấp:**
+**Hướng dẫn theo nhà cung cấp:**
 
 <details>
 <summary><b>Namecheap</b></summary>
@@ -942,9 +968,9 @@ aws ec2 describe-instances \
 1. Đăng nhập Namecheap → Domain List
 2. Click **Manage** bên cạnh domain
 3. Tab **Advanced DNS**
-4. Add New Record:
-   - **CNAME Record**: Host = `www`, Value = CloudFront domain
-   - **URL Redirect**: Host = `@`, Value = `http://www.yourdomain.com`
+4. Add Records:
+   - **CNAME Record**: Host = `www`, Value = S3 website endpoint
+   - **URL Redirect**: Host = `@`, Value = `http://www.yourdomain.com` (Unmasked)
    - **A Record**: Host = `api`, Value = Nginx EC2 IP
 
 </details>
@@ -953,24 +979,26 @@ aws ec2 describe-instances \
 <summary><b>GoDaddy</b></summary>
 
 1. Đăng nhập GoDaddy → My Products → DNS
-2. Click domain của bạn
-3. Add Records:
-   - **CNAME**: Name = `www`, Value = CloudFront domain
+2. Add Records:
+   - **CNAME**: Name = `www`, Value = S3 website endpoint
    - **Forwarding**: Forward `yourdomain.com` to `www.yourdomain.com`
    - **A**: Name = `api`, Value = Nginx EC2 IP
 
 </details>
 
 <details>
-<summary><b>Cloudflare (nếu dùng)</b></summary>
+<summary><b>Cloudflare (Khuyến nghị - FREE SSL!)</b></summary>
 
-1. Cloudflare Dashboard → DNS → Records
-2. Add record:
-   - **CNAME**: Name = `www`, Target = CloudFront domain, **Proxy status: DNS only** (tắt orange cloud)
-   - **CNAME**: Name = `@`, Target = `www.yourdomain.com`
-   - **A**: Name = `api`, IPv4 = Nginx EC2 IP
+Dùng Cloudflare để có **HTTPS miễn phí** cho cả frontend và API:
 
-⚠️ **Quan trọng**: Phải tắt Cloudflare proxy (grey cloud) cho CloudFront CNAME!
+1. Chuyển nameserver của domain sang Cloudflare
+2. Cloudflare Dashboard → DNS → Add records:
+   - **CNAME**: Name = `www`, Target = S3 website endpoint, **Proxy: ON** (orange cloud)
+   - **CNAME**: Name = `@`, Target = `www.yourdomain.com`, **Proxy: ON**
+   - **A**: Name = `api`, IPv4 = Nginx EC2 IP, **Proxy: ON**
+3. SSL/TLS → Overview → Chọn **Flexible**
+
+✅ Cloudflare sẽ cung cấp HTTPS miễn phí!
 
 </details>
 
@@ -1100,11 +1128,16 @@ telnet mysql-192be37d-vietlinh1482004-83dd.g.aivencloud.com 10404
 # 3. Kiểm tra Aiven IP whitelist (nếu đã cấu hình)
 ```
 
-### CloudFront 403/404 Error
+### S3 Frontend 403/404 Error
 ```bash
-# Kiểm tra S3 bucket policy
-# Kiểm tra CloudFront OAC configuration
+# Kiểm tra S3 bucket policy (phải public read)
+aws s3api get-bucket-policy --bucket quanhss-frontend-YOURNAME
+
+# Kiểm tra static website hosting đã enable
+aws s3api get-bucket-website --bucket quanhss-frontend-YOURNAME
+
 # Kiểm tra index.html tồn tại
+aws s3 ls s3://quanhss-frontend-YOURNAME/index.html
 ```
 
 ### CORS Error trên Frontend
@@ -1140,14 +1173,15 @@ docker inspect quanhss-backend
 | ~~RDS (MySQL)~~ | ~~db.t3.micro~~ | ~~$15~~ **FREE (Aiven)** |
 | ~~NAT Gateway~~ | | ~~$32~~ **SAVED!** |
 | S3 | 10 GB | ~$0.25 |
-| CloudFront | 100 GB transfer | ~$10 |
+| ~~CloudFront~~ | ~~100 GB transfer~~ | ~~$10~~ **SAVED!** |
 | ~~Route 53~~ | ~~Hosted zone~~ | ~~$0.50~~ **FREE (External DNS)** |
-| **Total** | | **~$48.75/month** |
+| **Total** | | **~$38.25/month** |
 
 **Tiết kiệm được:**
 - ✅ Không dùng RDS → Dùng Aiven free tier: **-$15/tháng**
 - ✅ Không cần NAT Gateway (EC2 ở public subnet): **-$32/tháng**
-- 💰 **Tổng tiết kiệm: ~$47/tháng** so với kiến trúc full AWS!
+- ✅ Không dùng CloudFront (S3 static hosting): **-$10/tháng**
+- 💰 **Tổng tiết kiệm: ~$58/tháng** so với kiến trúc full AWS!
 
 *Note: Giá tham khảo, có thể thay đổi.*
 
@@ -1155,16 +1189,16 @@ docker inspect quanhss-backend
 
 ## ✅ Checklist Deploy
 
-- [ ] VPC và Subnets đã tạo
+- [ ] VPC và Public Subnet đã tạo
 - [ ] Security Groups đã cấu hình đúng
-- [ ] RDS đang chạy và accessible
-- [ ] S3 buckets đã tạo với policies đúng
+- [ ] Aiven MySQL accessible
+- [ ] S3 buckets đã tạo với static website hosting
+- [ ] S3 bucket policy cho phép public read
 - [ ] EC2 instances đang chạy
 - [ ] Docker đã cài trên Backend EC2s
 - [ ] Nginx đã cấu hình reverse proxy
-- [ ] CloudFront distribution đã tạo
-- [ ] Route 53 records đã thêm
-- [ ] SSL certificates đã issue
+- [ ] DNS records đã thêm (CNAME cho frontend, A cho API)
+- [ ] SSL cho API (Certbot hoặc Cloudflare)
 - [ ] GitHub Actions secrets đã thêm
 - [ ] CI/CD workflows đã tạo
 - [ ] Test API endpoint hoạt động
@@ -1176,10 +1210,10 @@ docker inspect quanhss-backend
 ## 📞 Support
 
 Nếu gặp vấn đề, kiểm tra:
-1. CloudWatch Logs
-2. Docker container logs
-3. Nginx access/error logs
+1. Docker container logs: `docker logs quanhss-backend`
+2. Nginx logs: `sudo tail -f /var/log/nginx/error.log`
+3. S3 bucket policy và permissions
 4. Browser DevTools → Network tab
 
 **Author**: QuanhSS Team  
-**Updated**: 2025-12-15
+**Updated**: 2025-12-17

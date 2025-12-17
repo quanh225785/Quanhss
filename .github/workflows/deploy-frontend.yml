@@ -1,0 +1,81 @@
+name: 🌐 Deploy Frontend
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/deploy-frontend.yml'
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '20'
+  S3_BUCKET: ${{ secrets.S3_BUCKET_FRONTEND }}
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+
+jobs:
+  build-and-deploy:
+    name: 🚀 Build & Deploy to S3
+    runs-on: ubuntu-latest
+    environment: Deploy
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: ./frontend/package-lock.json
+
+      - name: 📥 Install dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: 🧪 Run Lint
+        working-directory: ./frontend
+        run: npm run lint || true
+
+      - name: 🏗️ Build
+        working-directory: ./frontend
+        run: npm run build
+        env:
+          VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
+
+      - name: 🔑 Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: 📤 Deploy to S3
+        working-directory: ./frontend
+        run: |
+          # Sync all files to S3
+          aws s3 sync dist/ s3://${{ env.S3_BUCKET }} \
+            --delete \
+            --cache-control "max-age=31536000,public" \
+            --exclude "index.html" \
+            --exclude "*.json"
+          
+          # Upload index.html with no-cache (for SPA routing)
+          aws s3 cp dist/index.html s3://${{ env.S3_BUCKET }}/index.html \
+            --cache-control "no-cache,no-store,must-revalidate" \
+            --content-type "text/html"
+          
+          # Upload any JSON files with short cache
+          find dist -name "*.json" -type f | while read file; do
+            aws s3 cp "$file" s3://${{ env.S3_BUCKET }}/$(basename "$file") \
+              --cache-control "max-age=3600"
+          done
+
+      - name: ✅ Deployment Summary
+        run: |
+          echo "## 🌐 Frontend Deployment Complete!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "🔗 **S3 Website URL**: http://${{ env.S3_BUCKET }}.s3-website-${{ env.AWS_REGION }}.amazonaws.com" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch**: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
