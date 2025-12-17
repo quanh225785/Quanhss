@@ -7,3 +7,4 @@ target/
 mvnw
 mvnw.cmd
 .git/
+**/application.yaml

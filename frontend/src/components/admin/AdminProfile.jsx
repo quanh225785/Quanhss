@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Loader2, Check, AlertCircle, Shield, Lock } from "lucide-react";
+import { Loader2, Check, AlertCircle, Shield, Lock, Upload } from "lucide-react";
 import { api } from "../../utils/api";
 import ChangePasswordModal from "../shared/ChangePasswordModal";
 
@@ -8,15 +8,71 @@ const AdminProfile = ({ user }) => {
     firstName: user.firstName || "",
     lastName: user.lastName || "",
     dob: user.dob || "",
+    avatar: user.avatar || "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState(null);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const fileInputRef = React.useRef(null);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleAvatarUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      setError('Chỉ chấp nhận file ảnh');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setError('File phải nhỏ hơn 5MB');
+      return;
+    }
+
+    setIsUploadingAvatar(true);
+    setError(null);
+
+    try {
+      const uploadFormData = new FormData();
+      uploadFormData.append('file', file);
+      uploadFormData.append('folder', 'avatars');
+
+      const response = await api.post('/upload', uploadFormData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      if (response.data.code === 1000) {
+        const avatarUrl = response.data.result;
+        setFormData((prev) => ({ ...prev, avatar: avatarUrl }));
+
+        const updateResponse = await api.put(`/users/${user.id}`, {
+          ...formData,
+          avatar: avatarUrl,
+          roles: user.roles?.map((r) => r.name) || ["ADMIN"],
+        });
+
+        if (updateResponse.data.code === 1000) {
+          const updatedUser = { ...user, ...updateResponse.data.result };
+          localStorage.setItem("user", JSON.stringify(updatedUser));
+          setSuccess(true);
+          setTimeout(() => setSuccess(false), 3000);
+        }
+      }
+    } catch (err) {
+      console.error('Avatar upload error:', err);
+      setError(err.response?.data?.message || 'Không thể upload ảnh đại diện');
+    } finally {
+      setIsUploadingAvatar(false);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -46,7 +102,7 @@ const AdminProfile = ({ user }) => {
       console.error("[AdminProfile] Update error:", err);
       setError(
         err.response?.data?.message ||
-          "Không thể cập nhật thông tin. Vui lòng thử lại."
+        "Không thể cập nhật thông tin. Vui lòng thử lại."
       );
     } finally {
       setIsSubmitting(false);
@@ -67,8 +123,38 @@ const AdminProfile = ({ user }) => {
         className="bg-white border border-zinc-200 rounded-xl p-6 space-y-6"
       >
         <div className="flex items-center gap-6">
-          <div className="w-20 h-20 bg-zinc-900 rounded-full flex items-center justify-center text-2xl font-bold text-white">
-            <Shield size={32} />
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleAvatarUpload}
+            className="hidden"
+          />
+          <div className="relative group">
+            {formData.avatar ? (
+              <img
+                src={formData.avatar}
+                alt="Avatar"
+                className="w-20 h-20 rounded-full object-cover border-2 border-zinc-900"
+              />
+            ) : (
+              <div className="w-20 h-20 bg-zinc-900 rounded-full flex items-center justify-center text-2xl font-bold text-white">
+                <Shield size={32} />
+              </div>
+            )}
+            {isUploadingAvatar && (
+              <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center">
+                <Loader2 className="animate-spin text-white" size={24} />
+              </div>
+            )}
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isUploadingAvatar}
+              className="absolute bottom-0 right-0 p-1.5 bg-zinc-900 text-white rounded-full hover:bg-zinc-800 transition-colors disabled:opacity-50"
+            >
+              <Upload size={12} />
+            </button>
           </div>
           <div>
             <h3 className="text-lg font-medium">{user.name || "Admin"}</h3>

@@ -14,6 +14,81 @@
 7. [Phase 4: Deploy Frontend](#phase-4-deploy-frontend)
 8. [Phase 5: DNS & SSL Configuration](#phase-5-dns--ssl-configuration)
 8. [Troubleshooting](#troubleshooting)
+9. [🔒 Security Best Practices](#security-best-practices)
+
+---
+
+## 🔒 QUAN TRỌNG: Bảo Mật Secrets
+
+### ⚠️ CẢNH BÁO: Nếu đã push secrets lên Git
+
+Nếu `application.yaml` hoặc file chứa credentials đã được push lên Git (dù là private repo), bạn **BẮT BUỘC** phải:
+
+#### 1. Rotate (đổi) TẤT CẢ credentials bị lộ
+
+| Secret | Cách đổi |
+|--------|----------|
+| **Aiven MySQL password** | [Aiven Console](https://console.aiven.io/) → Service → Users → Reset password |
+| **JWT Signer Key** | Generate key mới: `openssl rand -base64 32` |
+| **AWS S3 Access Keys** | AWS IAM → Users → Security credentials → Create new access key → Deactivate old |
+| **Email password** | Đổi password trong email provider |
+| **Vietmap API Key** | Vietmap Dashboard → Generate new key |
+
+#### 2. Xóa file khỏi Git history (Khuyến nghị)
+
+```bash
+# Option 1: Dùng BFG Repo-Cleaner (nhanh nhất)
+# Download: https://rtyley.github.io/bfg-repo-cleaner/
+java -jar bfg.jar --delete-files application.yaml
+
+# Option 2: Dùng git filter-repo
+pip install git-filter-repo
+git filter-repo --path backend/src/main/resources/application.yaml --invert-paths
+
+# Force push sau khi xóa (⚠️ coordinate với team!)
+git push origin --force --all
+git push origin --force --tags
+```
+
+#### 3. Verify file đã được gitignore
+
+```bash
+# Kiểm tra .gitignore đã có
+cat backend/.gitignore | grep application.yaml
+
+# Output expected:
+# application.yaml
+
+# Kiểm tra file không còn được track
+git ls-files | grep application.yaml
+# Output should be EMPTY
+```
+
+### ✅ Cách đúng: Sử dụng Environment Variables
+
+**KHÔNG BAO GIỜ** commit secrets vào code. Thay vào đó:
+
+```yaml
+# application.yaml (KHÔNG chứa secrets)
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+
+jwt:
+  signerKey: ${JWT_SIGNERKEY}
+
+aws:
+  s3:
+    access-key-id: ${AWS_S3_ACCESS_KEY_ID}
+    secret-access-key: ${AWS_S3_SECRET_ACCESS_KEY}
+```
+
+Secrets được truyền qua:
+- **Local development**: File `.env` (đã gitignore)
+- **CI/CD**: GitHub Secrets
+- **Production**: Docker environment variables
 
 ---
 

@@ -88,8 +88,16 @@ const MainLayout = ({ children, onLogout }) => {
 
                 <div className="p-4 m-4 bg-white/50 rounded-2xl border border-white/50">
                     <div className="flex items-center gap-3 mb-4 rounded-xl p-2 transition-colors hover:bg-white/60 cursor-default">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary text-white flex items-center justify-center text-sm font-bold shadow-md">
-                            {user.firstName ? user.firstName.charAt(0).toUpperCase() : 'U'}
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary text-white flex items-center justify-center text-sm font-bold shadow-md overflow-hidden">
+                            {user.avatar ? (
+                                <img
+                                    src={user.avatar}
+                                    alt="Avatar"
+                                    className="w-full h-full object-cover"
+                                />
+                            ) : (
+                                user.firstName ? user.firstName.charAt(0).toUpperCase() : 'U'
+                            )}
                         </div>
                         <div className="flex-1 min-w-0">
                             <p className="text-sm font-bold text-slate-900 truncate">
