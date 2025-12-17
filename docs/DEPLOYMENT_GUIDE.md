@@ -1,7 +1,23 @@
 # 🚀 Hướng Dẫn Deploy Chi Tiết - QuanhSS Travel Platform
 
 **Kiến trúc**: CloudFront + S3 + GitHub Actions + Docker + EC2 + Aiven MySQL
-LÚC BUILD, NHỚ ĐỂ Ý DOCKERFILE XÓA HẾT CÁC YAML CÓ SECRET
+- LÚC BUILD, NHỚ ĐỂ Ý DOCKERFILE XÓA HẾT CÁC YAML CÓ SECRET
+
+- Lúc ssh vào backend, phải ssh thông qua nginx, nhưng nginx không có key, nên phải setup để jump
+
+
+# Cấu hình cho Nginx (Bastion Host)
+Host bastion
+    HostName 54.255.219.226
+    User ec2-user
+    IdentityFile C:\Users\LynG\Downloads\backend.pem
+
+# Cấu hình cho Backend (Đi qua Bastion)
+Host backend
+    HostName 10.0.13.12
+    User ec2-user
+    IdentityFile C:\Users\LynG\Downloads\backend.pem
+    ProxyJump bastion
 ---
 
 ## 📋 Mục Lục
@@ -960,47 +976,20 @@ aws ec2 describe-instances \
 - ⚠️ Root domain (`@`) không thể dùng CNAME. Dùng URL Redirect tới `www`
 - ⚠️ S3 Website chỉ hỗ trợ HTTP. Xem bên dưới về SSL options
 
-**Hướng dẫn theo nhà cung cấp:**
+**Hướng dẫn theo nhà cung cấp: Nói thế thui chứ dùng CloudFlare + CloudFront cho nhàn**
 
-<details>
-<summary><b>Namecheap</b></summary>
-
-1. Đăng nhập Namecheap → Domain List
-2. Click **Manage** bên cạnh domain
-3. Tab **Advanced DNS**
-4. Add Records:
-   - **CNAME Record**: Host = `www`, Value = S3 website endpoint
-   - **URL Redirect**: Host = `@`, Value = `http://www.yourdomain.com` (Unmasked)
-   - **A Record**: Host = `api`, Value = Nginx EC2 IP
-
-</details>
-
-<details>
-<summary><b>GoDaddy</b></summary>
-
-1. Đăng nhập GoDaddy → My Products → DNS
-2. Add Records:
-   - **CNAME**: Name = `www`, Value = S3 website endpoint
-   - **Forwarding**: Forward `yourdomain.com` to `www.yourdomain.com`
-   - **A**: Name = `api`, Value = Nginx EC2 IP
-
-</details>
-
-<details>
-<summary><b>Cloudflare (Khuyến nghị - FREE SSL!)</b></summary>
+<b>Cloudflare (Khuyến nghị - FREE SSL!)</b>
 
 Dùng Cloudflare để có **HTTPS miễn phí** cho cả frontend và API:
 
 1. Chuyển nameserver của domain sang Cloudflare
 2. Cloudflare Dashboard → DNS → Add records:
    - **CNAME**: Name = `www`, Target = S3 website endpoint, **Proxy: ON** (orange cloud)
-   - **CNAME**: Name = `@`, Target = `www.yourdomain.com`, **Proxy: ON**
    - **A**: Name = `api`, IPv4 = Nginx EC2 IP, **Proxy: ON**
-3. SSL/TLS → Overview → Chọn **Flexible**
+3. SSL/TLS → Overview → Chọn **Strict**, phải để strict, nếu không nó và CloudFront không hoạt động được, cứ đẩy nhau qua lại giữa https và http => Multiple request error, nó cứ load đi load lại
 
 ✅ Cloudflare sẽ cung cấp HTTPS miễn phí!
 
-</details>
 
 **Bước 3: Verify DNS Propagation**
 
@@ -1015,7 +1004,7 @@ nslookup api.yourdomain.com
 
 DNS có thể mất **5-30 phút** để propagate toàn cầu.
 
-### 5.2 SSL Certificate (AWS Certificate Manager)
+### 5.2 Setup CloudFront
 
 **Bước 1: Request Certificate**
 
@@ -1031,87 +1020,20 @@ DNS có thể mất **5-30 phút** để propagate toàn cầu.
 
 **Bước 2: Validate Certificate qua DNS**
 
-Sau khi request, ACM sẽ hiển thị CNAME records cần thêm:
+1. Vào AWS CloudFront: Tạo một Distribution mới.
+2. Origin Domain: Chọn bucket quanh-frontend.s3... của bạn.
+3. Alternate domain name (CNAME): Điền www.linhng148.id.vn.
+4. 
+- Custom SSL certificate: Request một chứng chỉ ACM cho www.linhng148.id.vn (miễn phí) và chọn vào đó.
+- Khi tạo SSL từ đấy, nó sẽ ra CNAME có Name và Value, Name bỏ cái đít cho đến www thôi, value thì copy nguyên, sau đó cho name và value đó vào Cloudflare DNS.
+5. Đợi 5-10 phút để CloudFront validate SSL.
 
-```
-Name: _abc123.yourdomain.com
-Value: _xyz456.acm-validations.aws.
-```
+6. 
+- Quay lại Cloudflare DNS:
+- Sửa record www.
+- Thay đổi giá trị từ S3 endpoint thành d12345xxxx.cloudfront.net.
+- Bật đám mây màu cam (Proxied).
 
-**Thêm CNAME record này vào DNS provider của bạn:**
-
-- **Namecheap**: Advanced DNS → Add New Record → CNAME
-- **GoDaddy**: DNS Management → Add → CNAME
-- **Cloudflare**: DNS → Add record → CNAME
-
-**Lưu ý:**
-- Copy chính xác Name và Value từ ACM
-- Bỏ domain root nếu provider tự động thêm (VD: chỉ nhập `_abc123` thay vì `_abc123.yourdomain.com`)
-- TTL: 300 hoặc Auto
-
-**Bước 3: Đợi Validation**
-
-Validation thường mất **5-30 phút**. Kiểm tra status trong ACM Console.
-
-✅ Khi status = **Issued**, certificate đã sẵn sàng!
-
-**Bước 4: Attach Certificate vào CloudFront**
-
-1. CloudFront → Distributions → Chọn distribution của bạn → **Edit**
-2. **Alternate domain names (CNAMEs)**:
-   ```
-   yourdomain.com
-   www.yourdomain.com
-   ```
-3. **Custom SSL certificate**: Chọn certificate vừa tạo
-4. **Save changes**
-
-⏳ CloudFront deployment mất ~10-15 phút.
-
-### 5.3 Cấu hình SSL cho Nginx (Let's Encrypt)
-
-**Option A: Sử dụng Certbot (Khuyến nghị - Free SSL)**
-
-SSH vào Nginx EC2:
-```bash
-ssh -i key.pem ec2-user@<NGINX_PUBLIC_IP>
-
-# Cài đặt Certbot
-sudo yum install -y certbot python3-certbot-nginx
-
-# Request SSL certificate
-sudo certbot --nginx -d api.yourdomain.com
-
-# Certbot sẽ hỏi:
-# 1. Email: nhập email của bạn
-# 2. Terms of Service: A (Agree)
-# 3. Share email: N (No)
-# 4. Redirect HTTP to HTTPS: 2 (Yes, redirect)
-
-# Verify SSL
-curl https://api.yourdomain.com
-```
-
-**Auto-renewal:**
-```bash
-# Test auto-renewal
-sudo certbot renew --dry-run
-
-# Certbot tự động tạo cron job để renew
-# Kiểm tra:
-sudo systemctl status certbot-renew.timer
-```
-
-**Option B: Sử dụng AWS Certificate Manager + Application Load Balancer**
-
-Nếu muốn dùng ACM cho API (tốn thêm tiền cho ALB ~$16/tháng):
-
-1. Tạo Application Load Balancer
-2. Target Group → Backend EC2 instances
-3. Listener HTTPS:443 → Attach ACM certificate
-4. Update DNS: `api.yourdomain.com` → ALB DNS name
-
-💡 **Khuyến nghị**: Dùng Certbot (Option A) để tiết kiệm chi phí!
 
 ---
 
