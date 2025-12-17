@@ -1,7 +1,7 @@
 # 🚀 Hướng Dẫn Deploy Chi Tiết - QuanhSS Travel Platform
 
 **Kiến trúc**: CloudFront + S3 + GitHub Actions + Docker + EC2 + Aiven MySQL
-
+LÚC BUILD, NHỚ ĐỂ Ý DOCKERFILE XÓA HẾT CÁC YAML CÓ SECRET
 ---
 
 ## 📋 Mục Lục
