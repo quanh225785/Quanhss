@@ -988,7 +988,140 @@ Dùng Cloudflare để có **HTTPS miễn phí** cho cả frontend và API:
    - **A**: Name = `api`, IPv4 = Nginx EC2 IP, **Proxy: ON**
 3. SSL/TLS → Overview → Chọn **Strict**, phải để strict, nếu không nó và CloudFront không hoạt động được, cứ đẩy nhau qua lại giữa https và http => Multiple request error, nó cứ load đi load lại
 
+⚠️ **Quan trọng**: Khi dùng Strict mode, Nginx PHẢI có SSL certificate! Xem bước 5.2 bên dưới.
+
 ✅ Cloudflare sẽ cung cấp HTTPS miễn phí!
+
+### 5.2 Setup SSL cho Nginx (Bắt buộc với Cloudflare Strict)
+
+Vì Cloudflare Strict mode yêu cầu HTTPS từ Cloudflare đến origin server, bạn cần cài SSL cho Nginx.
+
+**Bước 1: Tạo Cloudflare Origin Certificate**
+
+1. **Cloudflare Dashboard** → Domain của bạn → **SSL/TLS** → **Origin Server**
+2. Click **Create Certificate**
+3. Cấu hình:
+   - Private key type: **RSA (2048)**
+   - Hostnames: `api.yourdomain.com`, `*.yourdomain.com`
+   - Certificate Validity: **15 years**
+4. Click **Create**
+5. **Copy cả 2**: Origin Certificate và Private Key (lưu lại vì chỉ hiển thị 1 lần!)
+
+**Bước 2: Cài Certificate lên Nginx**
+
+SSH vào Nginx EC2:
+
+```bash
+# Tạo thư mục chứa certificate
+sudo mkdir -p /etc/nginx/ssl
+
+# Paste Origin Certificate
+sudo nano /etc/nginx/ssl/cloudflare-origin.pem
+# Paste nội dung Origin Certificate vào, Ctrl+O để save, Ctrl+X để thoát
+
+# Paste Private Key  
+sudo nano /etc/nginx/ssl/cloudflare-origin.key
+# Paste nội dung Private Key vào, Ctrl+O để save, Ctrl+X để thoát
+
+# Set permissions
+sudo chmod 600 /etc/nginx/ssl/*
+```
+
+**Bước 3: Cấu hình Nginx HTTPS**
+
+```bash
+sudo nano /etc/nginx/conf.d/api.conf
+```
+
+Thay toàn bộ nội dung bằng:
+
+```nginx
+upstream backend_servers {
+    server 10.0.13.12:8080;   # Backend EC2-1 Private IP
+    server 10.0.5.106:8080;   # Backend EC2-2 Private IP
+}
+
+map $http_upgrade $connection_upgrade {
+    default upgrade;
+    '' close;
+}
+
+# Redirect HTTP to HTTPS
+server {
+    listen 80;
+    server_name api.yourdomain.com;
+    return 301 https://$server_name$request_uri;
+}
+
+# HTTPS Server
+server {
+    listen 443 ssl;
+    server_name api.yourdomain.com;
+
+    # Cloudflare Origin Certificate
+    ssl_certificate /etc/nginx/ssl/cloudflare-origin.pem;
+    ssl_certificate_key /etc/nginx/ssl/cloudflare-origin.key;
+
+    # SSL Settings
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+
+    # WebSocket endpoint
+    location /api/ws {
+        proxy_pass http://backend_servers;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 86400s;
+        proxy_send_timeout 86400s;
+    }
+
+    # Regular API endpoints
+    location / {
+        proxy_pass http://backend_servers;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
+```
+
+**Bước 4: Mở port 443 trên Security Group**
+
+AWS Console → EC2 → Security Groups → `quanhss-nginx-sg`:
+
+| Type | Port | Source |
+|------|------|--------|
+| HTTP | 80 | 0.0.0.0/0 |
+| HTTPS | 443 | 0.0.0.0/0 |
+| SSH | 22 | Your IP |
+
+**Bước 5: Restart Nginx**
+
+```bash
+sudo nginx -t
+sudo systemctl restart nginx
+```
+
+**Bước 6: Test SSL**
+
+```bash
+# Test từ local
+curl -X OPTIONS "https://api.yourdomain.com/api/auth/token" \
+  -H "Origin: https://www.yourdomain.com" \
+  -v
+
+# Expected: HTTP 200/204 với CORS headers
+```
 
 
 **Bước 3: Verify DNS Propagation**

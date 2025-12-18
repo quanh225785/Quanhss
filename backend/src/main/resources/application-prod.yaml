@@ -46,3 +46,8 @@ logging:
   level:
     root: INFO
     com.devteria: INFO
+
+app:
+  client-url: ${CLIENT_URL:https://www.linhng148.id.vn}
+  verification-token-expiry: 24 # hours
+  reset-token-expiry: 1
