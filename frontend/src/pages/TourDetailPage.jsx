@@ -38,6 +38,7 @@ const TourDetailPage = () => {
 
     useEffect(() => {
         fetchTourDetails();
+        checkFavoriteStatus();
     }, [id]);
 
     const fetchTourDetails = async () => {
@@ -51,6 +52,43 @@ const TourDetailPage = () => {
             setError('Không thể tải thông tin tour. Vui lòng thử lại sau.');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const checkFavoriteStatus = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) return; // Skip if not logged in
+
+            const response = await api.get(`/favorites/check/${id}`);
+            if (response.data && response.data.code === 1000) {
+                setIsFavorite(response.data.result);
+            }
+        } catch (error) {
+            console.error('Error checking favorite status:', error);
+        }
+    };
+
+    const toggleFavorite = async () => {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            navigate('/login');
+            return;
+        }
+
+        // Optimistic UI update
+        setIsFavorite(prev => !prev);
+
+        try {
+            if (isFavorite) {
+                await api.delete(`/favorites/${id}`);
+            } else {
+                await api.post(`/favorites/${id}`);
+            }
+        } catch (error) {
+            console.error('Error toggling favorite:', error);
+            // Revert on error
+            setIsFavorite(prev => !prev);
         }
     };
 
@@ -214,7 +252,7 @@ const TourDetailPage = () => {
                     </div>
                     <div className="flex items-center gap-2">
                         <button
-                            onClick={() => setIsFavorite(!isFavorite)}
+                            onClick={toggleFavorite}
                             className={`p-3 rounded-xl border transition-all ${isFavorite
                                 ? 'bg-red-50 border-red-200 text-red-500'
                                 : 'bg-white/60 border-white/60 text-slate-600 hover:text-red-500'

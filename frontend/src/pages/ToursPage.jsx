@@ -38,11 +38,26 @@ const ToursPage = () => {
   useEffect(() => {
     fetchLocations();
     fetchTours();
+    fetchFavorites();
   }, []);
 
   useEffect(() => {
     fetchTours();
   }, [searchParams]);
+
+  const fetchFavorites = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return; // Skip if not logged in
+
+      const response = await api.get('/favorites/ids');
+      if (response.data && response.data.code === 1000) {
+        setFavorites(new Set(response.data.result || []));
+      }
+    } catch (error) {
+      console.error('Error fetching favorites:', error);
+    }
+  };
 
   const fetchLocations = async () => {
     try {
@@ -116,17 +131,47 @@ const ToursPage = () => {
     setSearchParams({});
   };
 
-  const toggleFavorite = (e, tourId) => {
+  const toggleFavorite = async (e, tourId) => {
     e.stopPropagation();
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/login');
+      return;
+    }
+
+    const isFavorited = favorites.has(tourId);
+
+    // Optimistic UI update
     setFavorites(prev => {
       const newFavorites = new Set(prev);
-      if (newFavorites.has(tourId)) {
+      if (isFavorited) {
         newFavorites.delete(tourId);
       } else {
         newFavorites.add(tourId);
       }
       return newFavorites;
     });
+
+    try {
+      if (isFavorited) {
+        await api.delete(`/favorites/${tourId}`);
+      } else {
+        await api.post(`/favorites/${tourId}`);
+      }
+    } catch (error) {
+      console.error('Error toggling favorite:', error);
+      // Revert on error
+      setFavorites(prev => {
+        const newFavorites = new Set(prev);
+        if (isFavorited) {
+          newFavorites.add(tourId);
+        } else {
+          newFavorites.delete(tourId);
+        }
+        return newFavorites;
+      });
+    }
   };
 
   const formatPrice = (price) => {

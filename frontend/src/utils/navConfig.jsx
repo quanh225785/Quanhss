@@ -7,17 +7,19 @@ import {
     User,
     MessageCircle,
     MessageSquare,
+    Heart,
 } from 'lucide-react';
 
 // User navigation items
 export const userNavItems = [
     { icon: <LayoutDashboard size={20} />, label: 'Khám phá', shortLabel: 'Khám phá', path: '/dashboard', checkPaths: ['', '/dashboard'] },
+    { icon: <Heart size={20} />, label: 'Yêu thích', shortLabel: 'Yêu thích', path: '/favorites' },
     { icon: <Calendar size={20} />, label: 'Chuyến đi của tôi', shortLabel: 'Chuyến đi', path: '/bookings' },
     // { icon: <Map size={20} />, label: 'Lập kế hoạch', shortLabel: 'Kế hoạch', path: '/planner' },
     // { icon: <MapPin size={20} />, label: 'Đề xuất địa điểm', shortLabel: 'Đề xuất', path: '/locations' },
     { icon: <MessageCircle size={20} />, label: 'Tin nhắn', shortLabel: 'Tin nhắn', path: '/chat' },
     { icon: <User size={20} />, label: 'Hồ sơ', shortLabel: 'Hồ sơ', path: '/profile' },
-    
+
 ];
 
 // Agent navigation items
