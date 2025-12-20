@@ -26,30 +26,44 @@ const ChatWindow = ({
     const messagesEndRef = useRef(null);
     const fileInputRef = useRef(null);
 
+    // Use ref to store the latest callback without causing re-subscription
+    const onNewMessageRef = useRef(onNewMessage);
+
+    // Keep the ref updated with the latest callback
+    useEffect(() => {
+        onNewMessageRef.current = onNewMessage;
+    }, [onNewMessage]);
+
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     };
+
 
     useEffect(() => {
         scrollToBottom();
     }, [messages]);
 
-    // WebSocket connection and subscription
+    // WebSocket connection and subscription - only depend on conversationId
     useEffect(() => {
         if (!conversationId) return;
+
+        let isSubscribed = false;
 
         const setupWebSocket = () => {
             connectWebSocket(
                 () => {
                     setWsConnected(true);
                     // Subscribe to conversation
-                    subscribeToConversation(conversationId, (message) => {
-                        // Always add message via onNewMessage callback
-                        // The parent component will handle duplicate checking
-                        if (onNewMessage) {
-                            onNewMessage(message);
-                        }
-                    });
+                    if (!isSubscribed) {
+                        isSubscribed = true;
+                        subscribeToConversation(conversationId, (message) => {
+                            // Use ref to get the latest callback
+                            // This prevents re-subscription when callback changes
+                            if (onNewMessageRef.current) {
+                                onNewMessageRef.current(message);
+                            }
+                        });
+                    }
                 },
                 (error) => {
                     console.error('WebSocket connection failed:', error);
@@ -60,13 +74,44 @@ const ChatWindow = ({
 
         setupWebSocket();
 
-        // Cleanup on unmount or conversation change
+        // Cleanup on unmount or conversation change ONLY
         return () => {
+            isSubscribed = false;
             if (conversationId) {
                 unsubscribeFromConversation(conversationId);
             }
         };
-    }, [conversationId, onNewMessage]);
+    }, [conversationId]); // Remove onNewMessage from dependencies
+
+    // POLLING FALLBACK: Sync messages every 3 seconds to handle load balancer issues
+    // This ensures messages are received even when WebSocket broadcasts to wrong instance
+    useEffect(() => {
+        if (!conversationId || !onNewMessageRef.current) return;
+
+        const pollMessages = async () => {
+            try {
+                const { getMessages } = await import("../../utils/chatApi");
+                const allMessages = await getMessages(conversationId);
+
+                // Find messages that we don't have yet
+                if (allMessages && allMessages.length > 0) {
+                    allMessages.forEach(msg => {
+                        if (onNewMessageRef.current) {
+                            onNewMessageRef.current(msg);
+                        }
+                    });
+                }
+            } catch (error) {
+                // Silent fail - WebSocket should handle most cases
+                console.debug('Polling fallback error:', error);
+            }
+        };
+
+        // Poll every 3 seconds
+        const interval = setInterval(pollMessages, 3000);
+
+        return () => clearInterval(interval);
+    }, [conversationId]);
 
     // Update wsConnected status periodically
     useEffect(() => {
