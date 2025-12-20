@@ -16,26 +16,28 @@ public class TourResponse {
     String name;
     String description;
     Double price;
-    Integer numberOfDays;  // Number of days for the tour
+    Integer numberOfDays; // Number of days for the tour
     String vehicle;
     Boolean isOptimized;
-    Double totalDistance;  // meters
-    Long totalTime;  // milliseconds
+    Double totalDistance; // meters
+    Long totalTime; // milliseconds
     String routePolyline;
-    String imageUrl;  // S3 URL for tour thumbnail
+    String imageUrl; // S3 URL for tour thumbnail
     List<TourPointResponse> points;
     String createdByUsername;
-    String createdById;  // User ID of the agent who created this tour
+    String createdById; // User ID of the agent who created this tour
+    String createdByAvatar; // Avatar URL of the agent who created this tour
+    String createdByFirstName; // First name of the agent
+    String createdByLastName; // Last name of the agent
     LocalDateTime createdAt;
     Boolean isActive;
-    String status;  // PENDING, APPROVED, REJECTED, HIDDEN
+    String status; // PENDING, APPROVED, REJECTED, HIDDEN
     String rejectionReason;
-    
-    // Trip statistics (thống kê chuyến)
-    List<TripResponse> trips;  // Danh sách các chuyến
-    Integer totalTrips;  // Tổng số chuyến
-    Integer activeTrips;  // Số chuyến còn mở
 
+    // Trip statistics (thống kê chuyến)
+    List<TripResponse> trips; // Danh sách các chuyến
+    Integer totalTrips; // Tổng số chuyến
+    Integer activeTrips; // Số chuyến còn mở
 
     @Data
     @Builder
@@ -48,10 +50,10 @@ public class TourResponse {
         String note;
         Integer stayDurationMinutes;
         // Itinerary fields
-        Integer dayNumber;   // Which day (1, 2, 3...)
-        String startTime;    // Time slot, e.g., "08:00"
-        String activity;     // What to do at this location
-        String imageUrl;     // S3 URL for tour point image
+        Integer dayNumber; // Which day (1, 2, 3...)
+        String startTime; // Time slot, e.g., "08:00"
+        String activity; // What to do at this location
+        String imageUrl; // S3 URL for tour point image
         // Location details
         Long locationId;
         String locationName;

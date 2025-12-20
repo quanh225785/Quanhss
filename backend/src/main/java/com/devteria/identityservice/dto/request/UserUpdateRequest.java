@@ -16,6 +16,7 @@ import lombok.experimental.FieldDefaults;
 public class UserUpdateRequest {
     String firstName;
     String lastName;
+    String avatar;
 
     @DobConstraint(min = 18, message = "INVALID_DOB")
     LocalDate dob;

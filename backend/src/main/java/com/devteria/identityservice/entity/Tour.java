@@ -78,11 +78,19 @@ public class Tour {
     String imageUrl;  // S3 URL for tour thumbnail image
     Boolean isActive;
 
+    // Legacy field - not used anymore (moved to Trip entity)
+    @Column(name = "current_participants")
+    @Builder.Default
+    Integer currentParticipants = 0;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         isActive = true;
         status = TourStatus.PENDING;  // New tours need approval
+        if (currentParticipants == null) {
+            currentParticipants = 0;
+        }
     }
 
     @PreUpdate

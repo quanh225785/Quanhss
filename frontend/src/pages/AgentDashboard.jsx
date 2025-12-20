@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
-import { LogOut, Map } from 'lucide-react';
+import { Routes, Route, Navigate } from 'react-router-dom';
 
-import NavItem from '../components/shared/NavItem';
+import MainLayout from '../components/layout/MainLayout';
 import DashboardOverview from '../components/agent/DashboardOverview';
 import MyTours from '../components/agent/MyTours';
 import AgentTourDetail from '../components/agent/AgentTourDetail';
@@ -11,11 +10,8 @@ import LocationProposals from '../components/agent/LocationProposals';
 import Reviews from '../components/agent/Reviews';
 import AgentProfile from '../components/agent/AgentProfile';
 import AgentChatList from '../components/agent/AgentChatList';
-import { agentNavItems } from '../utils/navConfig';
 
 const AgentDashboard = ({ onLogout }) => {
-    const location = useLocation();
-    const navigate = useNavigate();
     const [user] = useState(JSON.parse(localStorage.getItem('user') || '{"firstName": "Agent", "email": "agent@example.com"}'));
 
     const getFullName = () => {

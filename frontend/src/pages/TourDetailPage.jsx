@@ -207,7 +207,7 @@ const TourDetailPage = () => {
                             </h1>
                             <p className="text-sm text-slate-500 flex items-center gap-1">
                                 <User size={14} />
-                                Tạo bởi: {tour.createdByUsername}
+                                Tạo bởi: {tour.createdByFirstName && tour.createdByLastName ? `${tour.createdByFirstName} ${tour.createdByLastName}` : tour.createdByUsername}
                             </p>
                         </div>
                     </div>
@@ -580,16 +580,28 @@ const TourDetailPage = () => {
                                 </p>
                             )}
                         </div>
-
+                        {console.log(tour)}
                         {/* Agent Info */}
                         <div className="bg-white/60 backdrop-blur-md border border-white/60 shadow-sm rounded-[2rem] p-6">
                             <h3 className="text-lg font-display font-bold text-slate-900 mb-4">Thông tin đại lý</h3>
                             <div className="flex items-center gap-4">
-                                <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary to-secondary text-white flex items-center justify-center text-xl font-bold shadow-md">
-                                    {tour.createdByUsername?.charAt(0)?.toUpperCase() || 'A'}
+                                <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary to-secondary text-white flex items-center justify-center text-xl font-bold shadow-md overflow-hidden">
+                                    {tour.createdByAvatar ? (
+                                        <img
+                                            src={tour.createdByAvatar}
+                                            alt={tour.createdByUsername}
+                                            className="w-full h-full object-cover"
+                                        />
+                                    ) : (
+                                        tour.createdByUsername?.charAt(0)?.toUpperCase() || 'A'
+                                    )}
                                 </div>
                                 <div>
-                                    <p className="font-bold text-slate-900">{tour.createdByUsername}</p>
+                                    <p className="font-bold text-slate-900">
+                                        {tour.createdByFirstName && tour.createdByLastName
+                                            ? `${tour.createdByFirstName} ${tour.createdByLastName}`
+                                            : tour.createdByUsername}
+                                    </p>
                                     <p className="text-sm text-slate-500">Đại lý du lịch</p>
                                 </div>
                             </div>

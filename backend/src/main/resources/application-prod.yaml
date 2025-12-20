@@ -1,3 +1,53 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+
 jwt:
-  valid-duration: 7200 # in second
-  refreshable-duration: 72000 # in seconds
+  signerKey: ${JWT_SIGNERKEY}
+  valid-duration: 7200
+  refreshable-duration: 72000
+
+aws:
+  s3:
+    access-key-id: ${AWS_S3_ACCESS_KEY_ID}
+    secret-access-key: ${AWS_S3_SECRET_ACCESS_KEY}
+    bucket-name: ${AWS_S3_BUCKET_NAME}
+    region: ${AWS_S3_REGION}
+    endpoint: ${AWS_S3_ENDPOINT}
+
+mailServer:
+  host: ${MAIL_HOST:smtp.gmail.com}
+  port: ${MAIL_PORT:587}
+  email: ${MAIL_EMAIL}
+  password: ${MAIL_PASSWORD}
+  protocol: ${MAIL_PROTOCOL:smtp}
+  isSSL: ${MAIL_SSL:false}
+
+vietmap:
+  api:
+    key: ${VIETMAP_API_KEY}
+    base-url: ${VIETMAP_BASE_URL:https://maps.vietmap.vn/api}
+
+logging:
+  level:
+    root: INFO
+    com.devteria: INFO
+
+app:
+  client-url: ${CLIENT_URL:https://www.linhng148.id.vn}
+  verification-token-expiry: 24 # hours
+  reset-token-expiry: 1
