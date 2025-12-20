@@ -60,7 +60,7 @@ public class TourService {
         List<TourCreationRequest.TourPointRequest> locationPoints = request.getPoints().stream()
                 .filter(p -> p.getLocationId() != null)
                 .collect(Collectors.toList());
-        
+
         // Fetch locations for location-based points
         Map<Long, Location> locationMap = new java.util.HashMap<>();
         for (TourCreationRequest.TourPointRequest point : locationPoints) {
@@ -127,7 +127,7 @@ public class TourService {
                 .totalTime(time)
                 .routePolyline(polyline)
                 .routeInstructions(instructionsJson)
-                .imageUrl(request.getImageUrl())  // S3 image URL
+                .imageUrl(request.getImageUrl()) // S3 image URL
                 .createdBy(user)
                 .tourPoints(new ArrayList<>())
                 .build();
@@ -135,15 +135,15 @@ public class TourService {
         // Create tour points (both location-based and free activities)
         for (int i = 0; i < request.getPoints().size(); i++) {
             TourCreationRequest.TourPointRequest pointReq = request.getPoints().get(i);
-            
+
             // Get location if locationId is provided
-            Location location = pointReq.getLocationId() != null 
-                    ? locationMap.get(pointReq.getLocationId()) 
+            Location location = pointReq.getLocationId() != null
+                    ? locationMap.get(pointReq.getLocationId())
                     : null;
 
             TourPoint tourPoint = TourPoint.builder()
                     .tour(tour)
-                    .location(location)  // Can be null for free activities
+                    .location(location) // Can be null for free activities
                     .orderIndex(pointReq.getOrderIndex() != null ? pointReq.getOrderIndex() : i)
                     .note(pointReq.getNote())
                     .stayDurationMinutes(pointReq.getStayDurationMinutes())
@@ -151,7 +151,7 @@ public class TourService {
                     .dayNumber(pointReq.getDayNumber() != null ? pointReq.getDayNumber() : 1)
                     .startTime(pointReq.getStartTime())
                     .activity(pointReq.getActivity())
-                    .imageUrl(pointReq.getImageUrl())  // S3 image URL
+                    .imageUrl(pointReq.getImageUrl()) // S3 image URL
                     .build();
 
             tour.getTourPoints().add(tourPoint);
@@ -221,7 +221,7 @@ public class TourService {
 
         tour.setStatus(TourStatus.APPROVED);
         tour = tourRepository.save(tour);
-        
+
         log.info("Tour {} approved by admin", id);
         return mapToResponse(tour);
     }
@@ -239,7 +239,7 @@ public class TourService {
         tour.setStatus(TourStatus.REJECTED);
         tour.setRejectionReason(reason);
         tour = tourRepository.save(tour);
-        
+
         log.info("Tour {} rejected by admin. Reason: {}", id, reason);
         return mapToResponse(tour);
     }
@@ -250,8 +250,9 @@ public class TourService {
         List<Tour> allTours = tourRepository.findByIsActiveTrueOrderByCreatedAtDesc().stream()
                 .filter(tour -> tour.getStatus() == TourStatus.APPROVED)
                 .collect(Collectors.toList());
-        
-        // Force load all relationships before mapping to avoid LazyInitializationException
+
+        // Force load all relationships before mapping to avoid
+        // LazyInitializationException
         allTours.forEach(tour -> {
             // Force load tourPoints
             if (tour.getTourPoints() != null) {
@@ -267,7 +268,7 @@ public class TourService {
                 tour.getCreatedBy().getUsername(); // Force load user
             }
         });
-        
+
         return allTours.stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
@@ -284,24 +285,30 @@ public class TourService {
             Long locationId) {
         try {
             // Normalize parameters: convert empty strings to null
-            String normalizedKeyword = (keyword != null && !keyword.trim().isEmpty()) ? keyword.trim().toLowerCase() : null;
+            String normalizedKeyword = (keyword != null && !keyword.trim().isEmpty()) ? keyword.trim().toLowerCase()
+                    : null;
             Double normalizedMinPrice = minPrice;
             Double normalizedMaxPrice = maxPrice;
             Integer normalizedNumberOfDays = numberOfDays;
-            String normalizedVehicle = (vehicle != null && !vehicle.trim().isEmpty()) ? vehicle.trim().toLowerCase() : null;
+            String normalizedVehicle = (vehicle != null && !vehicle.trim().isEmpty()) ? vehicle.trim().toLowerCase()
+                    : null;
             Long normalizedLocationId = locationId;
-            
-            log.info("Searching tours with params - keyword: {}, minPrice: {}, maxPrice: {}, numberOfDays: {}, vehicle: {}, locationId: {}",
-                    normalizedKeyword, normalizedMinPrice, normalizedMaxPrice, normalizedNumberOfDays, normalizedVehicle, normalizedLocationId);
-            
-            // Get all approved tours first - use repository method that returns active tours
+
+            log.info(
+                    "Searching tours with params - keyword: {}, minPrice: {}, maxPrice: {}, numberOfDays: {}, vehicle: {}, locationId: {}",
+                    normalizedKeyword, normalizedMinPrice, normalizedMaxPrice, normalizedNumberOfDays,
+                    normalizedVehicle, normalizedLocationId);
+
+            // Get all approved tours first - use repository method that returns active
+            // tours
             List<Tour> allTours = tourRepository.findByIsActiveTrueOrderByCreatedAtDesc().stream()
                     .filter(t -> t.getStatus() == TourStatus.APPROVED)
                     .collect(Collectors.toList());
-            
+
             log.info("Total approved tours: {}", allTours.size());
-            
-            // Force load all relationships before filtering to avoid LazyInitializationException
+
+            // Force load all relationships before filtering to avoid
+            // LazyInitializationException
             allTours.forEach(tour -> {
                 // Force load tourPoints
                 if (tour.getTourPoints() != null) {
@@ -317,7 +324,7 @@ public class TourService {
                     tour.getCreatedBy().getUsername(); // Force load user
                 }
             });
-            
+
             // Apply filters
             List<Tour> filteredTours = allTours.stream()
                     .filter(tour -> {
@@ -326,49 +333,56 @@ public class TourService {
                             boolean matchesKeyword = false;
                             if (tour.getName() != null && tour.getName().toLowerCase().contains(normalizedKeyword)) {
                                 matchesKeyword = true;
-                            } else if (tour.getDescription() != null && tour.getDescription().toLowerCase().contains(normalizedKeyword)) {
+                            } else if (tour.getDescription() != null
+                                    && tour.getDescription().toLowerCase().contains(normalizedKeyword)) {
                                 matchesKeyword = true;
                             } else if (tour.getTourPoints() != null) {
                                 matchesKeyword = tour.getTourPoints().stream()
-                                        .anyMatch(tp -> tp.getLocation() != null && 
+                                        .anyMatch(tp -> tp.getLocation() != null &&
                                                 tp.getLocation().getName() != null &&
                                                 tp.getLocation().getName().toLowerCase().contains(normalizedKeyword));
                             }
-                            if (!matchesKeyword) return false;
+                            if (!matchesKeyword)
+                                return false;
                         }
-                        
+
                         // Price filters
-                        if (normalizedMinPrice != null && (tour.getPrice() == null || tour.getPrice() < normalizedMinPrice)) {
+                        if (normalizedMinPrice != null
+                                && (tour.getPrice() == null || tour.getPrice() < normalizedMinPrice)) {
                             return false;
                         }
-                        if (normalizedMaxPrice != null && (tour.getPrice() == null || tour.getPrice() > normalizedMaxPrice)) {
+                        if (normalizedMaxPrice != null
+                                && (tour.getPrice() == null || tour.getPrice() > normalizedMaxPrice)) {
                             return false;
                         }
-                        
+
                         // Number of days filter
                         if (normalizedNumberOfDays != null && !normalizedNumberOfDays.equals(tour.getNumberOfDays())) {
                             return false;
                         }
-                        
+
                         // Vehicle filter
-                        if (normalizedVehicle != null && (tour.getVehicle() == null || !tour.getVehicle().toLowerCase().equals(normalizedVehicle))) {
+                        if (normalizedVehicle != null && (tour.getVehicle() == null
+                                || !tour.getVehicle().toLowerCase().equals(normalizedVehicle))) {
                             return false;
                         }
-                        
+
                         // Location filter
                         if (normalizedLocationId != null) {
                             boolean hasLocation = tour.getTourPoints() != null && tour.getTourPoints().stream()
-                                    .anyMatch(tp -> tp.getLocation() != null && normalizedLocationId.equals(tp.getLocation().getId()));
-                            if (!hasLocation) return false;
+                                    .anyMatch(tp -> tp.getLocation() != null
+                                            && normalizedLocationId.equals(tp.getLocation().getId()));
+                            if (!hasLocation)
+                                return false;
                         }
-                        
+
                         return true;
                     })
                     .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
                     .collect(Collectors.toList());
-            
+
             log.info("Filtered tours: {}", filteredTours.size());
-            
+
             // All relationships should already be loaded, but ensure it
             filteredTours.forEach(tour -> {
                 if (tour.getTourPoints() != null) {
@@ -383,7 +397,7 @@ public class TourService {
                     tour.getCreatedBy().getUsername();
                 }
             });
-            
+
             return filteredTours.stream()
                     .map(this::mapToResponse)
                     .collect(Collectors.toList());
@@ -412,7 +426,7 @@ public class TourService {
 
         tour.setStatus(TourStatus.HIDDEN);
         tour = tourRepository.save(tour);
-        
+
         log.info("Tour {} hidden by agent {}", id, username);
         return mapToResponse(tour);
     }
@@ -436,7 +450,7 @@ public class TourService {
 
         tour.setStatus(TourStatus.APPROVED);
         tour = tourRepository.save(tour);
-        
+
         log.info("Tour {} unhidden by agent {}", id, username);
         return mapToResponse(tour);
     }
@@ -456,7 +470,7 @@ public class TourService {
                                 .dayNumber(point.getDayNumber())
                                 .startTime(point.getStartTime())
                                 .activity(point.getActivity())
-                                .imageUrl(point.getImageUrl())  // S3 image URL
+                                .imageUrl(point.getImageUrl()) // S3 image URL
                                 // Location details (can be null for free activities)
                                 .locationId(loc != null ? loc.getId() : null)
                                 .locationName(loc != null ? loc.getName() : null)
@@ -479,10 +493,13 @@ public class TourService {
                 .totalDistance(tour.getTotalDistance())
                 .totalTime(tour.getTotalTime())
                 .routePolyline(tour.getRoutePolyline())
-                .imageUrl(tour.getImageUrl())  // S3 image URL
+                .imageUrl(tour.getImageUrl()) // S3 image URL
                 .points(pointResponses)
                 .createdByUsername(tour.getCreatedBy() != null ? tour.getCreatedBy().getUsername() : null)
                 .createdById(tour.getCreatedBy() != null ? tour.getCreatedBy().getId() : null)
+                .createdByAvatar(tour.getCreatedBy() != null ? tour.getCreatedBy().getAvatar() : null)
+                .createdByFirstName(tour.getCreatedBy() != null ? tour.getCreatedBy().getFirstName() : null)
+                .createdByLastName(tour.getCreatedBy() != null ? tour.getCreatedBy().getLastName() : null)
                 .createdAt(tour.getCreatedAt())
                 .isActive(tour.getIsActive())
                 .status(tour.getStatus() != null ? tour.getStatus().name() : null)
@@ -490,7 +507,9 @@ public class TourService {
                 // Trip statistics
                 .trips(mapTripsToResponse(tour))
                 .totalTrips(tour.getTrips() != null ? tour.getTrips().size() : 0)
-                .activeTrips(tour.getTrips() != null ? (int) tour.getTrips().stream().filter(t -> t.getIsActive() && !t.isFull()).count() : 0)
+                .activeTrips(tour.getTrips() != null
+                        ? (int) tour.getTrips().stream().filter(t -> t.getIsActive() && !t.isFull()).count()
+                        : 0)
                 .build();
     }
 

@@ -20,10 +20,13 @@ const UserProfile = ({ user, onLogout }) => {
     firstName: user.firstName || "",
     lastName: user.lastName || "",
     dob: user.dob || "",
+    avatar: user.avatar || "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState(null);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const fileInputRef = React.useRef(null);
 
   // Password change states
   const [showPasswordSection, setShowPasswordSection] = useState(false);
@@ -42,6 +45,59 @@ const UserProfile = ({ user, onLogout }) => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleAvatarUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      setError('Chỉ chấp nhận file ảnh');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setError('File phải nhỏ hơn 5MB');
+      return;
+    }
+
+    setIsUploadingAvatar(true);
+    setError(null);
+
+    try {
+      const uploadFormData = new FormData();
+      uploadFormData.append('file', file);
+      uploadFormData.append('folder', 'avatars');
+
+      const response = await api.post('/upload', uploadFormData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      if (response.data.code === 1000) {
+        const avatarUrl = response.data.result;
+        setFormData((prev) => ({ ...prev, avatar: avatarUrl }));
+
+        const updateResponse = await api.put(`/users/${user.id}`, {
+          ...formData,
+          avatar: avatarUrl,
+          roles: user.roles?.map((r) => r.name) || ["USER"],
+        });
+
+        if (updateResponse.data.code === 1000) {
+          const updatedUser = { ...user, ...updateResponse.data.result };
+          localStorage.setItem("user", JSON.stringify(updatedUser));
+          setSuccess(true);
+          setTimeout(() => setSuccess(false), 3000);
+        }
+      }
+    } catch (err) {
+      console.error('Avatar upload error:', err);
+      setError(err.response?.data?.message || 'Không thể upload ảnh đại diện');
+    } finally {
+      setIsUploadingAvatar(false);
+    }
   };
 
   const handlePasswordChange = (e) => {
@@ -135,11 +191,36 @@ const UserProfile = ({ user, onLogout }) => {
 
       <div className="bg-white/60 backdrop-blur-md p-8 rounded-[2.5rem] border border-white/60 shadow-xl">
         <div className="flex flex-col items-center mb-10">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleAvatarUpload}
+            className="hidden"
+          />
           <div className="relative group cursor-pointer">
             <div className="w-32 h-32 rounded-full bg-gradient-to-br from-slate-100 to-slate-200 border-4 border-white shadow-lg flex items-center justify-center text-4xl font-bold text-slate-400 mb-2 overflow-hidden">
-              {user.firstName ? user.firstName.charAt(0).toUpperCase() : "U"}
+              {formData.avatar ? (
+                <img
+                  src={formData.avatar}
+                  alt="Avatar"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                user.firstName ? user.firstName.charAt(0).toUpperCase() : "U"
+              )}
             </div>
-            <button className="absolute bottom-2 right-2 p-2.5 bg-slate-900 text-white rounded-full hover:bg-primary transition-colors shadow-lg group-hover:scale-110">
+            {isUploadingAvatar && (
+              <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center">
+                <Loader2 className="animate-spin text-white" size={32} />
+              </div>
+            )}
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isUploadingAvatar}
+              className="absolute bottom-2 right-2 p-2.5 bg-slate-900 text-white rounded-full hover:bg-primary transition-colors shadow-lg group-hover:scale-110 disabled:opacity-50"
+            >
               <Camera className="w-5 h-5" />
             </button>
           </div>
