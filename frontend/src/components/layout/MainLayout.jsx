@@ -10,7 +10,7 @@ const MainLayout = ({ children, onLogout }) => {
     const [user] = useState(
         JSON.parse(
             localStorage.getItem('user') ||
-            '{"name": "Khách hàng", "email": "user@example.com"}'
+            '{"firstName": "Khách", "lastName": "hàng", "email": "user@example.com"}'
         )
     );
 
