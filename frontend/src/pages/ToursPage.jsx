@@ -11,6 +11,7 @@ import {
   Loader2,
   SlidersHorizontal,
   ChevronRight,
+  Star,
 } from 'lucide-react';
 import { api } from '../utils/api';
 import { formatDistance } from '../utils/polylineUtils';
@@ -381,6 +382,17 @@ const ToursPage = () => {
                       <h3 className="text-lg font-display font-bold text-slate-900 mb-2 line-clamp-1">
                         {tour.name}
                       </h3>
+
+                      {/* Rating Display */}
+                      {tour.reviewCount > 0 && (
+                        <div className="flex items-center gap-1.5 mb-2">
+                          <Star size={14} className="text-amber-400 fill-amber-400" />
+                          <span className="text-sm font-medium text-slate-900">
+                            {tour.averageRating?.toFixed(1) || '0'}
+                          </span>
+                        </div>
+                      )}
+
                       {tour.description && (
                         <p className="text-sm text-slate-600 line-clamp-2 mb-4">
                           {tour.description}

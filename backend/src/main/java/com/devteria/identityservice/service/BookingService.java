@@ -30,6 +30,7 @@ import com.devteria.identityservice.enums.PaymentStatus;
 import com.devteria.identityservice.exception.AppException;
 import com.devteria.identityservice.exception.ErrorCode;
 import com.devteria.identityservice.repository.BookingRepository;
+import com.devteria.identityservice.repository.ReviewRepository;
 import com.devteria.identityservice.repository.TourRepository;
 import com.devteria.identityservice.repository.TripRepository;
 import com.devteria.identityservice.repository.UserRepository;
@@ -54,6 +55,7 @@ import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 public class BookingService {
 
     BookingRepository bookingRepository;
+    ReviewRepository reviewRepository;
     TourRepository tourRepository;
     TripRepository tripRepository;
     UserRepository userRepository;
@@ -412,6 +414,7 @@ public class BookingService {
                 .contactPhone(booking.getContactPhone())
                 .note(booking.getNote())
                 .qrCodeUrl(booking.getQrCodeUrl())
+                .hasReview(reviewRepository.existsByBookingId(booking.getId()))
                 .createdAt(booking.getCreatedAt())
                 .build();
     }

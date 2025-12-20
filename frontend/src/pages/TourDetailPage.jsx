@@ -22,6 +22,7 @@ import {
 import { api } from '../utils/api';
 import { formatDistance, formatDuration } from '../utils/polylineUtils';
 import TourMap from '../components/agent/TourMap';
+import TourReviews from '../components/tour/TourReviews';
 import { startConversation } from '../utils/chatApi';
 
 const TourDetailPage = () => {
@@ -417,6 +418,9 @@ const TourDetailPage = () => {
                                 )}
                             </div>
                         </div>
+
+                        {/* Reviews Section */}
+                        <TourReviews tourId={tour.id} />
                     </div>
 
                     {/* Sidebar */}

@@ -39,6 +39,10 @@ public class TourResponse {
     Integer totalTrips; // Tổng số chuyến
     Integer activeTrips; // Số chuyến còn mở
 
+    // Review statistics
+    Double averageRating; // Average rating (1-5)
+    Integer reviewCount; // Number of reviews
+
     @Data
     @Builder
     @NoArgsConstructor

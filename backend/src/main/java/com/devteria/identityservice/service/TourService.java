@@ -20,6 +20,7 @@ import com.devteria.identityservice.enums.TourStatus;
 import com.devteria.identityservice.exception.AppException;
 import com.devteria.identityservice.exception.ErrorCode;
 import com.devteria.identityservice.repository.LocationRepository;
+import com.devteria.identityservice.repository.ReviewRepository;
 import com.devteria.identityservice.repository.TourRepository;
 import com.devteria.identityservice.repository.TripRepository;
 import com.devteria.identityservice.repository.UserRepository;
@@ -40,6 +41,7 @@ public class TourService {
     TourRepository tourRepository;
     TripRepository tripRepository;
     LocationRepository locationRepository;
+    ReviewRepository reviewRepository;
     UserRepository userRepository;
     VietmapService vietmapService;
     ObjectMapper objectMapper;
@@ -510,6 +512,9 @@ public class TourService {
                 .activeTrips(tour.getTrips() != null
                         ? (int) tour.getTrips().stream().filter(t -> t.getIsActive() && !t.isFull()).count()
                         : 0)
+                // Review statistics
+                .averageRating(reviewRepository.findAverageRatingByTourId(tour.getId()))
+                .reviewCount(reviewRepository.countByTourId(tour.getId()))
                 .build();
     }
 

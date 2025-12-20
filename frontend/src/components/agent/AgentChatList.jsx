@@ -236,21 +236,23 @@ const AgentChatList = () => {
                 </div>
 
                 {/* Chat Window */}
-                <div className="col-span-2">
+                <div className="col-span-2 h-full overflow-hidden">
                     {selectedConversation ? (
                         loadingMessages ? (
                             <div className="flex items-center justify-center h-full bg-white rounded-xl border border-zinc-200">
                                 <Loader2 className="w-8 h-8 animate-spin text-primary" />
                             </div>
                         ) : (
-                            <ChatWindow
-                                messages={messages}
-                                conversationId={selectedConversation.id}
-                                onMessageSent={handleMessageSent}
-                                onNewMessage={handleNewMessage}
-                                partnerName={selectedConversation.partnerName}
-                                partnerInitial={selectedConversation.partnerInitial}
-                            />
+                            <div className="h-full">
+                                <ChatWindow
+                                    messages={messages}
+                                    conversationId={selectedConversation.id}
+                                    onMessageSent={handleMessageSent}
+                                    onNewMessage={handleNewMessage}
+                                    partnerName={selectedConversation.partnerName}
+                                    partnerInitial={selectedConversation.partnerInitial}
+                                />
+                            </div>
                         )
                     ) : (
                         <div className="flex flex-col items-center justify-center h-full bg-white rounded-xl border border-zinc-200 text-zinc-400">

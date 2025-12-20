@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
-import { Calendar, MapPin, Clock, ArrowRight, Loader2, AlertCircle, X, Users, QrCode, ChevronLeft, ChevronRight, List } from "lucide-react";
+import { Calendar, MapPin, Clock, ArrowRight, Loader2, AlertCircle, X, Users, QrCode, ChevronLeft, ChevronRight, List, Star } from "lucide-react";
+import ReviewModal from "./ReviewModal";
 import { api } from "../../utils/api";
 import { FaMoneyBillAlt } from "react-icons/fa";
 import { FaRegCheckCircle } from "react-icons/fa";
@@ -18,6 +19,7 @@ const MyBookings = () => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [popupBooking, setPopupBooking] = useState(null);
   const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
+  const [reviewBooking, setReviewBooking] = useState(null);
 
   useEffect(() => {
     fetchBookings();
@@ -504,6 +506,15 @@ const MyBookings = () => {
                               QR Code
                             </button>
                           )}
+                          {booking.status === 'COMPLETED' && !booking.hasReview && (
+                            <button
+                              onClick={() => setReviewBooking(booking)}
+                              className="px-4 py-2 text-sm font-medium text-amber-600 bg-amber-50 hover:bg-amber-100 rounded-xl border border-amber-200 transition-all flex items-center gap-2"
+                            >
+                              <Star size={16} />
+                              Đánh giá
+                            </button>
+                          )}
                           {booking.status === 'PENDING' && (
                             <button
                               onClick={() => handleCancelBooking(booking.id)}
@@ -572,6 +583,15 @@ const MyBookings = () => {
           </div>
         </div>,
         document.body
+      )}
+
+      {/* Review Modal */}
+      {reviewBooking && (
+        <ReviewModal
+          booking={reviewBooking}
+          onClose={() => setReviewBooking(null)}
+          onSuccess={() => fetchBookings()}
+        />
       )}
     </div>
   );

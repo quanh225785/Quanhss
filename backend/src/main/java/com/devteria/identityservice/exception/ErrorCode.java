@@ -33,6 +33,11 @@ public enum ErrorCode {
     CONVERSATION_NOT_FOUND(1020, "Conversation not found", HttpStatus.NOT_FOUND),
     USER_NOT_AGENT(1021, "User is not an agent", HttpStatus.BAD_REQUEST),
     MESSAGE_EMPTY(1022, "Message content or image is required", HttpStatus.BAD_REQUEST),
+    BOOKING_NOT_FOUND(1023, "Booking not found", HttpStatus.NOT_FOUND),
+    BOOKING_NOT_COMPLETED(1024, "Booking is not completed yet", HttpStatus.BAD_REQUEST),
+    REVIEW_ALREADY_EXISTS(1025, "Review already exists for this booking", HttpStatus.BAD_REQUEST),
+    INVALID_RATING(1026, "Rating must be between 1 and 5", HttpStatus.BAD_REQUEST),
+    REVIEW_NOT_FOUND(1027, "Review not found", HttpStatus.NOT_FOUND),
             ;
 
     ErrorCode(int code, String message, HttpStatusCode statusCode) {
