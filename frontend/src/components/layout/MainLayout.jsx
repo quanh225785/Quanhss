@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { LogOut } from 'lucide-react';
 import NavItem from '../shared/NavItem';
+import NotificationBell from '../shared/NotificationBell';
 import { userNavItems, agentNavItems, adminNavItems } from '../../utils/navConfig';
 
 const MainLayout = ({ children, onLogout }) => {
@@ -107,6 +108,10 @@ const MainLayout = ({ children, onLogout }) => {
                             </p>
                             <p className="text-xs text-slate-500 truncate">{user.email}</p>
                         </div>
+                        {/* Notification Bell for AGENT and ADMIN */}
+                        {(userRole === 'AGENT' || userRole === 'ADMIN') && (
+                            <NotificationBell />
+                        )}
                     </div>
                     <button
                         onClick={handleLogout}

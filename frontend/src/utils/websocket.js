@@ -158,6 +158,37 @@ export const subscribeToNotifications = (userId, onNotification) => {
 };
 
 /**
+ * Subscribe vào agent notifications via topic
+ * Dùng cho realtime notifications khi có booking mới
+ */
+export const subscribeToAgentNotifications = (userId, onNotification) => {
+    if (!stompClient || !isConnected) {
+        console.warn('WebSocket not connected, cannot subscribe to agent notifications');
+        return null;
+    }
+
+    const destination = `/topic/notifications/${userId}`;
+
+    // Check if already subscribed
+    if (subscriptions.has(destination)) {
+        return subscriptions.get(destination);
+    }
+
+    const subscription = stompClient.subscribe(destination, (frame) => {
+        try {
+            const notification = JSON.parse(frame.body);
+            if (onNotification) onNotification(notification);
+        } catch (e) {
+            console.error('Error parsing agent notification:', e);
+        }
+    });
+
+    subscriptions.set(destination, subscription);
+
+    return subscription;
+};
+
+/**
  * Gửi tin nhắn qua WebSocket
  */
 export const sendMessageViaWebSocket = (conversationId, content, imageUrl = null) => {

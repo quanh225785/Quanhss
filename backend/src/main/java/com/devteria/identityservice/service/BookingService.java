@@ -26,6 +26,7 @@ import com.devteria.identityservice.entity.Tour;
 import com.devteria.identityservice.entity.Trip;
 import com.devteria.identityservice.entity.User;
 import com.devteria.identityservice.enums.BookingStatus;
+import com.devteria.identityservice.enums.NotificationType;
 import com.devteria.identityservice.enums.PaymentStatus;
 import com.devteria.identityservice.exception.AppException;
 import com.devteria.identityservice.exception.ErrorCode;
@@ -60,6 +61,7 @@ public class BookingService {
     TripRepository tripRepository;
     UserRepository userRepository;
     S3Client s3Client;
+    NotificationService notificationService;
 
     @NonFinal
     @Value("${aws.s3.bucket-name}")
@@ -153,6 +155,25 @@ public class BookingService {
 
         log.info("Booking created: {} for trip: {} (tour: {}) by user: {}",
                 bookingCode, trip.getId(), tour.getName(), username);
+
+        // Gửi notification cho Agent owner của tour
+        try {
+            User agent = tour.getCreatedBy();
+            String userName = user.getFirstName() != null 
+                    ? user.getFirstName() + " " + user.getLastName() 
+                    : user.getUsername();
+            notificationService.createNotification(
+                    agent,
+                    NotificationType.NEW_BOOKING,
+                    "Đặt tour mới!",
+                    String.format("%s vừa đặt tour %s với %d người", userName, tour.getName(), numberOfParticipants),
+                    tour.getId(),  // Gửi tourId để agent có thể navigate đến trang quản lý chuyến
+                    "TOUR"
+            );
+        } catch (Exception e) {
+            log.error("Failed to send notification for booking: {}", bookingCode, e);
+            // Don't fail the booking if notification fails
+        }
 
         return mapToResponse(booking);
     }
