@@ -5,8 +5,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 import com.devteria.identityservice.dto.request.ApiResponse;
 import com.devteria.identityservice.dto.response.AgentStatsResponse;
+import com.devteria.identityservice.dto.response.TourRevenueResponse;
 import com.devteria.identityservice.service.AgentService;
 
 import lombok.AccessLevel;
@@ -32,6 +35,19 @@ public class AgentController {
         log.info("Fetching agent dashboard statistics");
         return ApiResponse.<AgentStatsResponse>builder()
                 .result(agentService.getAgentStats())
+                .build();
+    }
+
+    /**
+     * Get detailed revenue report by tour and trip
+     * GET /agent/revenue
+     */
+    @PreAuthorize("hasRole('AGENT')")
+    @GetMapping("/revenue")
+    ApiResponse<List<TourRevenueResponse>> getRevenueByTour() {
+        log.info("Fetching revenue report by tour and trip");
+        return ApiResponse.<List<TourRevenueResponse>>builder()
+                .result(agentService.getRevenueByTour())
                 .build();
     }
 }
