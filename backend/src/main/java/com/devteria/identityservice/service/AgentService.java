@@ -12,6 +12,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.devteria.identityservice.dto.response.AgentStatsResponse;
+import com.devteria.identityservice.dto.response.TourRevenueResponse;
+import com.devteria.identityservice.dto.response.TripRevenueResponse;
 import com.devteria.identityservice.entity.Booking;
 import com.devteria.identityservice.entity.Tour;
 import com.devteria.identityservice.entity.Trip;
@@ -203,6 +205,66 @@ public class AgentService {
         // Cập nhật kết quả
         result.putAll(revenueCount);
         return result;
+    }
+
+    /**
+     * Get detailed revenue report by tour and trip
+     */
+    @Transactional(readOnly = true)
+    public List<TourRevenueResponse> getRevenueByTour() {
+        // Get current agent
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User agent = userRepository.findByUsername(username)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        // Get all tours for agent
+        List<Tour> myTours = tourRepository.findByCreatedByAndIsActiveTrueOrderByCreatedAtDesc(agent);
+
+        return myTours.stream()
+                .map(tour -> {
+                    // Get all bookings for this tour
+                    List<Booking> tourBookings = bookingRepository.findByTourOrderByCreatedAtDesc(tour);
+                    
+                    // Calculate total bookings and revenue for tour
+                    long totalBookings = tourBookings.size();
+                    double totalRevenue = tourBookings.stream()
+                            .filter(b -> b.getPaymentStatus() == PaymentStatus.PAID)
+                            .mapToDouble(b -> b.getTotalPrice() != null ? b.getTotalPrice() : 0.0)
+                            .sum();
+
+                    // Get all trips for this tour
+                    List<Trip> trips = tripRepository.findByTourOrderByStartDateAsc(tour);
+                    
+                    // Calculate revenue by trip
+                    List<TripRevenueResponse> tripRevenues = trips.stream()
+                            .map(trip -> {
+                                List<Booking> tripBookings = bookingRepository.findByTripOrderByCreatedAtDesc(trip);
+                                long tripTotalBookings = tripBookings.size();
+                                double tripTotalRevenue = tripBookings.stream()
+                                        .filter(b -> b.getPaymentStatus() == PaymentStatus.PAID)
+                                        .mapToDouble(b -> b.getTotalPrice() != null ? b.getTotalPrice() : 0.0)
+                                        .sum();
+                                
+                                return TripRevenueResponse.builder()
+                                        .tripId(trip.getId())
+                                        .startDate(trip.getStartDate())
+                                        .endDate(trip.getEndDate())
+                                        .totalBookings(tripTotalBookings)
+                                        .totalRevenue(tripTotalRevenue)
+                                        .build();
+                            })
+                            .collect(Collectors.toList());
+
+                    return TourRevenueResponse.builder()
+                            .tourId(tour.getId())
+                            .tourName(tour.getName())
+                            .tourImageUrl(tour.getImageUrl())
+                            .totalBookings(totalBookings)
+                            .totalRevenue(totalRevenue)
+                            .trips(tripRevenues)
+                            .build();
+                })
+                .collect(Collectors.toList());
     }
 }
 
