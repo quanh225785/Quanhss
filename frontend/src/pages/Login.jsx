@@ -62,7 +62,11 @@ function Login({ onLogin }) {
             const errorCode = err.response?.data?.code;
             const errorMessage = err.response?.data?.message;
 
-            if (errorCode === 1009 || errorMessage?.includes('not verified') || errorMessage?.includes('Email not verified')) {
+            if (errorCode === 1029 || errorMessage?.includes('bị khoá') || errorMessage?.includes('locked')) {
+                // Account is locked - show the lock reason from the error message
+                setError(errorMessage || 'Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên.');
+                setShowResendVerification(false);
+            } else if (errorCode === 1009 || errorMessage?.includes('not verified') || errorMessage?.includes('Email not verified')) {
                 setError('Email của bạn chưa được xác thực. Vui lòng kiểm tra email hoặc gửi lại email xác thực.');
                 setShowResendVerification(true);
                 // Prefill email from entered username if it looks like an email
