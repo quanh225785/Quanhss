@@ -610,7 +610,7 @@ const TourDetailPage = () => {
                                 disabled={!canBook()}
                                 onClick={() => navigate(`/booking/${id}`, { state: { tripId: selectedTrip.id, trip: selectedTrip } })}
                                 className={`w-full py-4 font-bold rounded-2xl transition-all duration-200 flex items-center justify-center gap-2 ${canBook()
-                                    ? 'bg-gradient-to-r from-primary to-secondary text-white hover:shadow-lg hover:-translate-y-0.5'
+                                    ? 'bg-primary text-white hover:bg-primary/90 hover:shadow-lg hover:-translate-y-0.5'
                                     : 'bg-slate-200 text-slate-500 cursor-not-allowed'
                                     }`}
                             >

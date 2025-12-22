@@ -7,7 +7,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -179,7 +181,7 @@ public class BookingService {
     }
 
     /**
-     * Get bookings for current user
+     * Get bookings for current user - OPTIMIZED to avoid N+1
      */
     @Transactional(readOnly = true)
     public List<BookingResponse> getMyBookings() {
@@ -187,9 +189,25 @@ public class BookingService {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
-        return bookingRepository.findByUserOrderByCreatedAtDesc(user)
-                .stream()
-                .map(this::mapToResponse)
+        // Use optimized query with JOIN FETCH
+        List<Booking> bookings = bookingRepository.findByUserWithDetailsOrderByCreatedAtDesc(user);
+        
+        if (bookings.isEmpty()) {
+            return List.of();
+        }
+
+        // Batch load review status for all bookings in one query
+        List<Long> bookingIds = bookings.stream()
+                .map(Booking::getId)
+                .collect(Collectors.toList());
+        
+        Set<Long> bookingsWithReviews = new HashSet<>(
+                reviewRepository.findBookingIdsWithReviews(bookingIds)
+        );
+
+        // Map to response with pre-loaded review status
+        return bookings.stream()
+                .map(booking -> mapToResponseWithReviewStatus(booking, bookingsWithReviews.contains(booking.getId())))
                 .collect(Collectors.toList());
     }
 
@@ -405,6 +423,13 @@ public class BookingService {
      * Map Booking entity to BookingResponse
      */
     private BookingResponse mapToResponse(Booking booking) {
+        return mapToResponseWithReviewStatus(booking, reviewRepository.existsByBookingId(booking.getId()));
+    }
+
+    /**
+     * Map Booking entity to BookingResponse with pre-loaded review status (avoids N+1)
+     */
+    private BookingResponse mapToResponseWithReviewStatus(Booking booking, boolean hasReview) {
         Tour tour = booking.getTour();
         Trip trip = booking.getTrip();
         User user = booking.getUser();
@@ -435,7 +460,7 @@ public class BookingService {
                 .contactPhone(booking.getContactPhone())
                 .note(booking.getNote())
                 .qrCodeUrl(booking.getQrCodeUrl())
-                .hasReview(reviewRepository.existsByBookingId(booking.getId()))
+                .hasReview(hasReview)
                 .createdAt(booking.getCreatedAt())
                 .build();
     }

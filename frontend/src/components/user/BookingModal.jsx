@@ -301,7 +301,7 @@ const BookingModal = ({ tour, onClose, onSuccess }) => {
                             <button
                                 onClick={handleCreateBooking}
                                 disabled={loading}
-                                className="w-full py-3 bg-gradient-to-r from-primary to-secondary text-white font-bold rounded-xl hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                className="w-full py-3 bg-primary text-white font-bold rounded-xl hover:bg-primary/90 hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                             >
                                 {loading ? (
                                     <>
@@ -319,7 +319,7 @@ const BookingModal = ({ tour, onClose, onSuccess }) => {
                         <button
                             onClick={handlePayment}
                             disabled={loading}
-                            className="w-full py-3 bg-gradient-to-r from-primary to-secondary text-white font-bold rounded-xl hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                            className="w-full py-3 bg-primary text-white font-bold rounded-xl hover:bg-primary/90 hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                         >
                             {loading ? (
                                 <>

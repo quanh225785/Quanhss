@@ -9,6 +9,8 @@ import {
   X,
 } from "lucide-react";
 import { api } from "../../utils/api";
+import { useToast } from "../../context/ToastContext";
+import ConfirmModal from "../shared/ConfirmModal";
 
 const UserManagement = () => {
   const [activeTab, setActiveTab] = useState("all");
@@ -21,6 +23,9 @@ const UserManagement = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [lockReason, setLockReason] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
+  const [showUnlockConfirm, setShowUnlockConfirm] = useState(false);
+  const [userToUnlock, setUserToUnlock] = useState(null);
+  const { showToast } = useToast();
 
   // Fetch users from API
   useEffect(() => {
@@ -30,28 +35,28 @@ const UserManagement = () => {
   // Filter users based on active tab and search term
   useEffect(() => {
     let filtered = users;
-    
+
     // Filter by role
     if (activeTab === "agent") {
-      filtered = filtered.filter(user => 
+      filtered = filtered.filter(user =>
         user.roles.some(role => role.name === "AGENT")
       );
     } else if (activeTab === "customer") {
-      filtered = filtered.filter(user => 
+      filtered = filtered.filter(user =>
         user.roles.some(role => role.name === "USER")
       );
     }
-    
+
     // Filter by search term
     if (searchTerm) {
-      filtered = filtered.filter(user => 
+      filtered = filtered.filter(user =>
         user.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         user.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         user.lastName?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
-    
+
     setFilteredUsers(filtered);
   }, [users, activeTab, searchTerm]);
 
@@ -75,18 +80,31 @@ const UserManagement = () => {
     setShowLockModal(true);
   };
 
-  const handleUnlockUser = async (user) => {
-    if (!confirm(`Bạn có chắc muốn mở khóa tài khoản của ${user.username}?`)) {
-      return;
-    }
+  const handleUnlockUser = (user) => {
+    setUserToUnlock(user);
+    setShowUnlockConfirm(true);
+  };
+
+  const confirmUnlockUser = async () => {
+    if (!userToUnlock) return;
 
     setActionLoading(true);
     try {
-      await api.post(`/users/${user.id}/unlock`);
-      alert("Mở khóa tài khoản thành công!");
+      await api.post(`/users/${userToUnlock.id}/unlock`);
+      showToast({
+        type: 'success',
+        message: 'Thành công',
+        description: 'Mở khóa tài khoản thành công!'
+      });
+      setShowUnlockConfirm(false);
+      setUserToUnlock(null);
       fetchUsers(); // Refresh the list
     } catch (err) {
-      alert(err.response?.data?.message || "Không thể mở khóa tài khoản");
+      showToast({
+        type: 'error',
+        message: 'Lỗi',
+        description: err.response?.data?.message || "Không thể mở khóa tài khoản"
+      });
       console.error("Error unlocking user:", err);
     } finally {
       setActionLoading(false);
@@ -95,7 +113,11 @@ const UserManagement = () => {
 
   const submitLockUser = async () => {
     if (!lockReason.trim()) {
-      alert("Vui lòng nhập lý do khóa tài khoản");
+      showToast({
+        type: 'warning',
+        message: 'Chú ý',
+        description: 'Vui lòng nhập lý do khóa tài khoản'
+      });
       return;
     }
 
@@ -104,11 +126,19 @@ const UserManagement = () => {
       await api.post(`/users/${selectedUser.id}/lock`, {
         lockReason: lockReason.trim()
       });
-      alert("Khóa tài khoản thành công!");
+      showToast({
+        type: 'success',
+        message: 'Thành công',
+        description: 'Khóa tài khoản thành công!'
+      });
       setShowLockModal(false);
       fetchUsers(); // Refresh the list
     } catch (err) {
-      alert(err.response?.data?.message || "Không thể khóa tài khoản");
+      showToast({
+        type: 'error',
+        message: 'Lỗi',
+        description: err.response?.data?.message || "Không thể khóa tài khoản"
+      });
       console.error("Error locking user:", err);
     } finally {
       setActionLoading(false);
@@ -161,31 +191,28 @@ const UserManagement = () => {
         <div className="flex gap-2">
           <button
             onClick={() => setActiveTab("all")}
-            className={`px-4 py-2 text-sm font-medium rounded-md ${
-              activeTab === "all"
-                ? "bg-zinc-100 text-zinc-900"
-                : "text-zinc-600 hover:bg-zinc-50"
-            }`}
+            className={`px-4 py-2 text-sm font-medium rounded-md ${activeTab === "all"
+              ? "bg-zinc-100 text-zinc-900"
+              : "text-zinc-600 hover:bg-zinc-50"
+              }`}
           >
             Tất cả ({users.length})
           </button>
           <button
             onClick={() => setActiveTab("agent")}
-            className={`px-4 py-2 text-sm font-medium rounded-md ${
-              activeTab === "agent"
-                ? "bg-zinc-100 text-zinc-900"
-                : "text-zinc-600 hover:bg-zinc-50"
-            }`}
+            className={`px-4 py-2 text-sm font-medium rounded-md ${activeTab === "agent"
+              ? "bg-zinc-100 text-zinc-900"
+              : "text-zinc-600 hover:bg-zinc-50"
+              }`}
           >
             Agents ({users.filter(u => u.roles?.some(r => r.name === "AGENT")).length})
           </button>
           <button
             onClick={() => setActiveTab("customer")}
-            className={`px-4 py-2 text-sm font-medium rounded-md ${
-              activeTab === "customer"
-                ? "bg-zinc-100 text-zinc-900"
-                : "text-zinc-600 hover:bg-zinc-50"
-            }`}
+            className={`px-4 py-2 text-sm font-medium rounded-md ${activeTab === "customer"
+              ? "bg-zinc-100 text-zinc-900"
+              : "text-zinc-600 hover:bg-zinc-50"
+              }`}
           >
             Khách hàng ({users.filter(u => u.roles?.some(r => r.name === "USER")).length})
           </button>
@@ -231,10 +258,9 @@ const UserManagement = () => {
                     <td className="px-6 py-4">
                       <span
                         className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium
-                          ${
-                            getUserRole(user) === "ADMIN"
-                              ? "bg-red-100 text-red-700"
-                              : getUserRole(user) === "AGENT"
+                          ${getUserRole(user) === "ADMIN"
+                            ? "bg-red-100 text-red-700"
+                            : getUserRole(user) === "AGENT"
                               ? "bg-purple-100 text-purple-700"
                               : "bg-blue-100 text-blue-700"
                           }`}
@@ -319,7 +345,7 @@ const UserManagement = () => {
                 <X className="w-5 h-5" />
               </button>
             </div>
-            
+
             <div className="mb-4">
               <label className="block text-sm font-medium text-zinc-700 mb-2">
                 Lý do khóa tài khoản <span className="text-red-500">*</span>
@@ -356,6 +382,21 @@ const UserManagement = () => {
           </div>
         </div>
       )}
+      {/* Unlock User Confirmation */}
+      <ConfirmModal
+        isOpen={showUnlockConfirm}
+        onClose={() => {
+          setShowUnlockConfirm(false);
+          setUserToUnlock(null);
+        }}
+        onConfirm={confirmUnlockUser}
+        title="Xác nhận mở khóa"
+        message={`Bạn có chắc muốn mở khóa tài khoản của ${userToUnlock?.username}?`}
+        confirmText="Mở khóa"
+        cancelText="Hủy"
+        variant="success"
+        isLoading={actionLoading}
+      />
     </div>
   );
 };

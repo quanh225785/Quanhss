@@ -1,15 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import {
     ArrowLeft, Users, Phone, FileText, Loader2, CreditCard, Check,
-    AlertCircle, MapPin, Calendar, Clock, ChevronRight, CalendarX
+    AlertCircle, MapPin, Calendar, Clock, ChevronRight, CalendarX, Timer
 } from 'lucide-react';
 import { api } from '../utils/api';
+
+// 10 minutes timeout for payment
+const PAYMENT_TIMEOUT_MINUTES = 10;
 
 const BookingPage = () => {
     const { tourId } = useParams();
     const navigate = useNavigate();
     const location = useLocation();
+    const countdownRef = useRef(null);
 
     // Get trip info from navigation state
     const tripId = location.state?.tripId;
@@ -22,6 +26,7 @@ const BookingPage = () => {
 
     const [step, setStep] = useState(1); // 1: Info, 2: Payment, 3: Success
     const [booking, setBooking] = useState(null);
+    const [timeRemaining, setTimeRemaining] = useState(PAYMENT_TIMEOUT_MINUTES * 60); // in seconds
 
     const [numberOfParticipants, setNumberOfParticipants] = useState(1);
     const [participantNames, setParticipantNames] = useState(['']);
@@ -52,6 +57,56 @@ const BookingPage = () => {
         } finally {
             setLoading(false);
         }
+    };
+
+    // Countdown timer for payment step
+    useEffect(() => {
+        if (step === 2 && booking) {
+            // Calculate remaining time based on booking creation time
+            const createdAt = new Date(booking.createdAt);
+            const expiresAt = new Date(createdAt.getTime() + PAYMENT_TIMEOUT_MINUTES * 60 * 1000);
+            const now = new Date();
+            const initialRemaining = Math.max(0, Math.floor((expiresAt - now) / 1000));
+            setTimeRemaining(initialRemaining);
+
+            // Start countdown
+            countdownRef.current = setInterval(() => {
+                setTimeRemaining(prev => {
+                    if (prev <= 1) {
+                        // Time's up - cancel booking
+                        clearInterval(countdownRef.current);
+                        handleTimeoutCancel();
+                        return 0;
+                    }
+                    return prev - 1;
+                });
+            }, 1000);
+
+            return () => {
+                if (countdownRef.current) {
+                    clearInterval(countdownRef.current);
+                }
+            };
+        }
+    }, [step, booking?.id]);
+
+    const handleTimeoutCancel = async () => {
+        if (booking) {
+            try {
+                await api.put(`/bookings/${booking.id}/cancel`);
+            } catch (err) {
+                console.error('Error cancelling timed-out booking:', err);
+            }
+        }
+        setBooking(null);
+        setError('Đã hết thời gian thanh toán. Vui lòng đặt lại tour.');
+        setStep(1);
+    };
+
+    const formatTimeRemaining = (seconds) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     };
 
     // Calculate max available spots from trip
@@ -138,6 +193,32 @@ const BookingPage = () => {
         }
     };
 
+    const handleGoBackToStep1 = async () => {
+        // Cancel the current booking before going back to step 1
+        if (booking) {
+            try {
+                await api.put(`/bookings/${booking.id}/cancel`);
+                setBooking(null);
+            } catch (err) {
+                console.error('Error cancelling booking:', err);
+                // Still go back even if cancel fails
+            }
+        }
+        setStep(1);
+    };
+
+    const handleNavigateBack = async () => {
+        // If we're at step 2, cancel the booking first before navigating back
+        if (step === 2 && booking) {
+            try {
+                await api.put(`/bookings/${booking.id}/cancel`);
+            } catch (err) {
+                console.error('Error cancelling booking:', err);
+            }
+        }
+        navigate(-1);
+    };
+
     const handlePayment = async () => {
         if (!booking) return;
 
@@ -175,7 +256,7 @@ const BookingPage = () => {
                 <AlertCircle size={48} className="text-red-400" />
                 <p className="text-slate-600">{error}</p>
                 <button
-                    onClick={() => navigate(-1)}
+                    onClick={handleNavigateBack}
                     className="text-primary hover:underline"
                 >
                     Quay lại
@@ -190,7 +271,7 @@ const BookingPage = () => {
             <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-100">
                 <div className="max-w-4xl mx-auto px-4 py-4 flex items-center gap-4">
                     <button
-                        onClick={() => navigate(-1)}
+                        onClick={handleNavigateBack}
                         className="p-2 rounded-full hover:bg-slate-100 transition-colors"
                     >
                         <ArrowLeft size={20} />
@@ -320,7 +401,32 @@ const BookingPage = () => {
                         {/* Step 2: Payment */}
                         {step === 2 && booking && (
                             <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 space-y-6">
-                                <h2 className="text-xl font-bold">Xác nhận thanh toán</h2>
+                                <div className="flex items-center justify-between">
+                                    <h2 className="text-xl font-bold">Xác nhận thanh toán</h2>
+                                    {/* Countdown Timer */}
+                                    <div className={`flex items-center gap-2 px-4 py-2 rounded-xl font-mono text-lg font-bold ${timeRemaining > 300
+                                            ? 'bg-green-50 text-green-700 border border-green-200'
+                                            : timeRemaining > 120
+                                                ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                                                : 'bg-red-50 text-red-700 border border-red-200 animate-pulse'
+                                        }`}>
+                                        <Timer size={20} />
+                                        <span>{formatTimeRemaining(timeRemaining)}</span>
+                                    </div>
+                                </div>
+
+                                {/* Timeout Warning */}
+                                <div className={`p-4 rounded-2xl flex items-center gap-3 ${timeRemaining > 120
+                                        ? 'bg-blue-50 border border-blue-200 text-blue-800'
+                                        : 'bg-red-50 border border-red-200 text-red-800'
+                                    }`}>
+                                    <Timer size={20} className="flex-shrink-0" />
+                                    <p>
+                                        <strong>Lưu ý:</strong> Bạn có {PAYMENT_TIMEOUT_MINUTES} phút để hoàn tất thanh toán.
+                                        {timeRemaining <= 120 && ' Thời gian sắp hết!'}
+                                        {' '}Nếu không thanh toán kịp, đơn đặt tour sẽ tự động bị hủy.
+                                    </p>
+                                </div>
 
                                 <div className="p-4 bg-slate-50 rounded-2xl">
                                     <p className="text-sm text-slate-500 mb-1">Mã đặt tour</p>
@@ -351,15 +457,16 @@ const BookingPage = () => {
 
                                 <div className="grid grid-cols-2 gap-4">
                                     <button
-                                        onClick={() => setStep(1)}
-                                        className="py-3 border border-slate-300 text-slate-700 font-medium rounded-xl hover:bg-slate-50 transition-all"
+                                        onClick={handleGoBackToStep1}
+                                        disabled={submitting}
+                                        className="py-3 border border-slate-300 text-slate-700 font-medium rounded-xl hover:bg-slate-50 transition-all disabled:opacity-50"
                                     >
                                         Quay lại
                                     </button>
                                     <button
                                         onClick={handlePayment}
                                         disabled={submitting}
-                                        className="py-3 bg-gradient-to-r from-primary to-secondary text-white font-bold rounded-xl hover:shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                                        className="py-3 bg-primary text-white font-bold rounded-xl hover:bg-primary/90 hover:shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                                     >
                                         {submitting ? (
                                             <Loader2 size={20} className="animate-spin" />
@@ -482,7 +589,7 @@ const BookingPage = () => {
                                 <button
                                     onClick={handleCreateBooking}
                                     disabled={submitting}
-                                    className="w-full mt-4 py-3 bg-gradient-to-r from-primary to-secondary text-white font-bold rounded-xl hover:shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                                    className="w-full mt-4 py-3 bg-primary text-white font-bold rounded-xl hover:bg-primary/90 hover:shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                                 >
                                     {submitting ? (
                                         <>

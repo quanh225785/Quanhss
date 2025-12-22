@@ -35,4 +35,8 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     // Count reviews for a tour
     @Query("SELECT COUNT(r) FROM Review r WHERE r.tour.id = :tourId")
     Integer countByTourId(@Param("tourId") Long tourId);
+
+    // Get all booking IDs that have reviews - for batch checking
+    @Query("SELECT r.booking.id FROM Review r WHERE r.booking.id IN :bookingIds")
+    List<Long> findBookingIdsWithReviews(@Param("bookingIds") List<Long> bookingIds);
 }

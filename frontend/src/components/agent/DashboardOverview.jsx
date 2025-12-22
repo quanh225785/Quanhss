@@ -639,8 +639,8 @@ const DashboardOverview = () => {
                                                                     <div
                                                                         key={trip.tripId}
                                                                         className={`p-5 rounded-xl border-2 transition-all ${hasRevenue
-                                                                                ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-200 hover:border-green-300 hover:shadow-md'
-                                                                                : 'bg-zinc-50 border-zinc-200'
+                                                                            ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-200 hover:border-green-300 hover:shadow-md'
+                                                                            : 'bg-zinc-50 border-zinc-200'
                                                                             }`}
                                                                     >
                                                                         <div className="flex items-center justify-between gap-4">

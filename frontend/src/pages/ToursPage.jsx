@@ -245,7 +245,7 @@ const ToursPage = () => {
             {/* Search Button */}
             <button
               onClick={handleSearch}
-              className="px-6 py-3 bg-gradient-to-r from-primary to-secondary text-white font-medium rounded-xl whitespace-nowrap hover:from-primary/90 hover:to-secondary/90 transition-colors"
+              className="px-6 py-3 bg-primary text-white font-medium rounded-xl whitespace-nowrap hover:bg-primary/90 transition-colors"
             >
               Tìm kiếm
             </button>
