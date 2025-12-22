@@ -156,4 +156,34 @@ public class UserService {
         return userMapper.toUserResponse(
                 userRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED)));
     }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @Transactional
+    public UserResponse lockUser(String userId, String lockReason) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        
+        user.setIsLocked(true);
+        user.setLockReason(lockReason);
+        
+        user = userRepository.save(user);
+        log.info("User {} has been locked. Reason: {}", user.getUsername(), lockReason);
+        
+        return userMapper.toUserResponse(user);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @Transactional
+    public UserResponse unlockUser(String userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        
+        user.setIsLocked(false);
+        user.setLockReason(null);
+        
+        user = userRepository.save(user);
+        log.info("User {} has been unlocked", user.getUsername());
+        
+        return userMapper.toUserResponse(user);
+    }
 }

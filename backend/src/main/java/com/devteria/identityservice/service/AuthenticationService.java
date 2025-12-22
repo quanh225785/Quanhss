@@ -86,6 +86,15 @@ public class AuthenticationService {
         if (!authenticated)
             throw new AppException(ErrorCode.UNAUTHENTICATED);
 
+        // Check if account is locked
+        if (user.getIsLocked() != null && user.getIsLocked()) {
+            String message = "Tài khoản đã bị khoá";
+            if (user.getLockReason() != null && !user.getLockReason().isEmpty()) {
+                message += ". Lý do: " + user.getLockReason();
+            }
+            throw new AppException(ErrorCode.ACCOUNT_LOCKED, message);
+        }
+
         // Check if email is verified
         if (user.getIsVerified() == null || !user.getIsVerified()) {
             throw new AppException(ErrorCode.EMAIL_NOT_VERIFIED);

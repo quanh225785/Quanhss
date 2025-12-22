@@ -12,6 +12,7 @@ import com.devteria.identityservice.dto.request.PasswordForgotRequest;
 import com.devteria.identityservice.dto.request.PasswordChangeRequest;
 import com.devteria.identityservice.dto.request.ResetPasswordRequest;
 import com.devteria.identityservice.dto.request.UserUpdateRequest;
+import com.devteria.identityservice.dto.request.LockUserRequest;
 import com.devteria.identityservice.dto.response.UserResponse;
 import com.devteria.identityservice.service.UserService;
 import com.devteria.identityservice.service.PasswordResetService;
@@ -88,6 +89,20 @@ public class UserController {
         userService.changePassword(userId, request.getCurrentPassword(), request.getNewPassword());
         return ApiResponse.<String>builder()
                 .result("Password changed successfully")
+                .build();
+    }
+
+    @PostMapping("/{userId}/lock")
+    ApiResponse<UserResponse> lockUser(@PathVariable String userId, @RequestBody @Valid LockUserRequest request) {
+        return ApiResponse.<UserResponse>builder()
+                .result(userService.lockUser(userId, request.getLockReason()))
+                .build();
+    }
+
+    @PostMapping("/{userId}/unlock")
+    ApiResponse<UserResponse> unlockUser(@PathVariable String userId) {
+        return ApiResponse.<UserResponse>builder()
+                .result(userService.unlockUser(userId))
                 .build();
     }
 }
