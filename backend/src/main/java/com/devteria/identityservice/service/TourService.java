@@ -194,9 +194,25 @@ public class TourService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public TourResponse getTourById(Long id) {
         Tour tour = tourRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Tour not found"));
+
+        // Force load lazy relationships to avoid LazyInitializationException
+        if (tour.getTourPoints() != null) {
+            tour.getTourPoints().size();
+            tour.getTourPoints().forEach(tp -> {
+                if (tp.getLocation() != null) {
+                    tp.getLocation().getName();
+                    tp.getLocation().getCityName();
+                }
+            });
+        }
+        if (tour.getCreatedBy() != null) {
+            tour.getCreatedBy().getUsername();
+        }
+
         return mapToResponse(tour);
     }
 

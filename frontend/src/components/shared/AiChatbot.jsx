@@ -20,6 +20,14 @@ const AiChatbot = () => {
         scrollToBottom();
     }, [messages]);
 
+    // Extract image URLs from content
+    const extractImages = (content) => {
+        const imageRegex = /https?:\/\/[^\s]+?\.(jpg|jpeg|png|gif|webp|bmp)(\?[^\s]*)?/gi;
+        const images = content.match(imageRegex) || [];
+        const textWithoutImages = content.replace(imageRegex, '').trim();
+        return { images, text: textWithoutImages };
+    };
+
     const handleSend = async (e) => {
         e.preventDefault();
         if (!input.trim() || isLoading) return;
@@ -139,16 +147,37 @@ const AiChatbot = () => {
                 <>
                     {/* Chat area */}
                     <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/50">
-                        {messages.map((msg, index) => (
-                            <div key={index} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                                <div className={`max-w-[90%] p-3 rounded-2xl text-sm shadow-sm ${msg.role === 'user'
-                                    ? 'bg-primary text-white rounded-tr-none'
-                                    : 'bg-white text-slate-700 rounded-tl-none border border-slate-100'
-                                    }`}>
-                                    <p className="whitespace-pre-wrap">{msg.content}</p>
+                        {messages.map((msg, index) => {
+                            const { images, text } = extractImages(msg.content);
+                            return (
+                                <div key={index} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                                    <div className={`max-w-[90%] rounded-2xl text-sm shadow-sm ${msg.role === 'user'
+                                        ? 'bg-primary text-white rounded-tr-none'
+                                        : 'bg-white text-slate-700 rounded-tl-none border border-slate-100'
+                                        }`}>
+                                        {text && (
+                                            <div className="p-3">
+                                                <p className="whitespace-pre-wrap">{text}</p>
+                                            </div>
+                                        )}
+                                        {images.length > 0 && (
+                                            <div className={`grid gap-2 p-3 ${text ? 'pt-0' : ''} ${images.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
+                                                {images.map((imgUrl, imgIndex) => (
+                                                    <img
+                                                        key={imgIndex}
+                                                        src={imgUrl}
+                                                        alt={`Tour image ${imgIndex + 1}`}
+                                                        className="w-full h-32 object-cover rounded-lg hover:scale-105 transition-transform cursor-pointer"
+                                                        onClick={() => window.open(imgUrl, '_blank')}
+                                                        onError={(e) => { e.target.style.display = 'none'; }}
+                                                    />
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                         {isLoading && (
                             <div className="flex justify-start">
                                 <div className="bg-white p-3 rounded-2xl rounded-tl-none border border-slate-100 shadow-sm flex items-center gap-2">
