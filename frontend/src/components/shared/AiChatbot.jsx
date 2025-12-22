@@ -54,12 +54,12 @@ const AiChatbot = () => {
 
             while (true) {
                 const { done, value } = await reader.read();
-                
+
                 if (done) break;
-                
+
                 const chunk = decoder.decode(value, { stream: true });
                 streamedContent += chunk;
-                
+
                 // Update the AI message with streamed content
                 setMessages(prev => {
                     const newMessages = [...prev];
@@ -142,8 +142,8 @@ const AiChatbot = () => {
                         {messages.map((msg, index) => (
                             <div key={index} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                                 <div className={`max-w-[85%] p-3 rounded-2xl text-sm shadow-sm ${msg.role === 'user'
-                                        ? 'bg-primary text-white rounded-tr-none'
-                                        : 'bg-white text-slate-700 rounded-tl-none border border-slate-100'
+                                    ? 'bg-primary text-white rounded-tr-none'
+                                    : 'bg-white text-slate-700 rounded-tl-none border border-slate-100'
                                     }`}>
                                     <p className="whitespace-pre-wrap">{msg.content}</p>
                                 </div>
