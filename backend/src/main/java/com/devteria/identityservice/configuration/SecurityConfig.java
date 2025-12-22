@@ -29,6 +29,7 @@ public class SecurityConfig {
             "/vietmap/tiles/**", // Map tiles need to be public for Leaflet
             "/tours/search", "/tours/approved", "/tours/{id}", // Public tour search and viewing
             "/locations", "/locations/cities", // Public location list and cities for filters
+            "/ai-chat", // AI Chatbot endpoint
             "/ws/**" // WebSocket endpoint
     };
 

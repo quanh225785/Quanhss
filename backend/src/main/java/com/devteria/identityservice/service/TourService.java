@@ -118,7 +118,7 @@ public class TourService {
 
         // Create tour entity
         int numberOfDays = request.getNumberOfDays() != null ? request.getNumberOfDays() : 1;
-        
+
         // Serialize imageUrls to JSON
         String imageUrlsJson = null;
         if (request.getImageUrls() != null && !request.getImageUrls().isEmpty()) {
@@ -128,13 +128,14 @@ public class TourService {
                 log.warn("Failed to serialize imageUrls", e);
             }
         }
-        
+
         // Use first image as thumbnail if imageUrl is not provided
         String thumbnailUrl = request.getImageUrl();
-        if ((thumbnailUrl == null || thumbnailUrl.isEmpty()) && request.getImageUrls() != null && !request.getImageUrls().isEmpty()) {
+        if ((thumbnailUrl == null || thumbnailUrl.isEmpty()) && request.getImageUrls() != null
+                && !request.getImageUrls().isEmpty()) {
             thumbnailUrl = request.getImageUrls().get(0);
         }
-        
+
         Tour tour = Tour.builder()
                 .name(request.getName())
                 .description(request.getDescription())
@@ -290,6 +291,20 @@ public class TourService {
         });
 
         return allTours.stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    // Get all active tours for AI suggestions
+    @Transactional(readOnly = true)
+    public List<TourResponse> getAllActiveTours() {
+        log.info("Getting all active tours for AI");
+        List<Tour> activeTours = tourRepository.findByIsActiveTrueOrderByCreatedAtDesc()
+                .stream()
+                .filter(t -> t.getStatus() == TourStatus.APPROVED)
+                .collect(Collectors.toList());
+
+        return activeTours.stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
@@ -502,13 +517,13 @@ public class TourService {
                     })
                     .collect(Collectors.toList());
         }
-        
+
         // Parse imageUrls from JSON
         List<String> imageUrlsList = new ArrayList<>();
         if (tour.getImageUrls() != null && !tour.getImageUrls().isEmpty()) {
             try {
-                imageUrlsList = objectMapper.readValue(tour.getImageUrls(), 
-                    objectMapper.getTypeFactory().constructCollectionType(List.class, String.class));
+                imageUrlsList = objectMapper.readValue(tour.getImageUrls(),
+                        objectMapper.getTypeFactory().constructCollectionType(List.class, String.class));
             } catch (JsonProcessingException e) {
                 log.warn("Failed to parse imageUrls", e);
             }

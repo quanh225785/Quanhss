@@ -22,6 +22,7 @@ import ToursPage from "./pages/ToursPage";
 import { setAuthToken } from "./utils/api";
 import { registerVietmapServiceWorker } from "./utils/serviceWorker";
 import { ToastProvider } from "./context/ToastContext";
+import AiChatbot from "./components/shared/AiChatbot";
 import "./App.css";
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(
@@ -212,6 +213,7 @@ function App() {
           />
         </Routes>
       </Router>
+      {isAuthenticated && <AiChatbot />}
     </ToastProvider>
   );
 }
