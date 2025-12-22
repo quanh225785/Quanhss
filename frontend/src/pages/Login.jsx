@@ -69,6 +69,10 @@ function Login({ onLogin }) {
                 if (formData.username && formData.username.includes('@')) {
                     setUserEmail(formData.username);
                 }
+            } else if (errorCode === 1029) {
+                // Account locked error
+                setError(errorMessage || 'Tài khoản đã bị khóa.');
+                setShowResendVerification(false);
             } else {
                 setError(errorMessage || 'Đăng nhập thất bại. Vui lòng thử lại.');
                 setShowResendVerification(false);
