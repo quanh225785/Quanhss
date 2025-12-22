@@ -39,6 +39,7 @@ public enum ErrorCode {
     INVALID_RATING(1026, "Rating must be between 1 and 5", HttpStatus.BAD_REQUEST),
     REVIEW_NOT_FOUND(1027, "Review not found", HttpStatus.NOT_FOUND),
     NOTIFICATION_NOT_FOUND(1028, "Notification not found", HttpStatus.NOT_FOUND),
+    ACCOUNT_LOCKED(1029, "Account has been locked", HttpStatus.FORBIDDEN),
             ;
 
     ErrorCode(int code, String message, HttpStatusCode statusCode) {
