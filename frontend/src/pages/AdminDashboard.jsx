@@ -29,7 +29,7 @@ const AdminDashboard = ({ onLogout }) => {
           <Route path="/locations" element={<LocationManagement />} />
           <Route path="/bookings" element={<BookingManagement />} />
           <Route path="/content" element={<ContentManagement />} />
-          <Route path="/profile" element={<AdminProfile user={user} />} />
+          <Route path="/profile" element={<AdminProfile user={user} onLogout={onLogout} />} />
         </Routes>
       </div>
     </MainLayout>
