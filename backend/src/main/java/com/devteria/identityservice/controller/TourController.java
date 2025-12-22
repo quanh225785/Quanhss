@@ -81,7 +81,7 @@ public class TourController {
         /**
          * Search tours with filters (Public - for users)
          * GET
-         * /tours/search?keyword=...&minPrice=...&maxPrice=...&numberOfDays=...&vehicle=...&locationId=...
+         * /tours/search?keyword=...&minPrice=...&maxPrice=...&numberOfDays=...&vehicle=...&cityName=...
          */
         @GetMapping("/search")
         ApiResponse<List<TourResponse>> searchTours(
@@ -90,12 +90,12 @@ public class TourController {
                         @RequestParam(required = false) Double maxPrice,
                         @RequestParam(required = false) Integer numberOfDays,
                         @RequestParam(required = false) String vehicle,
-                        @RequestParam(required = false) Long locationId) {
-                log.info("Searching tours with filters - keyword: {}, minPrice: {}, maxPrice: {}, numberOfDays: {}, vehicle: {}, locationId: {}",
-                                keyword, minPrice, maxPrice, numberOfDays, vehicle, locationId);
+                        @RequestParam(required = false) String cityName) {
+                log.info("Searching tours with filters - keyword: {}, minPrice: {}, maxPrice: {}, numberOfDays: {}, vehicle: {}, cityName: {}",
+                                keyword, minPrice, maxPrice, numberOfDays, vehicle, cityName);
                 return ApiResponse.<List<TourResponse>>builder()
                                 .result(tourService.searchTours(keyword, minPrice, maxPrice, numberOfDays, vehicle,
-                                                locationId))
+                                                cityName))
                                 .build();
         }
 

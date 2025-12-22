@@ -31,12 +31,12 @@ const ToursPage = () => {
   const [maxPrice, setMaxPrice] = useState(searchParams.get('maxPrice') || '');
   const [numberOfDays, setNumberOfDays] = useState(searchParams.get('numberOfDays') || '');
   const [vehicle, setVehicle] = useState(searchParams.get('vehicle') || '');
-  const [locationId, setLocationId] = useState(searchParams.get('locationId') || '');
+  const [cityName, setCityName] = useState(searchParams.get('cityName') || '');
 
-  const [locations, setLocations] = useState([]);
+  const [cities, setCities] = useState([]);
 
   useEffect(() => {
-    fetchLocations();
+    fetchCities();
     fetchTours();
     fetchFavorites();
   }, []);
@@ -59,14 +59,14 @@ const ToursPage = () => {
     }
   };
 
-  const fetchLocations = async () => {
+  const fetchCities = async () => {
     try {
-      const response = await api.get('/locations');
+      const response = await api.get('/locations/cities');
       if (response.data.code === 1000) {
-        setLocations(response.data.result || []);
+        setCities(response.data.result || []);
       }
     } catch (error) {
-      console.error('Error fetching locations:', error);
+      console.error('Error fetching cities:', error);
     }
   };
 
@@ -80,7 +80,7 @@ const ToursPage = () => {
       if (maxPrice) params.append('maxPrice', maxPrice);
       if (numberOfDays) params.append('numberOfDays', numberOfDays);
       if (vehicle) params.append('vehicle', vehicle);
-      if (locationId) params.append('locationId', locationId);
+      if (cityName) params.append('cityName', cityName);
 
       const url = `/tours/search${params.toString() ? '?' + params.toString() : ''}`;
 
@@ -116,7 +116,7 @@ const ToursPage = () => {
     if (maxPrice) params.set('maxPrice', maxPrice);
     if (numberOfDays) params.set('numberOfDays', numberOfDays);
     if (vehicle) params.set('vehicle', vehicle);
-    if (locationId) params.set('locationId', locationId);
+    if (cityName) params.set('cityName', cityName);
 
     setSearchParams(params);
   };
@@ -127,7 +127,7 @@ const ToursPage = () => {
     setMaxPrice('');
     setNumberOfDays('');
     setVehicle('');
-    setLocationId('');
+    setCityName('');
     setSearchParams({});
   };
 
@@ -196,7 +196,7 @@ const ToursPage = () => {
     maxPrice,
     numberOfDays,
     vehicle,
-    locationId,
+    cityName,
   ].filter(Boolean).length;
 
   return (
@@ -320,18 +320,18 @@ const ToursPage = () => {
                 </div>
               </div>
 
-              {/* Location */}
+              {/* City */}
               <div className="col-span-2 md:col-span-1">
-                <label className="block text-xs font-medium text-slate-600 mb-1.5">Địa điểm</label>
+                <label className="block text-xs font-medium text-slate-600 mb-1.5">Thành phố</label>
                 <select
-                  value={locationId}
-                  onChange={(e) => setLocationId(e.target.value)}
+                  value={cityName}
+                  onChange={(e) => setCityName(e.target.value)}
                   className="w-full px-3 py-2 text-sm bg-white/80 border-2 border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary text-slate-900"
                 >
                   <option value="">Tất cả</option>
-                  {locations.map((location) => (
-                    <option key={location.id} value={location.id}>
-                      {location.name}
+                  {cities.map((city) => (
+                    <option key={city} value={city}>
+                      {city}
                     </option>
                   ))}
                 </select>

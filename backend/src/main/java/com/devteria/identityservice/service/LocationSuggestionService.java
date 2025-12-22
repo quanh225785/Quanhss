@@ -230,6 +230,13 @@ public class LocationSuggestionService {
     }
 
     /**
+     * Get distinct city names for filter dropdown
+     */
+    public List<String> getDistinctCityNames() {
+        return locationRepository.findDistinctCityNames();
+    }
+
+    /**
      * Admin creates a location directly (auto-approved)
      */
     @PreAuthorize("hasRole('ADMIN')")

@@ -302,7 +302,7 @@ public class TourService {
             Double maxPrice,
             Integer numberOfDays,
             String vehicle,
-            Long locationId) {
+            String cityName) {
         try {
             // Normalize parameters: convert empty strings to null
             String normalizedKeyword = (keyword != null && !keyword.trim().isEmpty()) ? keyword.trim().toLowerCase()
@@ -312,12 +312,12 @@ public class TourService {
             Integer normalizedNumberOfDays = numberOfDays;
             String normalizedVehicle = (vehicle != null && !vehicle.trim().isEmpty()) ? vehicle.trim().toLowerCase()
                     : null;
-            Long normalizedLocationId = locationId;
+            String normalizedCityName = (cityName != null && !cityName.trim().isEmpty()) ? cityName.trim() : null;
 
             log.info(
-                    "Searching tours with params - keyword: {}, minPrice: {}, maxPrice: {}, numberOfDays: {}, vehicle: {}, locationId: {}",
+                    "Searching tours with params - keyword: {}, minPrice: {}, maxPrice: {}, numberOfDays: {}, vehicle: {}, cityName: {}",
                     normalizedKeyword, normalizedMinPrice, normalizedMaxPrice, normalizedNumberOfDays,
-                    normalizedVehicle, normalizedLocationId);
+                    normalizedVehicle, normalizedCityName);
 
             // Get all approved tours first - use repository method that returns active
             // tours
@@ -336,6 +336,7 @@ public class TourService {
                     tour.getTourPoints().forEach(tp -> {
                         if (tp.getLocation() != null) {
                             tp.getLocation().getName(); // Force load location
+                            tp.getLocation().getCityName(); // Force load cityName
                         }
                     });
                 }
@@ -387,12 +388,12 @@ public class TourService {
                             return false;
                         }
 
-                        // Location filter
-                        if (normalizedLocationId != null) {
-                            boolean hasLocation = tour.getTourPoints() != null && tour.getTourPoints().stream()
+                        // City name filter
+                        if (normalizedCityName != null) {
+                            boolean hasCity = tour.getTourPoints() != null && tour.getTourPoints().stream()
                                     .anyMatch(tp -> tp.getLocation() != null
-                                            && normalizedLocationId.equals(tp.getLocation().getId()));
-                            if (!hasLocation)
+                                            && normalizedCityName.equals(tp.getLocation().getCityName()));
+                            if (!hasCity)
                                 return false;
                         }
 

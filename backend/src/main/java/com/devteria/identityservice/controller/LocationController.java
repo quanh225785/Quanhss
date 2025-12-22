@@ -116,6 +116,17 @@ public class LocationController {
     }
 
     /**
+     * Get distinct city names for filter dropdown
+     * GET /locations/cities
+     */
+    @GetMapping("/cities")
+    ApiResponse<List<String>> getDistinctCityNames() {
+        return ApiResponse.<List<String>>builder()
+                .result(locationSuggestionService.getDistinctCityNames())
+                .build();
+    }
+
+    /**
      * Get location by ID
      * GET /locations/{locationId}
      */
