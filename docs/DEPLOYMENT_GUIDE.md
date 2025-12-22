@@ -1041,6 +1041,13 @@ upstream backend_servers {
     server 10.0.5.106:8080;   # Backend EC2-2 Private IP
 }
 
+# Separate upstream for AI Chat with sticky sessions
+upstream ai_chat_backend {
+    ip_hash;  # Same IP always goes to same backend
+    server 10.0.13.12:8080;
+    server 10.0.5.106:8080;
+}
+
 map $http_upgrade $connection_upgrade {
     default upgrade;
     '' close;
@@ -1080,16 +1087,14 @@ server {
         proxy_send_timeout 86400s;
     }
 
-    # AI Chat Streaming endpoint (CRITICAL: No buffering!)
-    location /api/ai-chat/stream {
-        proxy_pass http://backend_servers;
+    # AI Chat endpoints - Use sticky sessions
+    location /api/ai-chat {
+        proxy_pass http://ai_chat_backend;  # Use separate upstream with ip_hash
         proxy_http_version 1.1;
         
-        # Disable buffering for streaming
+        # Disable buffering for /stream endpoint
         proxy_buffering off;
         proxy_cache off;
-        
-        # Enable chunked transfer encoding
         chunked_transfer_encoding on;
         
         # Headers
@@ -1099,7 +1104,7 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_set_header Connection '';
         
-        # Timeouts for long-running streaming
+        # Timeouts
         proxy_read_timeout 300s;
         proxy_connect_timeout 75s;
     }
