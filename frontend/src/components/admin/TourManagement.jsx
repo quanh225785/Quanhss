@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Route, Check, X, AlertCircle, Loader2, MapPin, Clock, Eye, Calendar } from 'lucide-react';
 import { api } from '../../utils/api';
+import { useToast } from '../../context/ToastContext';
 import { formatDistance, formatDuration } from '../../utils/polylineUtils';
 import ConfirmModal from '../shared/ConfirmModal';
 import Modal from '../shared/Modal';
@@ -14,6 +15,7 @@ const TourManagement = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [processingId, setProcessingId] = useState(null);
+  const { showToast } = useToast();
 
   // Modal states
   const [showApproveModal, setShowApproveModal] = useState(false);
@@ -61,13 +63,21 @@ const TourManagement = () => {
     setProcessingId(tourId);
     try {
       await api.post(`/tours/${tourId}/approve`);
-      alert('Tour đã được duyệt thành công!');
+      showToast({
+        type: 'success',
+        message: 'Thành công',
+        description: 'Tour đã được duyệt thành công!'
+      });
       setShowApproveModal(false);
       setSelectedTour(null);
       await fetchTours();
     } catch (err) {
       console.error('Error approving tour:', err);
-      alert('Không thể duyệt tour: ' + (err.response?.data?.message || 'Lỗi không xác định'));
+      showToast({
+        type: 'error',
+        message: 'Lỗi',
+        description: 'Không thể duyệt tour: ' + (err.response?.data?.message || 'Lỗi không xác định')
+      });
     } finally {
       setProcessingId(null);
     }
@@ -75,7 +85,11 @@ const TourManagement = () => {
 
   const handleReject = async (tourId) => {
     if (!rejectReason || rejectReason.trim() === '') {
-      alert('Vui lòng nhập lý do từ chối');
+      showToast({
+        type: 'info',
+        message: 'Yêu cầu',
+        description: 'Vui lòng nhập lý do từ chối'
+      });
       return;
     }
 
@@ -84,14 +98,22 @@ const TourManagement = () => {
       await api.post(`/tours/${tourId}/reject`, null, {
         params: { reason: rejectReason.trim() },
       });
-      alert('Tour đã bị từ chối!');
+      showToast({
+        type: 'success',
+        message: 'Thành công',
+        description: 'Tour đã bị từ chối!'
+      });
       setShowRejectModal(false);
       setSelectedTour(null);
       setRejectReason('');
       await fetchTours();
     } catch (err) {
       console.error('Error rejecting tour:', err);
-      alert('Không thể từ chối tour: ' + (err.response?.data?.message || 'Lỗi không xác định'));
+      showToast({
+        type: 'error',
+        message: 'Lỗi',
+        description: 'Không thể từ chối tour: ' + (err.response?.data?.message || 'Lỗi không xác định')
+      });
     } finally {
       setProcessingId(null);
     }

@@ -13,6 +13,7 @@ import {
 } from 'recharts';
 import StatCard from './StatCard';
 import { api } from '../../utils/api';
+import { useToast } from '../../context/ToastContext';
 import jsPDF from 'jspdf';
 
 const DashboardOverview = () => {
@@ -24,6 +25,7 @@ const DashboardOverview = () => {
     const [showRevenueDetails, setShowRevenueDetails] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [sortBy, setSortBy] = useState('revenue-desc'); // revenue-desc, revenue-asc, bookings-desc, bookings-asc, name-asc
+    const { showToast } = useToast();
 
     useEffect(() => {
         fetchStats();
@@ -62,7 +64,7 @@ const DashboardOverview = () => {
         // Filter by search query
         if (searchQuery.trim()) {
             const query = searchQuery.toLowerCase().trim();
-            filtered = filtered.filter(tour => 
+            filtered = filtered.filter(tour =>
                 tour.tourName.toLowerCase().includes(query)
             );
         }
@@ -151,22 +153,22 @@ const DashboardOverview = () => {
 
             const doc = new jsPDF();
             const user = JSON.parse(localStorage.getItem('user') || '{}');
-            const userName = user.firstName && user.lastName 
-                ? `${user.firstName} ${user.lastName}` 
+            const userName = user.firstName && user.lastName
+                ? `${user.firstName} ${user.lastName}`
                 : user.firstName || user.lastName || 'Agent';
-            
+
             const currentDate = new Date().toLocaleDateString('vi-VN');
-            
+
             // Header
             doc.setFontSize(18);
             doc.text('BAO CAO THONG KE AGENT', 105, 20, { align: 'center' });
-            
+
             doc.setFontSize(12);
             doc.text(`Nguoi tao: ${userName}`, 20, 35);
             doc.text(`Ngay xuat: ${currentDate}`, 20, 42);
-            
+
             let yPos = 55;
-            
+
             // Tổng quan
             doc.setFontSize(14);
             doc.text('TONG QUAN', 20, yPos);
@@ -178,7 +180,7 @@ const DashboardOverview = () => {
             yPos = addTextToPDF(doc, `Tong Doanh thu: ${formatCurrencyForPDF(stats.totalRevenue)} VND`, 20, yPos);
             yPos = addTextToPDF(doc, `Doanh thu thang nay: ${formatCurrencyForPDF(stats.thisMonthRevenue)} VND`, 20, yPos);
             yPos += 3;
-            
+
             // Tours theo trạng thái
             if (yPos > 270) {
                 doc.addPage();
@@ -193,7 +195,7 @@ const DashboardOverview = () => {
             yPos = addTextToPDF(doc, `Da tu choi: ${formatNumber(stats.rejectedTours)}`, 20, yPos);
             yPos = addTextToPDF(doc, `Da an: ${formatNumber(stats.hiddenTours)}`, 20, yPos);
             yPos += 3;
-            
+
             // Thống kê theo tháng
             if (yPos > 270) {
                 doc.addPage();
@@ -203,18 +205,18 @@ const DashboardOverview = () => {
             doc.text('THONG KE THEO THANG (6 thang gan nhat)', 20, yPos);
             yPos += 10;
             doc.setFontSize(10);
-            
+
             const toursByMonth = getToursByMonthData();
             const bookingsByMonth = getBookingsByMonthData();
             const revenueByMonth = getRevenueByMonthData();
-            
+
             // Header của bảng
             doc.setFontSize(10);
             doc.setFont(undefined, 'bold');
             yPos = addTextToPDF(doc, 'Thang | Tours | Dat cho | Doanh thu', 20, yPos);
             doc.setFont(undefined, 'normal');
             yPos += 2;
-            
+
             toursByMonth.forEach((item, index) => {
                 if (yPos > 280) {
                     doc.addPage();
@@ -225,7 +227,7 @@ const DashboardOverview = () => {
                 const rowText = `${item.name} | ${item.tours} | ${bookings} | ${formatCurrencyForPDF(revenue)} VND`;
                 yPos = addTextToPDF(doc, rowText, 20, yPos, 170);
             });
-            
+
             // Doanh thu chi tiết theo tour
             if (revenueDetails && revenueDetails.length > 0) {
                 yPos += 5;
@@ -237,13 +239,13 @@ const DashboardOverview = () => {
                 doc.text('DOANH THU CHI TIET THEO TOUR', 20, yPos);
                 yPos += 10;
                 doc.setFontSize(10);
-                
+
                 revenueDetails.forEach((tour) => {
                     if (yPos > 280) {
                         doc.addPage();
                         yPos = 20;
                     }
-                    
+
                     // Tour header
                     doc.setFontSize(11);
                     doc.setFont(undefined, 'bold');
@@ -253,7 +255,7 @@ const DashboardOverview = () => {
                     doc.setFontSize(10);
                     const tourInfo = `  Dat cho: ${formatNumber(tour.totalBookings)} | Doanh thu: ${formatCurrencyForPDF(tour.totalRevenue)} VND`;
                     yPos = addTextToPDF(doc, tourInfo, 20, yPos, 170);
-                    
+
                     // Trips
                     if (tour.trips && tour.trips.length > 0) {
                         tour.trips.forEach((trip) => {
@@ -270,7 +272,7 @@ const DashboardOverview = () => {
                     yPos += 3;
                 });
             }
-            
+
             // Footer
             const pageCount = doc.internal.pages.length - 1;
             for (let i = 1; i <= pageCount; i++) {
@@ -278,12 +280,16 @@ const DashboardOverview = () => {
                 doc.setFontSize(10);
                 doc.text(`Trang ${i}/${pageCount}`, 105, 285, { align: 'center' });
             }
-            
+
             // Lưu file
             doc.save(`bao-cao-agent-${currentDate.replace(/\//g, '-')}.pdf`);
         } catch (error) {
             console.error("Error exporting PDF:", error);
-            alert("Co loi xay ra khi xuat PDF. Vui long thu lai.");
+            showToast({
+                type: 'error',
+                message: 'Lỗi xuất PDF',
+                description: 'Có lỗi xảy ra khi xuất PDF. Vui lòng thử lại.'
+            });
         }
     };
 
@@ -482,14 +488,14 @@ const DashboardOverview = () => {
                         <BarChart data={getRevenueByMonthData()}>
                             <CartesianGrid strokeDasharray="3 3" vertical={false} />
                             <XAxis dataKey="name" />
-                            <YAxis 
+                            <YAxis
                                 tickFormatter={(value) => {
                                     if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
                                     if (value >= 1000) return `${(value / 1000).toFixed(0)}K`;
                                     return value.toString();
                                 }}
                             />
-                            <Tooltip 
+                            <Tooltip
                                 formatter={(value) => formatCurrency(value)}
                                 contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                             />
@@ -570,129 +576,126 @@ const DashboardOverview = () => {
                                 filteredRevenueDetails.length > 0 ? (
                                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                         {filteredRevenueDetails.map((tour, index) => (
-                                        <div 
-                                            key={tour.tourId} 
-                                            className="bg-white rounded-xl shadow-lg border border-zinc-200 overflow-hidden hover:shadow-xl transition-all"
-                                        >
-                                            {/* Tour Header */}
-                                            <div className="p-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-zinc-200">
-                                                <div className="flex items-start gap-5">
-                                                    {tour.tourImageUrl ? (
-                                                        <img
-                                                            src={tour.tourImageUrl}
-                                                            alt={tour.tourName}
-                                                            className="w-32 h-32 object-cover rounded-xl shadow-lg border-2 border-white"
-                                                        />
-                                                    ) : (
-                                                        <div className="w-32 h-32 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-xl shadow-lg flex items-center justify-center">
-                                                            <Map className="text-white" size={48} />
-                                                        </div>
-                                                    )}
-                                                    <div className="flex-1 min-w-0">
-                                                        <div className="flex items-start justify-between gap-4">
-                                                            <div className="flex-1">
-                                                                <h3 className="text-2xl font-bold text-zinc-900 mb-3 line-clamp-2">
-                                                                    {tour.tourName}
-                                                                </h3>
-                                                                <div className="flex flex-wrap gap-3">
-                                                                    <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg shadow-md">
-                                                                        <Users size={18} className="text-blue-600" />
-                                                                        <span className="text-base font-semibold text-zinc-700">
-                                                                            {formatNumber(tour.totalBookings)} đặt chỗ
-                                                                        </span>
-                                                                    </div>
-                                                                    <div className="flex items-center gap-2 px-4 py-2 bg-green-50 rounded-lg shadow-md border border-green-200">
-                                                                        <DollarSign size={18} className="text-green-600" />
-                                                                        <span className="text-base font-bold text-green-700">
-                                                                            {formatCurrency(tour.totalRevenue)}
-                                                                        </span>
+                                            <div
+                                                key={tour.tourId}
+                                                className="bg-white rounded-xl shadow-lg border border-zinc-200 overflow-hidden hover:shadow-xl transition-all"
+                                            >
+                                                {/* Tour Header */}
+                                                <div className="p-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-zinc-200">
+                                                    <div className="flex items-start gap-5">
+                                                        {tour.tourImageUrl ? (
+                                                            <img
+                                                                src={tour.tourImageUrl}
+                                                                alt={tour.tourName}
+                                                                className="w-32 h-32 object-cover rounded-xl shadow-lg border-2 border-white"
+                                                            />
+                                                        ) : (
+                                                            <div className="w-32 h-32 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-xl shadow-lg flex items-center justify-center">
+                                                                <Map className="text-white" size={48} />
+                                                            </div>
+                                                        )}
+                                                        <div className="flex-1 min-w-0">
+                                                            <div className="flex items-start justify-between gap-4">
+                                                                <div className="flex-1">
+                                                                    <h3 className="text-2xl font-bold text-zinc-900 mb-3 line-clamp-2">
+                                                                        {tour.tourName}
+                                                                    </h3>
+                                                                    <div className="flex flex-wrap gap-3">
+                                                                        <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg shadow-md">
+                                                                            <Users size={18} className="text-blue-600" />
+                                                                            <span className="text-base font-semibold text-zinc-700">
+                                                                                {formatNumber(tour.totalBookings)} đặt chỗ
+                                                                            </span>
+                                                                        </div>
+                                                                        <div className="flex items-center gap-2 px-4 py-2 bg-green-50 rounded-lg shadow-md border border-green-200">
+                                                                            <DollarSign size={18} className="text-green-600" />
+                                                                            <span className="text-base font-bold text-green-700">
+                                                                                {formatCurrency(tour.totalRevenue)}
+                                                                            </span>
+                                                                        </div>
                                                                     </div>
                                                                 </div>
                                                             </div>
                                                         </div>
                                                     </div>
                                                 </div>
-                                            </div>
 
-                                            {/* Trips List */}
-                                            {tour.trips && tour.trips.length > 0 && (
-                                                <div className="p-6">
-                                                    <div className="flex items-center gap-2 mb-5">
-                                                        <CalendarDays size={20} className="text-indigo-600" />
-                                                        <h4 className="text-base font-semibold text-zinc-700 uppercase tracking-wide">
-                                                            Chi tiết theo chuyến ({tour.trips.length} chuyến)
-                                                        </h4>
-                                                    </div>
-                                                    <div className="space-y-3 max-h-[400px] overflow-y-auto">
-                                                        {tour.trips.map((trip) => {
-                                                            const startDate = new Date(trip.startDate);
-                                                            const endDate = new Date(trip.endDate);
-                                                            const hasRevenue = trip.totalRevenue > 0;
-                                                            
-                                                            return (
-                                                                <div 
-                                                                    key={trip.tripId} 
-                                                                    className={`p-5 rounded-xl border-2 transition-all ${
-                                                                        hasRevenue 
-                                                                            ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-200 hover:border-green-300 hover:shadow-md' 
-                                                                            : 'bg-zinc-50 border-zinc-200'
-                                                                    }`}
-                                                                >
-                                                                    <div className="flex items-center justify-between gap-4">
-                                                                        <div className="flex items-center gap-4 flex-1">
-                                                                            <div className={`p-3 rounded-xl ${
-                                                                                hasRevenue ? 'bg-green-100' : 'bg-zinc-200'
-                                                                            }`}>
-                                                                                <Calendar className={hasRevenue ? 'text-green-700' : 'text-zinc-600'} size={24} />
-                                                                            </div>
-                                                                            <div className="flex-1 min-w-0">
-                                                                                <div className="flex items-center gap-3 text-base font-semibold text-zinc-900">
-                                                                                    <span className="text-zinc-700">
-                                                                                        {startDate.toLocaleDateString('vi-VN', { 
-                                                                                            day: '2-digit', 
-                                                                                            month: '2-digit', 
-                                                                                            year: 'numeric' 
-                                                                                        })}
-                                                                                    </span>
-                                                                                    <ArrowRight size={16} className="text-zinc-400" />
-                                                                                    <span className="text-zinc-700">
-                                                                                        {endDate.toLocaleDateString('vi-VN', { 
-                                                                                            day: '2-digit', 
-                                                                                            month: '2-digit', 
-                                                                                            year: 'numeric' 
-                                                                                        })}
-                                                                                    </span>
-                                                                                </div>
-                                                                            </div>
-                                                                        </div>
-                                                                        <div className="flex items-center gap-6">
-                                                                            <div className="text-right">
-                                                                                <div className="flex items-center gap-2 text-base">
-                                                                                    <Users size={18} className="text-zinc-500" />
-                                                                                    <span className="text-zinc-700 font-semibold">
-                                                                                        {formatNumber(trip.totalBookings)}
-                                                                                    </span>
-                                                                                </div>
-                                                                            </div>
-                                                                            <div className="text-right min-w-[150px]">
-                                                                                <div className="flex items-center gap-2">
-                                                                                    <DollarSign size={20} className={hasRevenue ? 'text-green-600' : 'text-zinc-400'} />
-                                                                                    <span className={`font-bold text-base ${
-                                                                                        hasRevenue ? 'text-green-700' : 'text-zinc-500'
+                                                {/* Trips List */}
+                                                {tour.trips && tour.trips.length > 0 && (
+                                                    <div className="p-6">
+                                                        <div className="flex items-center gap-2 mb-5">
+                                                            <CalendarDays size={20} className="text-indigo-600" />
+                                                            <h4 className="text-base font-semibold text-zinc-700 uppercase tracking-wide">
+                                                                Chi tiết theo chuyến ({tour.trips.length} chuyến)
+                                                            </h4>
+                                                        </div>
+                                                        <div className="space-y-3 max-h-[400px] overflow-y-auto">
+                                                            {tour.trips.map((trip) => {
+                                                                const startDate = new Date(trip.startDate);
+                                                                const endDate = new Date(trip.endDate);
+                                                                const hasRevenue = trip.totalRevenue > 0;
+
+                                                                return (
+                                                                    <div
+                                                                        key={trip.tripId}
+                                                                        className={`p-5 rounded-xl border-2 transition-all ${hasRevenue
+                                                                                ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-200 hover:border-green-300 hover:shadow-md'
+                                                                                : 'bg-zinc-50 border-zinc-200'
+                                                                            }`}
+                                                                    >
+                                                                        <div className="flex items-center justify-between gap-4">
+                                                                            <div className="flex items-center gap-4 flex-1">
+                                                                                <div className={`p-3 rounded-xl ${hasRevenue ? 'bg-green-100' : 'bg-zinc-200'
                                                                                     }`}>
-                                                                                        {formatCurrency(trip.totalRevenue)}
-                                                                                    </span>
+                                                                                    <Calendar className={hasRevenue ? 'text-green-700' : 'text-zinc-600'} size={24} />
+                                                                                </div>
+                                                                                <div className="flex-1 min-w-0">
+                                                                                    <div className="flex items-center gap-3 text-base font-semibold text-zinc-900">
+                                                                                        <span className="text-zinc-700">
+                                                                                            {startDate.toLocaleDateString('vi-VN', {
+                                                                                                day: '2-digit',
+                                                                                                month: '2-digit',
+                                                                                                year: 'numeric'
+                                                                                            })}
+                                                                                        </span>
+                                                                                        <ArrowRight size={16} className="text-zinc-400" />
+                                                                                        <span className="text-zinc-700">
+                                                                                            {endDate.toLocaleDateString('vi-VN', {
+                                                                                                day: '2-digit',
+                                                                                                month: '2-digit',
+                                                                                                year: 'numeric'
+                                                                                            })}
+                                                                                        </span>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div className="flex items-center gap-6">
+                                                                                <div className="text-right">
+                                                                                    <div className="flex items-center gap-2 text-base">
+                                                                                        <Users size={18} className="text-zinc-500" />
+                                                                                        <span className="text-zinc-700 font-semibold">
+                                                                                            {formatNumber(trip.totalBookings)}
+                                                                                        </span>
+                                                                                    </div>
+                                                                                </div>
+                                                                                <div className="text-right min-w-[150px]">
+                                                                                    <div className="flex items-center gap-2">
+                                                                                        <DollarSign size={20} className={hasRevenue ? 'text-green-600' : 'text-zinc-400'} />
+                                                                                        <span className={`font-bold text-base ${hasRevenue ? 'text-green-700' : 'text-zinc-500'
+                                                                                            }`}>
+                                                                                            {formatCurrency(trip.totalRevenue)}
+                                                                                        </span>
+                                                                                    </div>
                                                                                 </div>
                                                                             </div>
                                                                         </div>
                                                                     </div>
-                                                                </div>
-                                                            );
-                                                        })}
+                                                                );
+                                                            })}
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            )}
-                                        </div>
+                                                )}
+                                            </div>
                                         ))}
                                     </div>
                                 ) : (

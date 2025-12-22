@@ -1,11 +1,11 @@
 import React from "react";
 
-const NavItem = ({ icon, label, active, onClick }) => (
+const NavItem = ({ icon, label, active, onClick, isCollapsed }) => (
   <button
     onClick={onClick}
-    className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 group relative overflow-hidden ${active
-        ? "bg-primary/10 text-primary shadow-sm"
-        : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+    className={`w-full flex items-center ${isCollapsed ? 'justify-center px-0' : 'gap-3 px-4'} py-3 text-sm font-medium rounded-xl transition-all duration-200 group relative overflow-hidden ${active
+      ? "bg-primary/10 text-primary shadow-sm"
+      : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
       }`}
   >
     {/* Active Indicator Bar */}
@@ -14,12 +14,14 @@ const NavItem = ({ icon, label, active, onClick }) => (
         }`}
     ></div>
 
-    <span className={`relative z-10 transition-transform duration-300 ${active ? 'translate-x-1.5' : 'group-hover:scale-110'}`}>
+    <span className={`relative z-10 transition-transform duration-300 ${active && !isCollapsed ? 'translate-x-1.5' : active && isCollapsed ? 'scale-110' : 'group-hover:scale-110'}`}>
       {icon}
     </span>
-    <span className={`relative z-10 font-bold transition-all duration-300 ${active ? 'translate-x-1' : ''}`}>
-      {label}
-    </span>
+    {!isCollapsed && (
+      <span className={`relative z-10 font-bold transition-all duration-300 ${active ? 'translate-x-1' : ''}`}>
+        {label}
+      </span>
+    )}
   </button>
 );
 

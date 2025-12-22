@@ -31,7 +31,7 @@ function LandingPage() {
             <nav className="fixed top-4 left-0 right-0 z-50 px-4 md:px-0">
                 <div className="max-w-7xl mx-auto">
                     <div className="bg-white/70 backdrop-blur-xl border border-white/40 shadow-sm rounded-full px-6 py-4 flex items-center justify-between">
-                        <div className="logo font-display font-bold text-2xl text-slate-900 tracking-tighter">Jadoo.</div>
+                        <div className="logo font-display font-bold text-2xl text-slate-900 tracking-tighter">Quanh.</div>
                         <ul className="flex items-center gap-4 md:gap-8 font-medium text-sm text-slate-900">
                             <li className="hidden md:block"><a href="#destinations" className="hover:text-primary transition-colors">Điểm đến</a></li>
                             <li className="hidden md:block"><a href="#hotels" className="hover:text-primary transition-colors">Khách sạn</a></li>
@@ -55,8 +55,8 @@ function LandingPage() {
                             Du lịch, tận hưởng <span className="relative whitespace-nowrap"><span className="absolute bottom-2 left-0 w-full h-3 bg-secondary/30 -z-10 bg-contain"></span>và sống</span> một cuộc sống mới và trọn vẹn
                         </h1>
                         <p className="text-lg leading-relaxed max-w-lg animate-fade-in-up [animation-delay:400ms]">
-                            Khám phá thế giới với những trải nghiệm du lịch đáng nhớ. 
-                            Chúng tôi mang đến cho bạn những chuyến đi tuyệt vời nhất 
+                            Khám phá thế giới với những trải nghiệm du lịch đáng nhớ.
+                            Chúng tôi mang đến cho bạn những chuyến đi tuyệt vời nhất
                             với dịch vụ chất lượng cao.
                         </p>
                         <div className="flex items-center gap-6 pt-4 animate-fade-in-up [animation-delay:600ms]">
@@ -268,7 +268,7 @@ function LandingPage() {
                                 <img src="https://i.pravatar.cc/150?img=12" alt="Mike" />
                             </div>
                             <p className="text-slate-600 leading-relaxed text-lg mb-8 pt-4">
-                                "Dịch vụ tuyệt vời! Tôi đã có những trải nghiệm du lịch tuyệt vời 
+                                "Dịch vụ tuyệt vời! Tôi đã có những trải nghiệm du lịch tuyệt vời
                                 với sự hỗ trợ tận tình từ đội ngũ. Chắc chắn sẽ quay lại lần nữa."
                             </p>
                             <div>
@@ -288,7 +288,7 @@ function LandingPage() {
                     <div className="bg-primary/10 rounded-tl-[4rem] rounded-br-[2rem] rounded-tr-[2rem] rounded-bl-[1rem] p-10 md:p-20 text-center relative overflow-hidden">
                         <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-secondary/20 blur-3xl"></div>
                         <h2 className="font-display text-3xl md:text-4xl font-bold text-slate-900 mb-12 max-w-3xl mx-auto leading-normal">
-                            Đăng ký để nhận thông tin, tin tức mới nhất và các ưu đãi thú vị về Jadoo
+                            Đăng ký để nhận thông tin, tin tức mới nhất và các ưu đãi thú vị về Quanh
                         </h2>
 
                         <div className="flex flex-col md:flex-row gap-6 max-w-xl mx-auto">
@@ -311,7 +311,7 @@ function LandingPage() {
                 <div className="max-w-7xl mx-auto px-6">
                     <div className="grid grid-cols-1 md:grid-cols-5 gap-12 mb-20">
                         <div className="md:col-span-2">
-                            <div className="font-display font-bold text-3xl text-slate-900 tracking-tighter mb-6">Jadoo.</div>
+                            <div className="font-display font-bold text-3xl text-slate-900 tracking-tighter mb-6">Quanh.</div>
                             <p className="text-slate-500 max-w-xs text-sm leading-relaxed">Đặt chuyến đi của bạn trong vài phút, kiểm soát hoàn toàn trong thời gian dài hơn.</p>
                         </div>
                         {[
@@ -331,7 +331,7 @@ function LandingPage() {
                     </div>
 
                     <div className="flex flex-col md:flex-row items-center justify-between pt-10 border-t border-slate-100">
-                        <p className="text-slate-400 text-sm font-medium">Bản quyền thuộc về @jadoo.co</p>
+                        <p className="text-slate-400 text-sm font-medium">Bản quyền thuộc về @Quanh.co</p>
                         <div className="flex gap-8 mt-4 md:mt-0">
                             {[FiFacebook, FiInstagram, FiTwitter].map((Icon, i) => (
                                 <a key={i} href="#" className="w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center text-slate-900 hover:bg-primary hover:text-white hover:-translate-y-1 transition-all">

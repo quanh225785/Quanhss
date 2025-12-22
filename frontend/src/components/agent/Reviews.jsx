@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Star, Loader2, MessageCircle, Send, AlertCircle } from 'lucide-react';
 import { api } from '../../utils/api';
+import { useToast } from '../../context/ToastContext';
 
 const Reviews = () => {
     const [reviews, setReviews] = useState([]);
@@ -9,6 +10,7 @@ const Reviews = () => {
     const [replyingId, setReplyingId] = useState(null);
     const [replyContent, setReplyContent] = useState('');
     const [submittingReply, setSubmittingReply] = useState(false);
+    const { showToast } = useToast();
 
     useEffect(() => {
         fetchReviews();
@@ -49,7 +51,11 @@ const Reviews = () => {
             }
         } catch (err) {
             console.error('Error submitting reply:', err);
-            alert(err.response?.data?.message || 'Không thể gửi phản hồi');
+            showToast({
+                type: 'error',
+                message: 'Lỗi phản hồi',
+                description: err.response?.data?.message || 'Không thể gửi phản hồi'
+            });
         } finally {
             setSubmittingReply(false);
         }

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api, setAuthToken } from '../utils/api';
+import { useToast } from '../context/ToastContext';
 import './Auth.css';
 
 function Login({ onLogin }) {
@@ -13,6 +14,7 @@ function Login({ onLogin }) {
     const [loading, setLoading] = useState(false);
     const [showResendVerification, setShowResendVerification] = useState(false);
     const [userEmail, setUserEmail] = useState('');
+    const { showToast } = useToast();
     // apiBaseUrl and preconfigured axios instance are available from `src/utils/api.js`
 
     const handleChange = (e) => {
@@ -88,7 +90,11 @@ function Login({ onLogin }) {
         try {
             await api.post(`/auth/resend-verify?email=${userEmail}`);
             setError('');
-            alert('Đã gửi lại email xác thực! Vui lòng kiểm tra hộp thư của bạn.');
+            showToast({
+                type: 'success',
+                message: 'Đã gửi lại email xác thực!',
+                description: 'Vui lòng kiểm tra hộp thư của bạn.'
+            });
             setShowResendVerification(false);
             setUserEmail('');
         } catch (err) {

@@ -24,6 +24,7 @@ import { formatDistance, formatDuration } from '../utils/polylineUtils';
 import TourMap from '../components/agent/TourMap';
 import TourReviews from '../components/tour/TourReviews';
 import { startConversation } from '../utils/chatApi';
+import { useToast } from '../context/ToastContext';
 
 const TourDetailPage = () => {
     const { id } = useParams();
@@ -35,6 +36,7 @@ const TourDetailPage = () => {
     const [activeDay, setActiveDay] = useState(1);
     const [selectedTrip, setSelectedTrip] = useState(null);  // Selected trip for booking
     const [contactingAgent, setContactingAgent] = useState(false);
+    const { showToast } = useToast();
 
     useEffect(() => {
         fetchTourDetails();
@@ -657,7 +659,11 @@ const TourDetailPage = () => {
                                         navigate('/user/chat');
                                     } catch (error) {
                                         console.error('Failed to start conversation:', error);
-                                        alert('Không thể liên hệ đại lý. Vui lòng thử lại.');
+                                        showToast({
+                                            type: 'error',
+                                            message: 'Lỗi liên hệ',
+                                            description: 'Không thể liên hệ đại lý. Vui lòng thử lại.'
+                                        });
                                     } finally {
                                         setContactingAgent(false);
                                     }

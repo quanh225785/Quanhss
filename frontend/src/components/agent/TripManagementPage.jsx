@@ -18,6 +18,8 @@ import {
 import { FaMoneyBillAlt, FaRegCheckCircle } from "react-icons/fa";
 import { PiKeyReturnBold } from "react-icons/pi";
 import { api } from '../../utils/api';
+import { useToast } from '../../context/ToastContext';
+import ConfirmModal from '../shared/ConfirmModal';
 
 const TripManagementPage = () => {
     const { id: tourId } = useParams();
@@ -28,6 +30,7 @@ const TripManagementPage = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const { showToast } = useToast();
 
     // Form for new/edit trip
     const [showForm, setShowForm] = useState(false);
@@ -43,6 +46,8 @@ const TripManagementPage = () => {
     const [tripBookings, setTripBookings] = useState({});
     const [loadingBookings, setLoadingBookings] = useState({});
     const [checkingIn, setCheckingIn] = useState(null);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [tripToDelete, setTripToDelete] = useState(null);
 
     useEffect(() => {
         fetchTourAndTrips();
@@ -160,12 +165,24 @@ const TripManagementPage = () => {
         setShowForm(true);
     };
 
-    const handleDelete = async (tripId) => {
-        if (!window.confirm('Bạn có chắc muốn xóa chuyến này?')) return;
+    const handleDelete = (tripId) => {
+        setTripToDelete(tripId);
+        setShowDeleteConfirm(true);
+    };
+
+    const confirmDelete = async () => {
+        if (!tripToDelete) return;
 
         try {
-            await api.delete(`/trips/${tripId}`);
+            await api.delete(`/trips/${tripToDelete}`);
             await fetchTrips();
+            setShowDeleteConfirm(false);
+            setTripToDelete(null);
+            showToast({
+                type: 'success',
+                message: 'Thành công',
+                description: 'Đã xóa chuyến thành công'
+            });
         } catch (err) {
             setError(err.response?.data?.message || 'Không thể xóa chuyến');
         }
@@ -191,7 +208,11 @@ const TripManagementPage = () => {
             }
         } catch (err) {
             console.error('Error checking in:', err);
-            alert(err.response?.data?.message || 'Không thể check-in');
+            showToast({
+                type: 'error',
+                message: 'Lỗi check-in',
+                description: err.response?.data?.message || 'Không thể check-in'
+            });
         } finally {
             setCheckingIn(null);
         }
@@ -561,6 +582,20 @@ const TripManagementPage = () => {
                     </div>
                 )}
             </div>
+            {/* Delete Confirmation Modal */}
+            <ConfirmModal
+                isOpen={showDeleteConfirm}
+                onClose={() => {
+                    setShowDeleteConfirm(false);
+                    setTripToDelete(null);
+                }}
+                onConfirm={confirmDelete}
+                title="Xác nhận xóa"
+                message="Bạn có chắc muốn xóa chuyến này? Hành động này không thể hoàn tác."
+                variant="danger"
+                confirmText="Xóa"
+                cancelText="Hủy"
+            />
         </div>
     );
 };

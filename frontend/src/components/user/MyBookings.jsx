@@ -4,9 +4,11 @@ import { useNavigate } from "react-router-dom";
 import { Calendar, MapPin, Clock, ArrowRight, Loader2, AlertCircle, X, Users, QrCode, ChevronLeft, ChevronRight, List, Star } from "lucide-react";
 import ReviewModal from "./ReviewModal";
 import { api } from "../../utils/api";
+import ConfirmModal from "../shared/ConfirmModal";
 import { FaMoneyBillAlt } from "react-icons/fa";
 import { FaRegCheckCircle } from "react-icons/fa";
 import { PiKeyReturnBold } from "react-icons/pi";
+import { useToast } from "../../context/ToastContext";
 
 const MyBookings = () => {
   const navigate = useNavigate();
@@ -20,6 +22,9 @@ const MyBookings = () => {
   const [popupBooking, setPopupBooking] = useState(null);
   const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
   const [reviewBooking, setReviewBooking] = useState(null);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [bookingToCancel, setBookingToCancel] = useState(null);
+  const { showToast } = useToast();
 
   useEffect(() => {
     fetchBookings();
@@ -40,18 +45,34 @@ const MyBookings = () => {
     }
   };
 
-  const handleCancelBooking = async (id) => {
-    if (!confirm('Bạn có chắc muốn hủy đặt tour này?')) return;
+  const handleCancelBooking = (id) => {
+    setBookingToCancel(id);
+    setShowCancelConfirm(true);
+  };
 
-    setCancellingId(id);
+  const confirmCancel = async () => {
+    if (!bookingToCancel) return;
+
+    setCancellingId(bookingToCancel);
     try {
-      const response = await api.put(`/bookings/${id}/cancel`);
+      const response = await api.put(`/bookings/${bookingToCancel}/cancel`);
       if (response.data.code === 1000) {
+        setShowCancelConfirm(false);
+        setBookingToCancel(null);
         fetchBookings(); // Refresh list
+        showToast({
+          type: 'success',
+          message: 'Thành công',
+          description: 'Đã hủy đặt tour thành công'
+        });
       }
     } catch (err) {
       console.error('Error cancelling booking:', err);
-      alert(err.response?.data?.message || 'Không thể hủy đặt tour');
+      showToast({
+        type: 'error',
+        message: 'Lỗi hủy đặt tour',
+        description: err.response?.data?.message || 'Không thể hủy đặt tour'
+      });
     } finally {
       setCancellingId(null);
     }
@@ -593,6 +614,22 @@ const MyBookings = () => {
           onSuccess={() => fetchBookings()}
         />
       )}
+
+      {/* Cancel Confirmation Modal */}
+      <ConfirmModal
+        isOpen={showCancelConfirm}
+        onClose={() => {
+          setShowCancelConfirm(false);
+          setBookingToCancel(null);
+        }}
+        onConfirm={confirmCancel}
+        title="Xác nhận hủy đặt tour"
+        message="Bạn có chắc muốn hủy đặt tour này? Hành động này không thể hoàn tác và tiền cọc sẽ được hoàn lại theo chính sách."
+        variant="danger"
+        confirmText="Hủy đặt tour"
+        cancelText="Quay lại"
+        isLoading={cancellingId === bookingToCancel}
+      />
     </div>
   );
 };

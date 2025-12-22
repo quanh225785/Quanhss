@@ -7,6 +7,7 @@ import {
     unsubscribeFromConversation,
     isWebSocketConnected
 } from "../../utils/websocket";
+import { useToast } from "../../context/ToastContext";
 
 const ChatWindow = ({
     messages,
@@ -25,6 +26,7 @@ const ChatWindow = ({
     const [wsConnected, setWsConnected] = useState(false);
     const messagesEndRef = useRef(null);
     const fileInputRef = useRef(null);
+    const { showToast } = useToast();
 
     // Use ref to store the latest callback without causing re-subscription
     const onNewMessageRef = useRef(onNewMessage);
@@ -125,7 +127,11 @@ const ChatWindow = ({
         const file = e.target.files[0];
         if (file) {
             if (file.size > 10 * 1024 * 1024) {
-                alert("Ảnh phải nhỏ hơn 10MB");
+                showToast({
+                    type: 'error',
+                    message: 'Ảnh quá lớn',
+                    description: 'Ảnh phải nhỏ hơn 10MB'
+                });
                 return;
             }
             setSelectedImage(file);
@@ -172,7 +178,11 @@ const ChatWindow = ({
             removeImage();
         } catch (error) {
             console.error("Failed to send message:", error);
-            alert("Không thể gửi tin nhắn. Vui lòng thử lại.");
+            showToast({
+                type: 'error',
+                message: 'Lỗi gửi tin nhắn',
+                description: 'Không thể gửi tin nhắn. Vui lòng thử lại.'
+            });
         } finally {
             setSending(false);
             setUploading(false);

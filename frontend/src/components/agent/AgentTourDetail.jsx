@@ -17,6 +17,7 @@ import { api } from '../../utils/api';
 import { formatDistance, formatDuration } from '../../utils/polylineUtils';
 import TourMap from './TourMap';
 import QrScanner from './QrScanner';
+import Toast from '../shared/Toast';
 
 const AgentTourDetail = () => {
     const { id } = useParams();
@@ -102,8 +103,6 @@ const AgentTourDetail = () => {
                     message: `Check-in thành công! Mã đặt chỗ: ${bookingCode}`,
                     data: response.data.result
                 });
-                // Auto hide success message after 5 seconds
-                setTimeout(() => setCheckInStatus(null), 5000);
             }
         } catch (err) {
             console.error('Check-in error:', err);
@@ -111,8 +110,6 @@ const AgentTourDetail = () => {
                 type: 'error',
                 message: err.response?.data?.message || 'Có lỗi xảy ra khi check-in. Vui lòng thử lại.'
             });
-            // Auto hide error message after 5 seconds
-            setTimeout(() => setCheckInStatus(null), 5000);
         }
     };
 
@@ -122,7 +119,6 @@ const AgentTourDetail = () => {
             type: 'error',
             message: 'Có lỗi xảy ra khi quét mã QR. Vui lòng thử lại.'
         });
-        setTimeout(() => setCheckInStatus(null), 3000);
     };
 
     // Group points by day
@@ -172,37 +168,21 @@ const AgentTourDetail = () => {
     return (
         <div className="space-y-6">
             {/* Check-in Status Alert */}
+            {/* Check-in Status Toast */}
             {checkInStatus && (
-                <div className={`fixed top-4 right-4 z-50 max-w-md p-4 rounded-lg shadow-lg border ${checkInStatus.type === 'success' ? 'bg-green-50 border-green-200' :
-                    checkInStatus.type === 'error' ? 'bg-red-50 border-red-200' :
-                        'bg-blue-50 border-blue-200'
-                    }`}>
-                    <div className="flex items-start gap-3">
-                        {checkInStatus.type === 'success' && <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />}
-                        {checkInStatus.type === 'error' && <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />}
-                        {checkInStatus.type === 'loading' && <Loader2 className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5 animate-spin" />}
-                        <div className="flex-1">
-                            <p className={`font-medium ${checkInStatus.type === 'success' ? 'text-green-900' :
-                                checkInStatus.type === 'error' ? 'text-red-900' :
-                                    'text-blue-900'
-                                }`}>
-                                {checkInStatus.message}
-                            </p>
-                            {checkInStatus.data && (
-                                <div className="mt-2 text-sm text-green-700">
-                                    <p>Người đặt: {checkInStatus.data.userName}</p>
-                                    <p>Số người: {checkInStatus.data.numberOfParticipants || 1}</p>
-                                </div>
-                            )}
+                <Toast
+                    type={checkInStatus.type}
+                    message={checkInStatus.message}
+                    onClose={() => setCheckInStatus(null)}
+                    duration={checkInStatus.type === 'loading' ? null : 5000}
+                >
+                    {checkInStatus.data && (
+                        <div className="mt-2 text-sm opacity-90">
+                            <p>Người đặt: <span className="font-semibold">{checkInStatus.data.userName}</span></p>
+                            <p>Số người: <span className="font-semibold">{checkInStatus.data.numberOfParticipants || 1}</span></p>
                         </div>
-                        <button
-                            onClick={() => setCheckInStatus(null)}
-                            className="text-zinc-400 hover:text-zinc-600"
-                        >
-                            <X size={16} />
-                        </button>
-                    </div>
-                </div>
+                    )}
+                </Toast>
             )}
 
             {/* QR Scanner Modal */}
