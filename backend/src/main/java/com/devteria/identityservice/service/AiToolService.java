@@ -52,12 +52,27 @@ public class AiToolService {
         }
     }
 
+    public record TrendingToursRequest(String dummy) {
+        public TrendingToursRequest() {
+            this(null);
+        }
+    }
+
     @Bean
     @Description("Lấy tất cả các tour du lịch đang hoạt động để gợi ý cho người dùng.")
     public java.util.function.Function<AllToursRequest, List<TourResponse>> getAllActiveToursTools() {
         return request -> {
             log.info("AI calling getAllActiveToursTools");
             return tourService.getAllActiveTours();
+        };
+    }
+
+    @Bean
+    @Description("Lấy danh sách các tour du lịch phổ biến và được đặt nhiều nhất (trending tours). Tour có nhiều booking nhất sẽ được ưu tiên hiển thị.")
+    public java.util.function.Function<TrendingToursRequest, List<TourResponse>> getTrendingToursTool() {
+        return request -> {
+            log.info("AI calling getTrendingToursTool");
+            return tourService.getTrendingTours();
         };
     }
 

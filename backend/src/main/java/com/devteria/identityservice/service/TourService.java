@@ -631,4 +631,34 @@ public class TourService {
                         .build())
                 .collect(Collectors.toList());
     }
+
+    @Transactional(readOnly = true)
+    public List<TourResponse> getTrendingTours() {
+        List<Tour> trendingTours = tourRepository.findTrendingTours();
+
+        // Force load lazy relationships to avoid LazyInitializationException
+        trendingTours.forEach(tour -> {
+            // Force load tourPoints
+            if (tour.getTourPoints() != null) {
+                tour.getTourPoints().size();
+                tour.getTourPoints().forEach(tp -> {
+                    if (tp.getLocation() != null) {
+                        tp.getLocation().getName(); // Force load location
+                    }
+                });
+            }
+            // Force load createdBy
+            if (tour.getCreatedBy() != null) {
+                tour.getCreatedBy().getUsername();
+            }
+            // Force load trips
+            if (tour.getTrips() != null) {
+                tour.getTrips().size();
+            }
+        });
+
+        return trendingTours.stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
 }
