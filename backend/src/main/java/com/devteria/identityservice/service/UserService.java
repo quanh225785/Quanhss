@@ -130,7 +130,7 @@ public class UserService {
 
         // Verify current password
         if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
-            throw new AppException(ErrorCode.UNAUTHENTICATED);
+            throw new AppException(ErrorCode.CURRENT_PASSWORD_INVALID);
         }
 
         // Update to new password

@@ -13,7 +13,7 @@ public enum ErrorCode {
     USERNAME_INVALID(1003, "Tên đăng nhập phải có ít nhất {min} ký tự", HttpStatus.BAD_REQUEST),
     INVALID_PASSWORD(1004, "Mật khẩu phải có ít nhất 6 ký tự và có ít nhất 1 chữ cái", HttpStatus.BAD_REQUEST),
     USER_NOT_EXISTED(1005, "Người dùng không tồn tại", HttpStatus.NOT_FOUND),
-    UNAUTHENTICATED(1006, "Chưa xác thực", HttpStatus.UNAUTHORIZED),
+    UNAUTHENTICATED(1006, "Tên đăng nhập hoặc mật khẩu không chính xác", HttpStatus.UNAUTHORIZED),
     UNAUTHORIZED(1007, "Bạn không có quyền truy cập", HttpStatus.FORBIDDEN),
     INVALID_DOB(1008, "Tuổi của bạn phải ít nhất {min}", HttpStatus.BAD_REQUEST),
     EMAIL_NOT_VERIFIED(1009, "Email chưa được xác thực", HttpStatus.FORBIDDEN),
@@ -40,6 +40,7 @@ public enum ErrorCode {
     REVIEW_NOT_FOUND(1027, "Không tìm thấy đánh giá", HttpStatus.NOT_FOUND),
     NOTIFICATION_NOT_FOUND(1028, "Không tìm thấy thông báo", HttpStatus.NOT_FOUND),
     ACCOUNT_LOCKED(1029, "Tài khoản đã bị khóa", HttpStatus.FORBIDDEN),
+    CURRENT_PASSWORD_INVALID(1030, "Mật khẩu hiện tại không hợp lệ", HttpStatus.BAD_REQUEST),
             ;
 
     ErrorCode(int code, String message, HttpStatusCode statusCode) {

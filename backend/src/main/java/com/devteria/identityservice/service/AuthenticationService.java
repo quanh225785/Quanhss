@@ -79,7 +79,7 @@ public class AuthenticationService {
         String loginIdentifier = request.getUsernameOrEmail();
         User user = userRepository.findByUsername(loginIdentifier)
                 .or(() -> userRepository.findByEmail(loginIdentifier))
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+                .orElseThrow(() -> new AppException(ErrorCode.UNAUTHENTICATED));
 
         boolean authenticated = passwordEncoder.matches(request.getPassword(), user.getPassword());
 

@@ -231,7 +231,7 @@ const AgentTourDetail = () => {
             {/* Tour Images */}
             {(tour.imageUrls?.length > 0 || tour.imageUrl) && (
                 <div className="bg-white border border-zinc-200 rounded-xl p-4">
-                    <h3 className="font-bold text-lg mb-4">🖼️ Ảnh Tour</h3>
+                    <h3 className="font-bold text-lg mb-4">Ảnh Tour</h3>
                     <ImageCarousel
                         images={tour.imageUrls?.length > 0 ? tour.imageUrls : [tour.imageUrl]}
                         alt={tour.name}
