@@ -29,13 +29,60 @@ const AiChatbot = () => {
         setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
         setIsLoading(true);
 
+        // Add empty AI message that will be streamed into
+        const aiMessageIndex = messages.length + 1;
+        setMessages(prev => [...prev, { role: 'ai', content: '' }]);
+
         try {
-            const response = await api.post('/ai-chat', { message: userMessage });
-            const aiReply = response.data?.result?.reply || 'Xin lỗi, tôi không thể trả lời lúc này.';
-            setMessages(prev => [...prev, { role: 'ai', content: aiReply }]);
+            const token = localStorage.getItem('token');
+            const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080'}/ai-chat/stream`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': token ? `Bearer ${token}` : ''
+                },
+                body: JSON.stringify({ message: userMessage })
+            });
+
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let streamedContent = '';
+
+            while (true) {
+                const { done, value } = await reader.read();
+                
+                if (done) break;
+                
+                const chunk = decoder.decode(value, { stream: true });
+                streamedContent += chunk;
+                
+                // Update the AI message with streamed content
+                setMessages(prev => {
+                    const newMessages = [...prev];
+                    newMessages[aiMessageIndex] = { role: 'ai', content: streamedContent };
+                    return newMessages;
+                });
+            }
+
+            // If no content was streamed, show error message
+            if (!streamedContent.trim()) {
+                setMessages(prev => {
+                    const newMessages = [...prev];
+                    newMessages[aiMessageIndex] = { role: 'ai', content: 'Xin lỗi, tôi không thể trả lời lúc này.' };
+                    return newMessages;
+                });
+            }
         } catch (error) {
             console.error('AI Chat Error:', error);
-            setMessages(prev => [...prev, { role: 'ai', content: 'Hiện tại hệ thống đang bận, bạn vui lòng thử lại sau nhé!' }]);
+            setMessages(prev => {
+                const newMessages = [...prev];
+                newMessages[aiMessageIndex] = { role: 'ai', content: 'Hiện tại hệ thống đang bận, bạn vui lòng thử lại sau nhé!' };
+                return newMessages;
+            });
         } finally {
             setIsLoading(false);
         }

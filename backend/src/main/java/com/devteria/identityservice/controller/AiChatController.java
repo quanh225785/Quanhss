@@ -3,11 +3,13 @@ package com.devteria.identityservice.controller;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.memory.InMemoryChatMemory;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
 import com.devteria.identityservice.dto.request.ApiResponse;
 
 import lombok.extern.slf4j.Slf4j;
+import reactor.core.publisher.Flux;
 
 @RestController
 @RequestMapping("/ai-chat")
@@ -59,6 +61,22 @@ public class AiChatController {
                     .message("AI service temporarily unavailable. Please make sure AI API Key is configured.")
                     .result(new ChatResponse("Xin lỗi, tôi đang gặp chút trục trặc kỹ thuật. Vui lòng thử lại sau."))
                     .build();
+        }
+    }
+
+    @PostMapping(value = "/stream", produces = "text/plain;charset=UTF-8")
+    public Flux<String> chatStream(@RequestBody ChatRequest request) {
+        log.info("User AI chat stream: {}", request.message());
+
+        try {
+            return chatClient.prompt()
+                    .user(request.message())
+                    .functions("getAllActiveToursTools", "searchToursTool", "getTourDetailsTool", "listLocationsTool")
+                    .stream()
+                    .content();
+        } catch (Exception e) {
+            log.error("AI Chat stream error: ", e);
+            return Flux.just("Xin lỗi, tôi đang gặp chút trục trặc kỹ thuật. Vui lòng thử lại sau.");
         }
     }
 }
