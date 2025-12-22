@@ -75,7 +75,11 @@ public class Tour {
     @Column(columnDefinition = "TEXT")
     String rejectionReason;  // Reason if rejected by admin
 
-    String imageUrl;  // S3 URL for tour thumbnail image
+    String imageUrl;  // S3 URL for tour thumbnail image (kept for backward compatibility)
+    
+    @Column(columnDefinition = "TEXT")
+    String imageUrls;  // JSON array of S3 URLs for multiple tour images
+    
     Boolean isActive;
 
     // Legacy field - not used anymore (moved to Trip entity)

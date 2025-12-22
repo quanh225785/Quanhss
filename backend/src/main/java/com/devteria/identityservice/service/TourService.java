@@ -118,6 +118,23 @@ public class TourService {
 
         // Create tour entity
         int numberOfDays = request.getNumberOfDays() != null ? request.getNumberOfDays() : 1;
+        
+        // Serialize imageUrls to JSON
+        String imageUrlsJson = null;
+        if (request.getImageUrls() != null && !request.getImageUrls().isEmpty()) {
+            try {
+                imageUrlsJson = objectMapper.writeValueAsString(request.getImageUrls());
+            } catch (JsonProcessingException e) {
+                log.warn("Failed to serialize imageUrls", e);
+            }
+        }
+        
+        // Use first image as thumbnail if imageUrl is not provided
+        String thumbnailUrl = request.getImageUrl();
+        if ((thumbnailUrl == null || thumbnailUrl.isEmpty()) && request.getImageUrls() != null && !request.getImageUrls().isEmpty()) {
+            thumbnailUrl = request.getImageUrls().get(0);
+        }
+        
         Tour tour = Tour.builder()
                 .name(request.getName())
                 .description(request.getDescription())
@@ -129,7 +146,8 @@ public class TourService {
                 .totalTime(time)
                 .routePolyline(polyline)
                 .routeInstructions(instructionsJson)
-                .imageUrl(request.getImageUrl()) // S3 image URL
+                .imageUrl(thumbnailUrl) // S3 image URL (thumbnail)
+                .imageUrls(imageUrlsJson) // JSON array of all images
                 .createdBy(user)
                 .tourPoints(new ArrayList<>())
                 .build();
@@ -483,6 +501,21 @@ public class TourService {
                     })
                     .collect(Collectors.toList());
         }
+        
+        // Parse imageUrls from JSON
+        List<String> imageUrlsList = new ArrayList<>();
+        if (tour.getImageUrls() != null && !tour.getImageUrls().isEmpty()) {
+            try {
+                imageUrlsList = objectMapper.readValue(tour.getImageUrls(), 
+                    objectMapper.getTypeFactory().constructCollectionType(List.class, String.class));
+            } catch (JsonProcessingException e) {
+                log.warn("Failed to parse imageUrls", e);
+            }
+        }
+        // Fallback: if imageUrls is empty but imageUrl exists, add it
+        if (imageUrlsList.isEmpty() && tour.getImageUrl() != null) {
+            imageUrlsList.add(tour.getImageUrl());
+        }
 
         return TourResponse.builder()
                 .id(tour.getId())
@@ -495,7 +528,8 @@ public class TourService {
                 .totalDistance(tour.getTotalDistance())
                 .totalTime(tour.getTotalTime())
                 .routePolyline(tour.getRoutePolyline())
-                .imageUrl(tour.getImageUrl()) // S3 image URL
+                .imageUrl(tour.getImageUrl()) // S3 image URL (thumbnail)
+                .imageUrls(imageUrlsList) // List of all images
                 .points(pointResponses)
                 .createdByUsername(tour.getCreatedBy() != null ? tour.getCreatedBy().getUsername() : null)
                 .createdById(tour.getCreatedBy() != null ? tour.getCreatedBy().getId() : null)

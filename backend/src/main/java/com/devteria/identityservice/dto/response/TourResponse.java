@@ -22,7 +22,8 @@ public class TourResponse {
     Double totalDistance; // meters
     Long totalTime; // milliseconds
     String routePolyline;
-    String imageUrl; // S3 URL for tour thumbnail
+    String imageUrl; // S3 URL for tour thumbnail (kept for backward compatibility)
+    List<String> imageUrls; // List of S3 URLs for multiple tour images
     List<TourPointResponse> points;
     String createdByUsername;
     String createdById; // User ID of the agent who created this tour

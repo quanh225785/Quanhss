@@ -1,5 +1,6 @@
 package com.devteria.identityservice.service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -18,6 +19,8 @@ import com.devteria.identityservice.repository.FavoriteTourRepository;
 import com.devteria.identityservice.repository.ReviewRepository;
 import com.devteria.identityservice.repository.TourRepository;
 import com.devteria.identityservice.repository.UserRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +36,7 @@ public class FavoriteTourService {
     TourRepository tourRepository;
     UserRepository userRepository;
     ReviewRepository reviewRepository;
+    ObjectMapper objectMapper;
 
     private User getCurrentUser() {
         var context = SecurityContextHolder.getContext();
@@ -118,6 +122,21 @@ public class FavoriteTourService {
                         .collect(Collectors.toList())
                 : List.of();
 
+        // Parse imageUrls from JSON
+        List<String> imageUrlsList = new ArrayList<>();
+        if (tour.getImageUrls() != null && !tour.getImageUrls().isEmpty()) {
+            try {
+                imageUrlsList = objectMapper.readValue(tour.getImageUrls(), 
+                    objectMapper.getTypeFactory().constructCollectionType(List.class, String.class));
+            } catch (JsonProcessingException e) {
+                log.warn("Failed to parse imageUrls", e);
+            }
+        }
+        // Fallback: if imageUrls is empty but imageUrl exists, add it
+        if (imageUrlsList.isEmpty() && tour.getImageUrl() != null) {
+            imageUrlsList.add(tour.getImageUrl());
+        }
+
         return TourResponse.builder()
                 .id(tour.getId())
                 .name(tour.getName())
@@ -130,6 +149,7 @@ public class FavoriteTourService {
                 .totalTime(tour.getTotalTime())
                 .routePolyline(tour.getRoutePolyline())
                 .imageUrl(tour.getImageUrl())
+                .imageUrls(imageUrlsList)
                 .points(pointResponses)
                 .createdByUsername(tour.getCreatedBy() != null ? tour.getCreatedBy().getUsername() : null)
                 .createdById(tour.getCreatedBy() != null ? tour.getCreatedBy().getId() : null)

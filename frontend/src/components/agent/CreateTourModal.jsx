@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { X, MapPin, Loader2, Check, AlertCircle, Plus, Trash2, Route, Sparkles, Car, Bike, Search, Calendar, Clock, Coffee, Sun, Moon, Image as ImageIcon } from 'lucide-react';
+import { X, MapPin, Loader2, Check, AlertCircle, Plus, Trash2, Route, Sparkles, Car, Bike, Search, Calendar, Clock, Coffee, Sun, Moon, Image as ImageIcon, Images } from 'lucide-react';
 import { api } from '../../utils/api';
 import TourMap from './TourMap';
 import ImageUpload from '../common/ImageUpload';
+import MultipleImageUpload from '../common/MultipleImageUpload';
 
 const CreateTourModal = ({ onClose, onSuccess }) => {
-    // Form state
     const [formData, setFormData] = useState({
         name: '',
         description: '',
@@ -14,7 +14,7 @@ const CreateTourModal = ({ onClose, onSuccess }) => {
         vehicle: 'car',
         useOptimization: false,
         roundtrip: false,
-        imageUrl: '',  // Tour thumbnail image
+        imageUrls: [],  // Multiple tour images
     });
 
     // Available approved locations
@@ -354,7 +354,8 @@ const CreateTourModal = ({ onClose, onSuccess }) => {
                 vehicle: formData.vehicle,
                 useOptimization: formData.useOptimization,
                 roundtrip: formData.roundtrip,
-                imageUrl: formData.imageUrl,  // Tour thumbnail
+                imageUrl: formData.imageUrls.length > 0 ? formData.imageUrls[0] : null,  // First image as thumbnail
+                imageUrls: formData.imageUrls,  // All images
                 points: sortedLocations.map((loc, index) => ({
                     locationId: loc.locationId || null,  // Can be null for free activities
                     orderIndex: index,
@@ -472,19 +473,20 @@ const CreateTourModal = ({ onClose, onSuccess }) => {
                         </p>
                     </div>
 
-                    {/* Tour Thumbnail Image */}
+                    {/* Tour Images (Multiple) */}
                     <div className="space-y-2">
                         <label className="block text-sm font-medium text-zinc-900">
                             <div className="flex items-center gap-2">
-                                <ImageIcon size={16} />
-                                Ảnh đại diện Tour
+                                <Images size={16} />
+                                Ảnh Tour
+                                <span className="text-xs text-zinc-500 font-normal">(Ảnh đầu tiên sẽ là ảnh bìa)</span>
                             </div>
                         </label>
-                        <ImageUpload
+                        <MultipleImageUpload
                             folder="tours"
-                            currentImageUrl={formData.imageUrl}
-                            onUploadComplete={(url) => setFormData(prev => ({ ...prev, imageUrl: url }))}
-                            onRemove={() => setFormData(prev => ({ ...prev, imageUrl: '' }))}
+                            imageUrls={formData.imageUrls}
+                            onImagesChange={(urls) => setFormData(prev => ({ ...prev, imageUrls: urls }))}
+                            maxImages={10}
                         />
                     </div>
 

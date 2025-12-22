@@ -18,6 +18,7 @@ import { formatDistance, formatDuration } from '../../utils/polylineUtils';
 import TourMap from './TourMap';
 import QrScanner from './QrScanner';
 import Toast from '../shared/Toast';
+import ImageCarousel from '../common/ImageCarousel';
 
 const AgentTourDetail = () => {
     const { id } = useParams();
@@ -226,6 +227,18 @@ const AgentTourDetail = () => {
                     </div>
                 )}
             </div>
+
+            {/* Tour Images */}
+            {(tour.imageUrls?.length > 0 || tour.imageUrl) && (
+                <div className="bg-white border border-zinc-200 rounded-xl p-4">
+                    <h3 className="font-bold text-lg mb-4">🖼️ Ảnh Tour</h3>
+                    <ImageCarousel
+                        images={tour.imageUrls?.length > 0 ? tour.imageUrls : [tour.imageUrl]}
+                        alt={tour.name}
+                        autoSlide={false}
+                    />
+                </div>
+            )}
 
             {/* Stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

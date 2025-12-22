@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { createPortal } from 'react-dom';
 import {
     ArrowLeft,
     MapPin,
@@ -18,11 +19,14 @@ import {
     Users,
     CalendarX,
     MessageCircle,
+    X,
+    ZoomIn,
 } from 'lucide-react';
 import { api } from '../utils/api';
 import { formatDistance, formatDuration } from '../utils/polylineUtils';
 import TourMap from '../components/agent/TourMap';
 import TourReviews from '../components/tour/TourReviews';
+import ImageCarousel from '../components/common/ImageCarousel';
 import { startConversation } from '../utils/chatApi';
 import { useToast } from '../context/ToastContext';
 
@@ -36,6 +40,7 @@ const TourDetailPage = () => {
     const [activeDay, setActiveDay] = useState(1);
     const [selectedTrip, setSelectedTrip] = useState(null);  // Selected trip for booking
     const [contactingAgent, setContactingAgent] = useState(false);
+    const [fullscreenImage, setFullscreenImage] = useState(null);  // For tour point image fullscreen
     const { showToast } = useToast();
 
     useEffect(() => {
@@ -246,10 +251,10 @@ const TourDetailPage = () => {
                             <h1 className="text-xl font-display font-bold text-slate-900 line-clamp-1">
                                 {tour.name}
                             </h1>
-                            <p className="text-sm text-slate-500 flex items-center gap-1">
+                            {/* <p className="text-sm text-slate-500 flex items-center gap-1">
                                 <User size={14} />
                                 Tạo bởi: {tour.createdByFirstName && tour.createdByLastName ? `${tour.createdByFirstName} ${tour.createdByLastName}` : tour.createdByUsername}
-                            </p>
+                            </p> */}
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
@@ -273,13 +278,13 @@ const TourDetailPage = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Main Content */}
                     <div className="lg:col-span-2 space-y-6">
-                        {/* Tour Hero Image */}
-                        {tour.imageUrl && (
-                            <div className="bg-white/60 backdrop-blur-md border border-white/60 shadow-sm rounded-[2rem] overflow-hidden">
-                                <img
-                                    src={tour.imageUrl}
+                        {/* Tour Images Carousel */}
+                        {(tour.imageUrls?.length > 0 || tour.imageUrl) && (
+                            <div className="bg-white/60 backdrop-blur-md border border-white/60 shadow-sm rounded-[2rem] overflow-hidden p-4">
+                                <ImageCarousel
+                                    images={tour.imageUrls?.length > 0 ? tour.imageUrls : [tour.imageUrl]}
                                     alt={tour.name}
-                                    className="w-full h-64 object-cover"
+                                    autoSlide={false}
                                 />
                             </div>
                         )}
@@ -437,12 +442,21 @@ const TourDetailPage = () => {
 
                                                         {/* Tour Point Image - on the right */}
                                                         {point.imageUrl && (
-                                                            <div className="flex-shrink-0">
+                                                            <div
+                                                                className="flex-shrink-0 cursor-pointer group relative w-32 h-24 rounded-xl overflow-hidden"
+                                                                onClick={() => setFullscreenImage({
+                                                                    url: point.imageUrl,
+                                                                    alt: point.locationName || point.activity
+                                                                })}
+                                                            >
                                                                 <img
                                                                     src={point.imageUrl}
                                                                     alt={point.locationName || point.activity}
-                                                                    className="w-32 h-24 object-cover rounded-xl"
+                                                                    className="w-full h-full object-cover transition-transform group-hover:scale-110"
                                                                 />
+                                                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
+                                                                    <ZoomIn size={20} className="text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                                </div>
                                                             </div>
                                                         )}
                                                     </div>
@@ -682,6 +696,31 @@ const TourDetailPage = () => {
                     </div>
                 </div>
             </main>
+
+            {/* Fullscreen Image Modal for Tour Points */}
+            {fullscreenImage && createPortal(
+                <div
+                    className="fixed inset-0 z-[9999] bg-black flex items-center justify-center"
+                    onClick={() => setFullscreenImage(null)}
+                >
+                    {/* Close button */}
+                    <button
+                        onClick={() => setFullscreenImage(null)}
+                        className="absolute top-4 right-4 p-3 rounded-full bg-white/10 hover:bg-white/20 transition-colors z-10"
+                    >
+                        <X size={24} className="text-white" />
+                    </button>
+
+                    {/* Image */}
+                    <img
+                        src={fullscreenImage.url}
+                        alt={fullscreenImage.alt}
+                        className="max-w-full max-h-full object-contain p-4"
+                        onClick={(e) => e.stopPropagation()}
+                    />
+                </div>,
+                document.body
+            )}
         </div>
     );
 };
