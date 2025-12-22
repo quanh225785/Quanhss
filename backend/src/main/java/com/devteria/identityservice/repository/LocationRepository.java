@@ -20,4 +20,6 @@ public interface LocationRepository extends JpaRepository<Location, Long> {
     // Get distinct city names for filter dropdown
     @Query("SELECT DISTINCT l.cityName FROM Location l WHERE l.cityName IS NOT NULL ORDER BY l.cityName")
     List<String> findDistinctCityNames();
+
+    List<Location> findByCityNameContainingIgnoreCase(String cityName);
 }

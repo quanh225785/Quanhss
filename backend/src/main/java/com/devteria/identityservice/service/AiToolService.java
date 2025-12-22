@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Description;
 
 import com.devteria.identityservice.dto.response.LocationResponse;
+import com.devteria.identityservice.dto.response.ReviewResponse;
 import com.devteria.identityservice.dto.response.TourResponse;
 
 import lombok.RequiredArgsConstructor;
@@ -21,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 public class AiToolService {
     private final TourService tourService;
     private final LocationSuggestionService locationService;
+    private final ReviewService reviewService;
 
     public record TourSearchRequest(
             String keyword,
@@ -32,6 +34,9 @@ public class AiToolService {
     }
 
     public record TourDetailRequest(Long id) {
+    }
+
+    public record CityRequest(String cityName) {
     }
 
     // OpenAI requires at least one property in the schema
@@ -81,11 +86,29 @@ public class AiToolService {
     }
 
     @Bean
-    @Description("Lấy danh sách tất cả các địa điểm du lịch khả dụng để gợi ý cho người dùng.")
+    @Description("Lấy danh sách tất cả các địa điểm du lịch khả dụng.")
     public java.util.function.Function<LocationRequest, List<LocationResponse>> listLocationsTool() {
         return request -> {
             log.info("AI calling listLocationsTool");
             return locationService.getAllLocations();
+        };
+    }
+
+    @Bean
+    @Description("Lấy danh sách các địa điểm du lịch tại một thành phố cụ thể.")
+    public java.util.function.Function<CityRequest, List<LocationResponse>> getLocationsByCityTool() {
+        return request -> {
+            log.info("AI calling getLocationsByCityTool for city: {}", request.cityName());
+            return locationService.getLocationsByCity(request.cityName());
+        };
+    }
+
+    @Bean
+    @Description("Lấy các đánh giá của người dùng về một tour du lịch cụ thể bằng ID.")
+    public java.util.function.Function<TourDetailRequest, List<ReviewResponse>> getTourReviewsTool() {
+        return request -> {
+            log.info("AI calling getTourReviewsTool for tour ID: {}", request.id());
+            return reviewService.getReviewsByTour(request.id());
         };
     }
 }

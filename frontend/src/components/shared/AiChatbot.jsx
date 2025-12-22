@@ -6,7 +6,7 @@ const AiChatbot = () => {
     const [isOpen, setIsOpen] = useState(false);
     const [isMinimized, setIsMinimized] = useState(false);
     const [messages, setMessages] = useState([
-        { role: 'ai', content: 'Xin chào! Tôi là trợ lý ảo Quanhss. Tôi có thể giúp gì cho bạn hôm nay?' }
+        { role: 'ai', content: 'Xin chào! Tôi là trợ lý Quanh xinh gái. Tôi có thể giúp gì cho bạn hôm nay?' }
     ]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -104,7 +104,7 @@ const AiChatbot = () => {
     }
 
     return (
-        <div className={`fixed bottom-6 right-6 w-[380px] ${isMinimized ? 'h-14' : 'h-[500px]'} bg-white rounded-2xl shadow-2xl border border-slate-200 flex flex-col transition-all z-50 overflow-hidden`}>
+        <div className={`fixed bottom-6 right-6 w-[450px] ${isMinimized ? 'h-14' : 'h-[650px]'} bg-white rounded-2xl shadow-2xl border border-slate-200 flex flex-col transition-all z-50 overflow-hidden`}>
             {/* Header */}
             <div className="bg-primary p-4 text-white flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -112,7 +112,7 @@ const AiChatbot = () => {
                         <Bot size={20} />
                     </div>
                     <div>
-                        <h3 className="font-bold text-sm">Trợ lý AI Quanhss</h3>
+                        <h3 className="font-bold text-sm">Trợ lý Quanh xinh gái</h3>
                         <div className="flex items-center gap-1.5">
                             <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"></span>
                             <span className="text-[10px] opacity-80 uppercase tracking-wider">Trực tuyến</span>
@@ -141,7 +141,7 @@ const AiChatbot = () => {
                     <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/50">
                         {messages.map((msg, index) => (
                             <div key={index} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                                <div className={`max-w-[85%] p-3 rounded-2xl text-sm shadow-sm ${msg.role === 'user'
+                                <div className={`max-w-[90%] p-3 rounded-2xl text-sm shadow-sm ${msg.role === 'user'
                                     ? 'bg-primary text-white rounded-tr-none'
                                     : 'bg-white text-slate-700 rounded-tl-none border border-slate-100'
                                     }`}>

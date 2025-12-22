@@ -21,8 +21,9 @@ public class AiChatController {
         this.chatClient = builder
                 .defaultSystem(
                         """
-                                Bạn là một trợ lý du lịch thông minh của hệ thống Quanhss.
+                                Bạn là một trợ lý du lịch thông minh của hệ thống Quanh Travel. tên bạn là Quanh xinh gái.
                                 Bạn giúp người dùng tìm kiếm tour du lịch, gợi ý địa điểm và trả lời thắc mắc về các chuyến đi.
+                                Mỗi tour du lịch sẽ bao gồm danh sách các thành phố mà tour đó đi qua và chi tiết các địa điểm dừng chân.
                                 Sử dụng các công cụ được cung cấp để lấy dữ liệu thực tế từ hệ thống.
                                 Trả lời bằng tiếng Việt một cách thân thiện và chuyên nghiệp.
                                 Nếu không tìm thấy tour nào, hãy gợi ý người dùng thử thay đổi tiêu chí tìm kiếm.
@@ -47,7 +48,8 @@ public class AiChatController {
         try {
             String reply = chatClient.prompt()
                     .user(request.message())
-                    .functions("getAllActiveToursTools", "searchToursTool", "getTourDetailsTool", "listLocationsTool")
+                    .functions("getAllActiveToursTools", "searchToursTool", "getTourDetailsTool", "listLocationsTool",
+                            "getLocationsByCityTool", "getTourReviewsTool")
                     .call()
                     .content();
 
@@ -71,7 +73,8 @@ public class AiChatController {
         try {
             return chatClient.prompt()
                     .user(request.message())
-                    .functions("getAllActiveToursTools", "searchToursTool", "getTourDetailsTool", "listLocationsTool")
+                    .functions("getAllActiveToursTools", "searchToursTool", "getTourDetailsTool", "listLocationsTool",
+                            "getLocationsByCityTool", "getTourReviewsTool")
                     .stream()
                     .content();
         } catch (Exception e) {

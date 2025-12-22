@@ -34,6 +34,7 @@ public class TourResponse {
     Boolean isActive;
     String status; // PENDING, APPROVED, REJECTED, HIDDEN
     String rejectionReason;
+    List<String> cities; // List of cities this tour passes through
 
     // Trip statistics (thống kê chuyến)
     List<TripResponse> trips; // Danh sách các chuyến
@@ -63,6 +64,7 @@ public class TourResponse {
         Long locationId;
         String locationName;
         String locationAddress;
+        String cityName;
         Double latitude;
         Double longitude;
     }

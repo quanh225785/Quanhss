@@ -97,7 +97,7 @@ public class LocationSuggestionService {
         Location location = locationMapper.toLocation(suggestion);
         location.setCreatedBy(admin);
         location.setApprovedFromSuggestion(suggestion);
-        
+
         // Normalize empty refId to null to avoid unique constraint violation
         if (location.getRefId() != null && location.getRefId().trim().isEmpty()) {
             location.setRefId(null);
@@ -202,7 +202,7 @@ public class LocationSuggestionService {
     @Transactional(readOnly = true)
     public List<LocationResponse> getAllLocations() {
         List<Location> locations = locationRepository.findAll();
-        
+
         // Force load lazy relationships to avoid LazyInitializationException
         locations.forEach(location -> {
             if (location.getCreatedBy() != null) {
@@ -212,7 +212,18 @@ public class LocationSuggestionService {
                 location.getApprovedFromSuggestion().getId(); // Force load suggestion
             }
         });
-        
+
+        return locations.stream()
+                .map(locationMapper::toLocationResponse)
+                .toList();
+    }
+
+    /**
+     * Get locations by city name
+     */
+    @Transactional(readOnly = true)
+    public List<LocationResponse> getLocationsByCity(String cityName) {
+        List<Location> locations = locationRepository.findByCityNameContainingIgnoreCase(cityName);
         return locations.stream()
                 .map(locationMapper::toLocationResponse)
                 .toList();
@@ -259,8 +270,9 @@ public class LocationSuggestionService {
         }
 
         // Normalize empty refId to null to avoid unique constraint violation
-        String normalizedRefId = (request.getRefId() != null && request.getRefId().trim().isEmpty()) 
-            ? null : request.getRefId();
+        String normalizedRefId = (request.getRefId() != null && request.getRefId().trim().isEmpty())
+                ? null
+                : request.getRefId();
 
         // Create Location entity directly (bypass suggestion)
         Location location = Location.builder()

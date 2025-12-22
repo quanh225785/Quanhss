@@ -304,6 +304,22 @@ public class TourService {
                 .filter(t -> t.getStatus() == TourStatus.APPROVED)
                 .collect(Collectors.toList());
 
+        // Force load lazy relationships to avoid LazyInitializationException
+        activeTours.forEach(tour -> {
+            if (tour.getTourPoints() != null) {
+                tour.getTourPoints().size();
+                tour.getTourPoints().forEach(tp -> {
+                    if (tp.getLocation() != null) {
+                        tp.getLocation().getName();
+                        tp.getLocation().getCityName();
+                    }
+                });
+            }
+            if (tour.getCreatedBy() != null) {
+                tour.getCreatedBy().getUsername();
+            }
+        });
+
         return activeTours.stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
@@ -407,7 +423,9 @@ public class TourService {
                         if (normalizedCityName != null) {
                             boolean hasCity = tour.getTourPoints() != null && tour.getTourPoints().stream()
                                     .anyMatch(tp -> tp.getLocation() != null
-                                            && normalizedCityName.equals(tp.getLocation().getCityName()));
+                                            && tp.getLocation().getCityName() != null
+                                            && tp.getLocation().getCityName().toLowerCase()
+                                                    .contains(normalizedCityName.toLowerCase()));
                             if (!hasCity)
                                 return false;
                         }
@@ -511,6 +529,7 @@ public class TourService {
                                 .locationId(loc != null ? loc.getId() : null)
                                 .locationName(loc != null ? loc.getName() : null)
                                 .locationAddress(loc != null ? loc.getAddress() : null)
+                                .cityName(loc != null ? loc.getCityName() : null)
                                 .latitude(loc != null ? loc.getLatitude() : null)
                                 .longitude(loc != null ? loc.getLongitude() : null)
                                 .build();
@@ -533,6 +552,13 @@ public class TourService {
             imageUrlsList.add(tour.getImageUrl());
         }
 
+        // Extract distinct city names from tour points
+        List<String> cities = pointResponses.stream()
+                .map(TourResponse.TourPointResponse::getCityName)
+                .filter(city -> city != null && !city.isEmpty())
+                .distinct()
+                .collect(Collectors.toList());
+
         return TourResponse.builder()
                 .id(tour.getId())
                 .name(tour.getName())
@@ -547,6 +573,7 @@ public class TourService {
                 .imageUrl(tour.getImageUrl()) // S3 image URL (thumbnail)
                 .imageUrls(imageUrlsList) // List of all images
                 .points(pointResponses)
+                .cities(cities)
                 .createdByUsername(tour.getCreatedBy() != null ? tour.getCreatedBy().getUsername() : null)
                 .createdById(tour.getCreatedBy() != null ? tour.getCreatedBy().getId() : null)
                 .createdByAvatar(tour.getCreatedBy() != null ? tour.getCreatedBy().getAvatar() : null)
