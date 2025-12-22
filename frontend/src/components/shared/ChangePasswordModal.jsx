@@ -35,8 +35,9 @@ const ChangePasswordModal = ({ isOpen, onClose, userId }) => {
     setSuccess(false);
 
     // Validation
-    if (formData.newPassword.length < 8) {
-      setError("Mật khẩu mới phải có ít nhất 8 ký tự");
+    const passwordRegex = /^(?=.*[a-zA-Z]).{6,}$/;
+    if (!passwordRegex.test(formData.newPassword)) {
+      setError("Mật khẩu mới phải có ít nhất 6 ký tự và có ít nhất 1 chữ cái");
       return;
     }
 
@@ -142,7 +143,7 @@ const ChangePasswordModal = ({ isOpen, onClose, userId }) => {
                 value={formData.newPassword}
                 onChange={handleChange}
                 required
-                minLength={8}
+                minLength={6}
                 className="w-full pl-10 pr-10 py-2 border border-zinc-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900"
               />
               <button
@@ -153,7 +154,7 @@ const ChangePasswordModal = ({ isOpen, onClose, userId }) => {
                 {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
-            <p className="text-xs text-zinc-500 mt-1">Tối thiểu 8 ký tự</p>
+            <p className="text-xs text-zinc-500 mt-1">Tối thiểu 6 ký tự, có ít nhất 1 chữ cái</p>
           </div>
 
           <div>

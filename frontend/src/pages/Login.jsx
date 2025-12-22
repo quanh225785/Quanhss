@@ -27,6 +27,14 @@ function Login({ onLogin }) {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
+
+        // Validate password
+        const passwordRegex = /^(?=.*[a-zA-Z]).{6,}$/;
+        if (!passwordRegex.test(formData.password)) {
+            setError('Mật khẩu phải có ít nhất 6 ký tự và có ít nhất 1 chữ cái');
+            return;
+        }
+
         setLoading(true);
 
         try {
@@ -127,7 +135,7 @@ function Login({ onLogin }) {
                         borderRadius: '5px',
                         marginBottom: '20px'
                     }}>
-                        <p style={{ margin: '0 0 10px 0' }}>📧 Nhập email để gửi lại link xác thực:</p>
+                        <p style={{ margin: '0 0 10px 0' }}> Nhập email để gửi lại link xác thực:</p>
                         <div style={{ display: 'flex', gap: '10px' }}>
                             <input
                                 type="email"

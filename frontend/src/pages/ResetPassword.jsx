@@ -29,8 +29,9 @@ function ResetPassword() {
             return;
         }
 
-        if (password.length < 6) {
-            setError('Mật khẩu phải có ít nhất 6 ký tự');
+        const passwordRegex = /^(?=.*[a-zA-Z]).{6,}$/;
+        if (!passwordRegex.test(password)) {
+            setError('Mật khẩu phải có ít nhất 6 ký tự và có ít nhất 1 chữ cái');
             return;
         }
 
@@ -75,7 +76,7 @@ function ResetPassword() {
                                 type="password"
                                 id="password"
                                 name="password"
-                                placeholder="Mật khẩu mới (tối thiểu 6 ký tự)"
+                                placeholder="Mật khẩu mới (tối thiểu 6 ký tự, có ít nhất 1 chữ cái)"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 required

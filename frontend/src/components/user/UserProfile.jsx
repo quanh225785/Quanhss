@@ -143,8 +143,9 @@ const UserProfile = ({ user, onLogout }) => {
     setPasswordSuccess(false);
 
     // Validation
-    if (passwordData.newPassword.length < 8) {
-      setPasswordError("Mật khẩu mới phải có ít nhất 8 ký tự");
+    const passwordRegex = /^(?=.*[a-zA-Z]).{6,}$/;
+    if (!passwordRegex.test(passwordData.newPassword)) {
+      setPasswordError("Mật khẩu mới phải có ít nhất 6 ký tự và có ít nhất 1 chữ cái");
       return;
     }
 
@@ -426,7 +427,7 @@ const UserProfile = ({ user, onLogout }) => {
                   value={passwordData.newPassword}
                   onChange={handlePasswordChange}
                   required
-                  minLength={8}
+                  minLength={6}
                   className="w-full pl-12 pr-12 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-slate-900"
                 />
                 <button
@@ -437,7 +438,7 @@ const UserProfile = ({ user, onLogout }) => {
                   {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
-              <p className="text-xs text-slate-500 ml-1">Tối thiểu 8 ký tự</p>
+              <p className="text-xs text-slate-500 ml-1">Tối thiểu 6 ký tự, có ít nhất 1 chữ cái</p>
             </div>
 
             <div className="space-y-2">

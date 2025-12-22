@@ -37,8 +37,9 @@ function Register() {
             return;
         }
 
-        if (formData.password.length < 6) {
-            setError('Mật khẩu phải có ít nhất 6 ký tự');
+        const passwordRegex = /^(?=.*[a-zA-Z]).{6,}$/;
+        if (!passwordRegex.test(formData.password)) {
+            setError('Mật khẩu phải có ít nhất 6 ký tự và có ít nhất 1 chữ cái');
             return;
         }
 
@@ -163,8 +164,8 @@ function Register() {
                                 }}
                                 required
                             >
-                                <option value="USER">👤 Người dùng (USER)</option>
-                                <option value="AGENT">🏢 Đại lý (AGENT)</option>
+                                <option value="USER">Người dùng</option>
+                                <option value="AGENT">Đại lý</option>
                             </select>
                             <small style={{ color: '#666', fontSize: '14px', marginTop: '5px', display: 'block' }}>
                                 {formData.role === 'USER'
@@ -193,7 +194,7 @@ function Register() {
                                 name="password"
                                 value={formData.password}
                                 onChange={handleChange}
-                                placeholder="Tạo mật khẩu (tối thiểu 6 ký tự)"
+                                placeholder="Tạo mật khẩu (tối thiểu 6 ký tự, có ít nhất 1 chữ cái)"
                                 required
                             />
                         </div>
