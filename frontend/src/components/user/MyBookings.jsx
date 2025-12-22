@@ -61,7 +61,13 @@ const MyBookings = () => {
       let hasExpired = false;
 
       pendingBookings.forEach(booking => {
-        const createdAt = new Date(booking.createdAt);
+        // Handle timezone: If createdAt doesn't have timezone info (from Java LocalDateTime),
+        // treat it as UTC by appending 'Z' if not already present
+        let createdAtStr = booking.createdAt;
+        if (createdAtStr && !createdAtStr.endsWith('Z') && !createdAtStr.includes('+')) {
+          createdAtStr = createdAtStr + 'Z';
+        }
+        const createdAt = new Date(createdAtStr);
         const expiresAt = new Date(createdAt.getTime() + PAYMENT_TIMEOUT_MINUTES * 60 * 1000);
         const remaining = Math.max(0, Math.floor((expiresAt - now) / 1000));
         newTimers[booking.id] = remaining;

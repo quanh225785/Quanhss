@@ -62,12 +62,9 @@ const BookingPage = () => {
     // Countdown timer for payment step
     useEffect(() => {
         if (step === 2 && booking) {
-            // Calculate remaining time based on booking creation time
-            const createdAt = new Date(booking.createdAt);
-            const expiresAt = new Date(createdAt.getTime() + PAYMENT_TIMEOUT_MINUTES * 60 * 1000);
-            const now = new Date();
-            const initialRemaining = Math.max(0, Math.floor((expiresAt - now) / 1000));
-            setTimeRemaining(initialRemaining);
+            // Start countdown from 10 minutes when entering step 2
+            // This avoids timezone issues with server's createdAt
+            setTimeRemaining(PAYMENT_TIMEOUT_MINUTES * 60);
 
             // Start countdown
             countdownRef.current = setInterval(() => {
@@ -405,10 +402,10 @@ const BookingPage = () => {
                                     <h2 className="text-xl font-bold">Xác nhận thanh toán</h2>
                                     {/* Countdown Timer */}
                                     <div className={`flex items-center gap-2 px-4 py-2 rounded-xl font-mono text-lg font-bold ${timeRemaining > 300
-                                            ? 'bg-green-50 text-green-700 border border-green-200'
-                                            : timeRemaining > 120
-                                                ? 'bg-amber-50 text-amber-700 border border-amber-200'
-                                                : 'bg-red-50 text-red-700 border border-red-200 animate-pulse'
+                                        ? 'bg-green-50 text-green-700 border border-green-200'
+                                        : timeRemaining > 120
+                                            ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                                            : 'bg-red-50 text-red-700 border border-red-200 animate-pulse'
                                         }`}>
                                         <Timer size={20} />
                                         <span>{formatTimeRemaining(timeRemaining)}</span>
@@ -417,8 +414,8 @@ const BookingPage = () => {
 
                                 {/* Timeout Warning */}
                                 <div className={`p-4 rounded-2xl flex items-center gap-3 ${timeRemaining > 120
-                                        ? 'bg-blue-50 border border-blue-200 text-blue-800'
-                                        : 'bg-red-50 border border-red-200 text-red-800'
+                                    ? 'bg-blue-50 border border-blue-200 text-blue-800'
+                                    : 'bg-red-50 border border-red-200 text-red-800'
                                     }`}>
                                     <Timer size={20} className="flex-shrink-0" />
                                     <p>
