@@ -19,6 +19,8 @@ public class UserResponse {
     String email;
     String avatar;
     Boolean isVerified;
+    Boolean isLocked;
+    String lockReason;
     LocalDate dob;
     Set<RoleResponse> roles;
 }

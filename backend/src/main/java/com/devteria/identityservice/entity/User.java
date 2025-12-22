@@ -30,6 +30,9 @@ public class User {
     String email;
     String avatar;
     Boolean isVerified;
+    Boolean isLocked;
+    @Column(columnDefinition = "TEXT")
+    String lockReason;
     @ManyToMany
     Set<Role> roles;
 }
