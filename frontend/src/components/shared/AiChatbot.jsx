@@ -22,7 +22,7 @@ const AiChatbot = () => {
 
     // Extract image URLs from content
     const extractImages = (content) => {
-        const imageRegex = /https?:\/\/[^\s]+?\.(jpg|jpeg|png|gif|webp|bmp)(\?[^\s]*)?/gi;
+        const imageRegex = /https?:\/\/[^\s]+?\.(jpg|jpeg|png|gif|webp|bmp|jfif)(\?[^\s]*)?/gi;
         const images = content.match(imageRegex) || [];
         const textWithoutImages = content.replace(imageRegex, '').trim();
         return { images, text: textWithoutImages };
