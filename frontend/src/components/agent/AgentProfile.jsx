@@ -1,9 +1,9 @@
 import React, { useState } from "react";
-import { Loader2, Check, AlertCircle, Lock, Upload } from "lucide-react";
+import { Loader2, Check, AlertCircle, Lock, Upload, LogOut } from "lucide-react";
 import { api } from "../../utils/api";
 import ChangePasswordModal from "../shared/ChangePasswordModal";
 
-const AgentProfile = ({ user }) => {
+const AgentProfile = ({ user, onLogout }) => {
   const [formData, setFormData] = useState({
     firstName: user.firstName || "",
     lastName: user.lastName || "",
@@ -266,6 +266,17 @@ const AgentProfile = ({ user }) => {
         onClose={() => setShowPasswordModal(false)}
         userId={user.id}
       />
+
+      {/* Logout Section */}
+      <div className="bg-white border border-zinc-200 rounded-xl p-6">
+        <button
+          onClick={onLogout}
+          className="w-full flex items-center justify-center gap-2 px-4 py-3 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg font-medium transition-all duration-200 group"
+        >
+          <LogOut size={18} className="group-hover:-translate-x-1 transition-transform" />
+          Đăng xuất tài khoản
+        </button>
+      </div>
     </div>
   );
 };

@@ -31,7 +31,7 @@ const AgentDashboard = ({ onLogout }) => {
                     <Route path="/locations" element={<LocationProposals />} />
                     <Route path="/reviews" element={<Reviews />} />
                     <Route path="/chat" element={<AgentChatList />} />
-                    <Route path="/profile" element={<AgentProfile user={user} />} />
+                    <Route path="/profile" element={<AgentProfile user={user} onLogout={onLogout} />} />
                 </Routes>
             </div>
         </MainLayout>
