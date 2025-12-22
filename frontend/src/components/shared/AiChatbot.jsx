@@ -1,10 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Bot, X, Send, Loader2, Minimize2, Maximize2 } from 'lucide-react';
+import { Bot, X, Send, Loader2, Minimize2, Maximize2, ChevronUp, ChevronDown } from 'lucide-react';
 import { api } from '../../utils/api';
 
 const AiChatbot = () => {
     const [isOpen, setIsOpen] = useState(false);
     const [isMinimized, setIsMinimized] = useState(false);
+    const [isFullScreen, setIsFullScreen] = useState(false);
     const [messages, setMessages] = useState([
         { role: 'ai', content: 'Xin chào! Tôi là trợ lý Quanh xinh gái. Tôi có thể giúp gì cho bạn hôm nay?' }
     ]);
@@ -100,7 +101,7 @@ const AiChatbot = () => {
         return (
             <button
                 onClick={() => setIsOpen(true)}
-                className="fixed bottom-6 right-6 w-14 h-14 bg-primary text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 transition-all z-50 group"
+                className="fixed bottom-24 right-6 w-14 h-14 bg-primary text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 transition-all z-50 group"
             >
                 <Bot size={28} className="group-hover:rotate-12 transition-transform" />
                 <span className="absolute -top-1 -right-1 flex h-3 w-3">
@@ -112,9 +113,14 @@ const AiChatbot = () => {
     }
 
     return (
-        <div className={`fixed bottom-6 right-6 w-[450px] ${isMinimized ? 'h-14' : 'h-[650px]'} bg-white rounded-2xl shadow-2xl border border-slate-200 flex flex-col transition-all z-50 overflow-hidden`}>
+        <div className={`fixed transition-all z-50 overflow-hidden bg-white shadow-2xl border border-slate-200 flex flex-col
+            ${isFullScreen
+                ? 'inset-0 md:inset-6 md:left-80 z-[60]'
+                : `bottom-24 right-6 w-[90vw] md:w-[450px] ${isMinimized ? 'h-14' : 'h-[600px] md:h-[650px]'} rounded-2xl`
+            }`}
+        >
             {/* Header */}
-            <div className="bg-primary p-4 text-white flex items-center justify-between">
+            <div className="bg-primary p-4 text-white flex items-center justify-between shrink-0">
                 <div className="flex items-center gap-2">
                     <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
                         <Bot size={20} />
@@ -129,13 +135,29 @@ const AiChatbot = () => {
                 </div>
                 <div className="flex items-center gap-1">
                     <button
-                        onClick={() => setIsMinimized(!isMinimized)}
+                        onClick={() => {
+                            setIsFullScreen(!isFullScreen);
+                            setIsMinimized(false);
+                        }}
                         className="p-1.5 hover:bg-white/10 rounded-lg transition-colors"
+                        title={isFullScreen ? "Thu nhỏ" : "Toàn màn hình"}
                     >
-                        {isMinimized ? <Maximize2 size={16} /> : <Minimize2 size={16} />}
+                        {isFullScreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
                     </button>
+                    {!isFullScreen && (
+                        <button
+                            onClick={() => setIsMinimized(!isMinimized)}
+                            className="p-1.5 hover:bg-white/10 rounded-lg transition-colors"
+                            title={isMinimized ? "Mở rộng" : "Thu gọn"}
+                        >
+                            {isMinimized ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                        </button>
+                    )}
                     <button
-                        onClick={() => setIsOpen(false)}
+                        onClick={() => {
+                            setIsOpen(false);
+                            setIsFullScreen(false);
+                        }}
                         className="p-1.5 hover:bg-white/10 rounded-lg transition-colors"
                     >
                         <X size={18} />

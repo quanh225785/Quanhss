@@ -430,12 +430,12 @@ const BookingPage = () => {
                                     <p className="text-2xl font-bold text-primary font-mono">{booking.bookingCode}</p>
                                 </div>
 
-                                <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl">
+                                {/* <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl">
                                     <p className="text-amber-800">
                                         💡 <strong>Lưu ý:</strong> Đây là thanh toán giả lập cho mục đích demo.
                                         Trong thực tế, bạn sẽ được chuyển đến cổng thanh toán an toàn.
                                     </p>
-                                </div>
+                                </div> */}
 
                                 <div className="space-y-3 p-4 bg-slate-50 rounded-2xl">
                                     <div className="flex justify-between">
