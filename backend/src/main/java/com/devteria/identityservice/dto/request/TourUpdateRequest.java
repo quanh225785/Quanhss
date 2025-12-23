@@ -16,6 +16,7 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class TourUpdateRequest {
     String description;
+    List<String> imageUrls;
     List<TourPointUpdateRequest> points;
 
     @Data
@@ -27,5 +28,6 @@ public class TourUpdateRequest {
         Long id;
         String note;
         String activity;
+        String imageUrl;
     }
 }

@@ -253,7 +253,22 @@ public class TourService {
             tour.setDescription(request.getDescription());
         }
 
-        // Update tour points activity and note
+        // Update tour images if provided
+        if (request.getImageUrls() != null) {
+            try {
+                String imageUrlsJson = objectMapper.writeValueAsString(request.getImageUrls());
+                tour.setImageUrls(imageUrlsJson);
+
+                // Update thumbnail (first image)
+                if (!request.getImageUrls().isEmpty()) {
+                    tour.setImageUrl(request.getImageUrls().get(0));
+                }
+            } catch (JsonProcessingException e) {
+                log.warn("Failed to serialize imageUrls during update", e);
+            }
+        }
+
+        // Update tour points activity, note and image
         if (request.getPoints() != null) {
             Map<Long, TourUpdateRequest.TourPointUpdateRequest> pointUpdateMap = request.getPoints().stream()
                     .filter(p -> p.getId() != null)
@@ -267,6 +282,9 @@ public class TourService {
                     }
                     if (update.getNote() != null) {
                         point.setNote(update.getNote());
+                    }
+                    if (update.getImageUrl() != null) {
+                        point.setImageUrl(update.getImageUrl());
                     }
                 }
             }
