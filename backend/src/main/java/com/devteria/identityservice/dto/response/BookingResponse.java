@@ -42,5 +42,8 @@ public class BookingResponse {
     String note;
     String qrCodeUrl;
     
+    // Review status
+    Boolean hasReview;
+    
     LocalDateTime createdAt;
 }

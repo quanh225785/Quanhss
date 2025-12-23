@@ -7,7 +7,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -19,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.devteria.identityservice.dto.request.BookingCreationRequest;
+import com.devteria.identityservice.dto.request.BookingEmailRequest;
 import com.devteria.identityservice.dto.response.BookingResponse;
 import com.devteria.identityservice.entity.Booking;
 import com.devteria.identityservice.entity.Participant;
@@ -26,10 +29,12 @@ import com.devteria.identityservice.entity.Tour;
 import com.devteria.identityservice.entity.Trip;
 import com.devteria.identityservice.entity.User;
 import com.devteria.identityservice.enums.BookingStatus;
+import com.devteria.identityservice.enums.NotificationType;
 import com.devteria.identityservice.enums.PaymentStatus;
 import com.devteria.identityservice.exception.AppException;
 import com.devteria.identityservice.exception.ErrorCode;
 import com.devteria.identityservice.repository.BookingRepository;
+import com.devteria.identityservice.repository.ReviewRepository;
 import com.devteria.identityservice.repository.TourRepository;
 import com.devteria.identityservice.repository.TripRepository;
 import com.devteria.identityservice.repository.UserRepository;
@@ -54,10 +59,13 @@ import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 public class BookingService {
 
     BookingRepository bookingRepository;
+    ReviewRepository reviewRepository;
     TourRepository tourRepository;
     TripRepository tripRepository;
     UserRepository userRepository;
     S3Client s3Client;
+    NotificationService notificationService;
+    EmailVerify emailVerify;
 
     @NonFinal
     @Value("${aws.s3.bucket-name}")
@@ -152,11 +160,30 @@ public class BookingService {
         log.info("Booking created: {} for trip: {} (tour: {}) by user: {}",
                 bookingCode, trip.getId(), tour.getName(), username);
 
+        // Gửi notification cho Agent owner của tour
+        try {
+            User agent = tour.getCreatedBy();
+            String userName = user.getFirstName() != null 
+                    ? user.getFirstName() + " " + user.getLastName() 
+                    : user.getUsername();
+            notificationService.createNotification(
+                    agent,
+                    NotificationType.NEW_BOOKING,
+                    "Đặt tour mới!",
+                    String.format("%s vừa đặt tour %s với %d người", userName, tour.getName(), numberOfParticipants),
+                    tour.getId(),  // Gửi tourId để agent có thể navigate đến trang quản lý chuyến
+                    "TOUR"
+            );
+        } catch (Exception e) {
+            log.error("Failed to send notification for booking: {}", bookingCode, e);
+            // Don't fail the booking if notification fails
+        }
+
         return mapToResponse(booking);
     }
 
     /**
-     * Get bookings for current user
+     * Get bookings for current user - OPTIMIZED to avoid N+1
      */
     @Transactional(readOnly = true)
     public List<BookingResponse> getMyBookings() {
@@ -164,9 +191,25 @@ public class BookingService {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
-        return bookingRepository.findByUserOrderByCreatedAtDesc(user)
-                .stream()
-                .map(this::mapToResponse)
+        // Use optimized query with JOIN FETCH
+        List<Booking> bookings = bookingRepository.findByUserWithDetailsOrderByCreatedAtDesc(user);
+        
+        if (bookings.isEmpty()) {
+            return List.of();
+        }
+
+        // Batch load review status for all bookings in one query
+        List<Long> bookingIds = bookings.stream()
+                .map(Booking::getId)
+                .collect(Collectors.toList());
+        
+        Set<Long> bookingsWithReviews = new HashSet<>(
+                reviewRepository.findBookingIdsWithReviews(bookingIds)
+        );
+
+        // Map to response with pre-loaded review status
+        return bookings.stream()
+                .map(booking -> mapToResponseWithReviewStatus(booking, bookingsWithReviews.contains(booking.getId())))
                 .collect(Collectors.toList());
     }
 
@@ -292,6 +335,30 @@ public class BookingService {
 
         log.info("Payment confirmed for booking: {}", booking.getBookingCode());
 
+        // Tạo DTO với dữ liệu đã load sẵn trước khi gọi async method
+        // Điều này tránh LazyInitializationException khi async thread truy cập entity sau khi session đóng
+        try {
+            User bookingUser = booking.getUser();
+            String fullName = (bookingUser.getFirstName() != null ? bookingUser.getFirstName() : "") + " " + 
+                             (bookingUser.getLastName() != null ? bookingUser.getLastName() : "");
+            if (fullName.trim().isEmpty()) fullName = bookingUser.getUsername();
+
+            BookingEmailRequest emailRequest = BookingEmailRequest.builder()
+                    .recipientEmail(bookingUser.getEmail())
+                    .recipientName(fullName)
+                    .bookingCode(booking.getBookingCode())
+                    .tourName(booking.getTour().getName())
+                    .totalPrice(booking.getTotalPrice())
+                    .startDate(booking.getTrip().getStartDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")))
+                    .numberOfParticipants(booking.getParticipants().size())
+                    .qrCodeUrl(booking.getQrCodeUrl())
+                    .build();
+
+            emailVerify.sendBookingSuccessEmail(emailRequest);
+        } catch (Exception e) {
+            log.error("Failed to send booking success email for booking: {}", booking.getBookingCode(), e);
+        }
+
         return mapToResponse(booking);
     }
 
@@ -382,6 +449,13 @@ public class BookingService {
      * Map Booking entity to BookingResponse
      */
     private BookingResponse mapToResponse(Booking booking) {
+        return mapToResponseWithReviewStatus(booking, reviewRepository.existsByBookingId(booking.getId()));
+    }
+
+    /**
+     * Map Booking entity to BookingResponse with pre-loaded review status (avoids N+1)
+     */
+    private BookingResponse mapToResponseWithReviewStatus(Booking booking, boolean hasReview) {
         Tour tour = booking.getTour();
         Trip trip = booking.getTrip();
         User user = booking.getUser();
@@ -412,6 +486,7 @@ public class BookingService {
                 .contactPhone(booking.getContactPhone())
                 .note(booking.getNote())
                 .qrCodeUrl(booking.getQrCodeUrl())
+                .hasReview(hasReview)
                 .createdAt(booking.getCreatedAt())
                 .build();
     }

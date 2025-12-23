@@ -1,5 +1,6 @@
 package com.devteria.identityservice.dto.request;
 
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 import lombok.*;
@@ -11,9 +12,8 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class PasswordChangeRequest {
-    @Size(min = 8, message = "PASSWORD_INVALID")
     String currentPassword;
 
-    @Size(min = 8, message = "PASSWORD_INVALID")
+    @Pattern(regexp = "^(?=.*[a-zA-Z]).{6,}$", message = "INVALID_PASSWORD")
     String newPassword;
 }

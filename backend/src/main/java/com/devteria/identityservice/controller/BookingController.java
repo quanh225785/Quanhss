@@ -1,6 +1,7 @@
 package com.devteria.identityservice.controller;
 
 import java.util.List;
+import jakarta.validation.Valid;
 
 import org.springframework.web.bind.annotation.*;
 
@@ -26,7 +27,7 @@ public class BookingController {
      * Create a new booking (USER)
      */
     @PostMapping
-    public ApiResponse<BookingResponse> createBooking(@RequestBody BookingCreationRequest request) {
+    public ApiResponse<BookingResponse> createBooking(@Valid @RequestBody BookingCreationRequest request) {
         log.info("Creating booking for trip: {}", request.getTripId());
         return ApiResponse.<BookingResponse>builder()
                 .result(bookingService.createBooking(request))

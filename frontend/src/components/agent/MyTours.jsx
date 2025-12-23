@@ -1,18 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, CheckCircle, XCircle, Loader2, Route, Clock, MapPin, Trash2, Eye, Calendar, Users } from 'lucide-react';
+import { Plus, CheckCircle, XCircle, Loader2, Route, Clock, MapPin, Trash2, Eye, Calendar, Users, Pencil } from 'lucide-react';
 import { api } from '../../utils/api';
+import { useToast } from '../../context/ToastContext';
 import { formatDistance, formatDuration } from '../../utils/polylineUtils';
 import CreateTourModal from './CreateTourModal';
+import EditTourModal from './EditTourModal';
 import Modal from '../shared/Modal';
+import ConfirmModal from '../shared/ConfirmModal';
 
 const MyTours = () => {
     const navigate = useNavigate();
     const [tours, setTours] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [showCreateModal, setShowCreateModal] = useState(false);
+    const [tourToEdit, setTourToEdit] = useState(null);
     const [error, setError] = useState(null);
     const [tourToHide, setTourToHide] = useState(null);
+    const [tourToDelete, setTourToDelete] = useState(null);
+    const { showToast } = useToast();
 
     useEffect(() => {
         fetchTours();
@@ -35,14 +41,28 @@ const MyTours = () => {
         }
     };
 
-    const handleDeleteTour = async (id) => {
-        if (!confirm('Bạn có chắc muốn xóa tour này?')) return;
+    const handleDeleteTour = (id) => {
+        setTourToDelete(id);
+    };
 
+    const confirmDeleteTour = async () => {
+        if (!tourToDelete) return;
         try {
-            await api.delete(`/tours/${id}`);
-            setTours(prev => prev.filter(t => t.id !== id));
+            await api.delete(`/tours/${tourToDelete}`);
+            setTours(prev => prev.filter(t => t.id !== tourToDelete));
+            setTourToDelete(null);
+            showToast({
+                type: 'success',
+                message: 'Thành công',
+                description: 'Đã xóa tour thành công'
+            });
         } catch (err) {
             console.error('Error deleting tour:', err);
+            showToast({
+                type: 'error',
+                message: 'Lỗi',
+                description: 'Không thể xóa tour. Vui lòng thử lại.'
+            });
         }
     };
 
@@ -59,7 +79,11 @@ const MyTours = () => {
             setTourToHide(null);
         } catch (err) {
             console.error('Error hiding tour:', err);
-            alert('Không thể ẩn tour');
+            showToast({
+                type: 'error',
+                message: 'Lỗi ẩn tour',
+                description: 'Không thể ẩn tour. Vui lòng thử lại.'
+            });
         }
     };
 
@@ -69,12 +93,21 @@ const MyTours = () => {
             fetchTours();
         } catch (err) {
             console.error('Error unhiding tour:', err);
-            alert('Không thể hiện tour');
+            showToast({
+                type: 'error',
+                message: 'Lỗi hiện tour',
+                description: 'Không thể hiện tour. Vui lòng thử lại.'
+            });
         }
     };
 
     const handleTourCreated = () => {
         setShowCreateModal(false);
+        fetchTours();
+    };
+
+    const handleTourUpdated = () => {
+        setTourToEdit(null);
         fetchTours();
     };
 
@@ -218,6 +251,13 @@ const MyTours = () => {
 
                                 <div className="flex items-center gap-2">
                                     <button
+                                        onClick={() => setTourToEdit(tour)}
+                                        className="p-2 text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 rounded-lg transition-colors"
+                                        title="Sửa tour"
+                                    >
+                                        <Pencil size={18} />
+                                    </button>
+                                    <button
                                         onClick={() => navigate(`/agent/tours/${tour.id}`)}
                                         className="p-2 text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 rounded-lg transition-colors"
                                         title="Xem chi tiết & đơn đặt"
@@ -277,39 +317,43 @@ const MyTours = () => {
             )}
 
             {/* Hide Tour Confirmation Modal */}
-            <Modal
+            <ConfirmModal
                 isOpen={!!tourToHide}
                 onClose={() => setTourToHide(null)}
+                onConfirm={confirmHideTour}
                 title="Xác nhận ẩn tour"
-                size="md"
-                footer={
-                    <>
-                        <button
-                            onClick={() => setTourToHide(null)}
-                            className="px-4 py-2 text-sm font-medium text-zinc-700 bg-white border border-zinc-300 rounded-md hover:bg-zinc-50 transition-colors"
-                        >
-                            Hủy
-                        </button>
-                        <button
-                            onClick={confirmHideTour}
-                            className="px-4 py-2 text-sm font-medium text-white bg-zinc-900 rounded-md hover:bg-zinc-800 transition-colors"
-                        >
-                            Xác nhận
-                        </button>
-                    </>
-                }
-            >
-                <p className="text-zinc-600">
-                    Bạn có chắc chắn muốn ẩn tour này khỏi danh sách công khai?
-                    Tour sẽ không hiển thị cho người dùng nữa.
-                </p>
-            </Modal>
+                message="Bạn có chắc chắn muốn ẩn tour này khỏi danh sách công khai? Tour sẽ không hiển thị cho người dùng nữa."
+                confirmText="Ẩn tour"
+                cancelText="Hủy"
+                variant="warning"
+            />
+
+            {/* Delete Tour Confirmation Modal */}
+            <ConfirmModal
+                isOpen={!!tourToDelete}
+                onClose={() => setTourToDelete(null)}
+                onConfirm={confirmDeleteTour}
+                title="Xác nhận xóa tour"
+                message="Bạn có chắc chắn muốn xóa tour này? Hành động này không thể hoàn tác và sẽ xóa tất cả các chuyến đi liên quan."
+                confirmText="Xóa tour"
+                cancelText="Hủy"
+                variant="danger"
+            />
 
             {/* Create Tour Modal */}
             {showCreateModal && (
                 <CreateTourModal
                     onClose={() => setShowCreateModal(false)}
                     onSuccess={handleTourCreated}
+                />
+            )}
+
+            {/* Edit Tour Modal */}
+            {tourToEdit && (
+                <EditTourModal
+                    tour={tourToEdit}
+                    onClose={() => setTourToEdit(null)}
+                    onSuccess={handleTourUpdated}
                 />
             )}
         </div>

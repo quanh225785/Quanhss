@@ -3,6 +3,7 @@ package com.devteria.identityservice.dto.request;
 import java.time.LocalDate;
 
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 import com.devteria.identityservice.validator.DobConstraint;
@@ -19,7 +20,7 @@ public class UserCreationRequest {
     @Size(min = 4, message = "USERNAME_INVALID")
     String username;
 
-    @Size(min = 6, message = "INVALID_PASSWORD")
+    @Pattern(regexp = "^(?=.*[a-zA-Z]).{6,}$", message = "INVALID_PASSWORD")
     String password;
 
     @Email(message = "INVALID_EMAIL")

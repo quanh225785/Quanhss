@@ -9,6 +9,7 @@ import {
   Plus,
 } from "lucide-react";
 import { api } from "../../utils/api";
+import { useToast } from "../../context/ToastContext";
 import ConfirmModal from "../shared/ConfirmModal";
 import Modal from "../shared/Modal";
 import AddLocationModal from "./AddLocationModal";
@@ -23,6 +24,7 @@ const LocationManagement = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [processingId, setProcessingId] = useState(null);
+  const { showToast } = useToast();
 
   // Modal states
   const [showApproveModal, setShowApproveModal] = useState(false);
@@ -104,24 +106,29 @@ const LocationManagement = () => {
     setProcessingId(suggestionId);
     try {
       await api.post(`/locations/suggestions/${suggestionId}/approve`);
-      alert("Địa điểm đã được duyệt thành công!");
+      showToast({
+        type: 'success',
+        message: 'Thành công',
+        description: 'Địa điểm đã được duyệt thành công!'
+      });
       setShowApproveModal(false);
       setSelectedSuggestion(null);
       await fetchData(); // Refresh both suggestions and locations
     } catch (err) {
-      console.error("Error approving suggestion:", err);
       const errorMsg = err.response?.data?.message;
+      let description = "Không thể duyệt địa điểm: " + (errorMsg || "Lỗi không xác định");
       if (errorMsg?.includes("already exists")) {
-        alert("Lỗi: Tên địa điểm này đã tồn tại trong hệ thống.");
+        description = "Lỗi: Tên địa điểm này đã tồn tại trong hệ thống.";
       } else if (errorMsg?.includes("already been processed")) {
-        alert("Lỗi: Địa điểm này đã được xử lý trước đó.");
+        description = "Lỗi: Địa điểm này đã được xử lý trước đó.";
       } else if (errorMsg?.includes("not found")) {
-        alert("Lỗi: Không tìm thấy địa điểm đề xuất.");
-      } else {
-        alert(
-          "Không thể duyệt địa điểm: " + (errorMsg || "Lỗi không xác định")
-        );
+        description = "Lỗi: Không tìm thấy địa điểm đề xuất.";
       }
+      showToast({
+        type: 'error',
+        message: 'Lỗi',
+        description
+      });
     } finally {
       setProcessingId(null);
     }
@@ -129,7 +136,11 @@ const LocationManagement = () => {
 
   const handleReject = async (suggestionId) => {
     if (!rejectReason || rejectReason.trim() === "") {
-      alert("Vui lòng nhập lý do từ chối");
+      showToast({
+        type: 'info',
+        message: 'Yêu cầu',
+        description: 'Vui lòng nhập lý do từ chối'
+      });
       return;
     }
 
@@ -138,7 +149,11 @@ const LocationManagement = () => {
       await api.post(`/locations/suggestions/${suggestionId}/reject`, null, {
         params: { reason: rejectReason.trim() },
       });
-      alert("Địa điểm đã bị từ chối!");
+      showToast({
+        type: 'success',
+        message: 'Thành công',
+        description: 'Địa điểm đã bị từ chối!'
+      });
       setShowRejectModal(false);
       setSelectedSuggestion(null);
       setRejectReason("");
@@ -146,9 +161,11 @@ const LocationManagement = () => {
     } catch (err) {
       console.error("Error rejecting suggestion:", err);
       const errorMsg = err.response?.data?.message;
-      alert(
-        "Không thể từ chối địa điểm: " + (errorMsg || "Lỗi không xác định")
-      );
+      showToast({
+        type: 'error',
+        message: 'Lỗi',
+        description: "Không thể từ chối địa điểm: " + (errorMsg || "Lỗi không xác định")
+      });
     } finally {
       setProcessingId(null);
     }

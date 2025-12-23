@@ -19,7 +19,8 @@ public class TourCreationRequest {
     String vehicle;  // car, motorcycle
     Boolean useOptimization;  // true to use TSP, false for manual order
     Boolean roundtrip;  // for TSP: return to start point
-    String imageUrl;  // S3 URL for tour thumbnail (after upload)
+    String imageUrl;  // S3 URL for tour thumbnail (after upload) - backward compatibility
+    List<String> imageUrls;  // List of S3 URLs for multiple tour images
     List<TourPointRequest> points;
 
     @Data

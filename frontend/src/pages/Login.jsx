@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api, setAuthToken } from '../utils/api';
+import { useToast } from '../context/ToastContext';
 import './Auth.css';
 
 function Login({ onLogin }) {
@@ -13,6 +14,7 @@ function Login({ onLogin }) {
     const [loading, setLoading] = useState(false);
     const [showResendVerification, setShowResendVerification] = useState(false);
     const [userEmail, setUserEmail] = useState('');
+    const { showToast } = useToast();
     // apiBaseUrl and preconfigured axios instance are available from `src/utils/api.js`
 
     const handleChange = (e) => {
@@ -25,6 +27,14 @@ function Login({ onLogin }) {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
+
+        // Validate password
+        const passwordRegex = /^(?=.*[a-zA-Z]).{6,}$/;
+        if (!passwordRegex.test(formData.password)) {
+            setError('Mật khẩu phải có ít nhất 6 ký tự và có ít nhất 1 chữ cái');
+            return;
+        }
+
         setLoading(true);
 
         try {
@@ -69,6 +79,10 @@ function Login({ onLogin }) {
                 if (formData.username && formData.username.includes('@')) {
                     setUserEmail(formData.username);
                 }
+            } else if (errorCode === 1029) {
+                // Account locked error
+                setError(errorMessage || 'Tài khoản đã bị khóa.');
+                setShowResendVerification(false);
             } else {
                 setError(errorMessage || 'Đăng nhập thất bại. Vui lòng thử lại.');
                 setShowResendVerification(false);
@@ -88,7 +102,11 @@ function Login({ onLogin }) {
         try {
             await api.post(`/auth/resend-verify?email=${userEmail}`);
             setError('');
-            alert('Đã gửi lại email xác thực! Vui lòng kiểm tra hộp thư của bạn.');
+            showToast({
+                type: 'success',
+                message: 'Đã gửi lại email xác thực!',
+                description: 'Vui lòng kiểm tra hộp thư của bạn.'
+            });
             setShowResendVerification(false);
             setUserEmail('');
         } catch (err) {
@@ -117,7 +135,7 @@ function Login({ onLogin }) {
                         borderRadius: '5px',
                         marginBottom: '20px'
                     }}>
-                        <p style={{ margin: '0 0 10px 0' }}>📧 Nhập email để gửi lại link xác thực:</p>
+                        <p style={{ margin: '0 0 10px 0' }}> Nhập email để gửi lại link xác thực:</p>
                         <div style={{ display: 'flex', gap: '10px' }}>
                             <input
                                 type="email"

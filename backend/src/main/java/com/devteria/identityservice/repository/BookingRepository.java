@@ -17,7 +17,18 @@ import com.devteria.identityservice.entity.User;
 @Repository
 public interface BookingRepository extends JpaRepository<Booking, Long> {
 
-    // Find bookings by user
+    // Find bookings by user - OPTIMIZED with JOIN FETCH to avoid N+1
+    @Query("SELECT DISTINCT b FROM Booking b " +
+           "LEFT JOIN FETCH b.user " +
+           "LEFT JOIN FETCH b.tour t " +
+           "LEFT JOIN FETCH t.createdBy " +
+           "LEFT JOIN FETCH b.trip " +
+           "LEFT JOIN FETCH b.participants " +
+           "WHERE b.user = :user " +
+           "ORDER BY b.createdAt DESC")
+    List<Booking> findByUserWithDetailsOrderByCreatedAtDesc(@Param("user") User user);
+
+    // Legacy method - keep for backward compatibility
     List<Booking> findByUserOrderByCreatedAtDesc(User user);
 
     // Find bookings by tour
@@ -35,4 +46,19 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     // Check if user already booked this tour
     boolean existsByUserAndTour(User user, Tour tour);
+
+    // Find expired unpaid bookings for auto-cancellation
+    @Query("SELECT b FROM Booking b WHERE b.paymentStatus = :paymentStatus AND b.status != :excludeStatus AND b.createdAt < :cutoffTime")
+    List<Booking> findByPaymentStatusAndStatusNotAndCreatedAtBefore(
+        @Param("paymentStatus") com.devteria.identityservice.enums.PaymentStatus paymentStatus,
+        @Param("excludeStatus") com.devteria.identityservice.enums.BookingStatus excludeStatus,
+        @Param("cutoffTime") LocalDateTime cutoffTime
+    );
+
+    long countByStatus(com.devteria.identityservice.enums.BookingStatus status);
+
+    long countByPaymentStatus(com.devteria.identityservice.enums.PaymentStatus paymentStatus);
+
+    @Query("SELECT COALESCE(SUM(b.totalPrice), 0) FROM Booking b WHERE b.paymentStatus = :paymentStatus")
+    Double sumTotalPriceByPaymentStatus(@Param("paymentStatus") com.devteria.identityservice.enums.PaymentStatus paymentStatus);
 }

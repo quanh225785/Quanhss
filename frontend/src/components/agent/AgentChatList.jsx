@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { MessageCircle, ArrowLeft, Search, Loader2 } from "lucide-react";
 import ChatWindow from "../shared/ChatWindow";
 import { getConversations, getMessages } from "../../utils/chatApi";
+import { useChat } from "../../context/ChatContext";
 
 const AgentChatList = () => {
     const [conversations, setConversations] = useState([]);
@@ -10,6 +11,7 @@ const AgentChatList = () => {
     const [loading, setLoading] = useState(true);
     const [loadingMessages, setLoadingMessages] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
+    const { refreshUnreadCount } = useChat();
 
     useEffect(() => {
         loadConversations();
@@ -39,6 +41,7 @@ const AgentChatList = () => {
             setConversations(prev => prev.map(c =>
                 c.id === conv.id ? { ...c, unreadCount: 0 } : c
             ));
+            refreshUnreadCount();
         } catch (error) {
             console.error("Failed to load messages:", error);
         } finally {
@@ -64,6 +67,7 @@ const AgentChatList = () => {
                 }
                 : c
         ));
+        refreshUnreadCount();
     };
 
     // Handle new message from WebSocket
@@ -85,6 +89,7 @@ const AgentChatList = () => {
                 }
                 : c
         ));
+        refreshUnreadCount();
     };
 
     const formatTime = (dateString) => {
@@ -236,21 +241,23 @@ const AgentChatList = () => {
                 </div>
 
                 {/* Chat Window */}
-                <div className="col-span-2">
+                <div className="col-span-2 h-full overflow-hidden">
                     {selectedConversation ? (
                         loadingMessages ? (
                             <div className="flex items-center justify-center h-full bg-white rounded-xl border border-zinc-200">
                                 <Loader2 className="w-8 h-8 animate-spin text-primary" />
                             </div>
                         ) : (
-                            <ChatWindow
-                                messages={messages}
-                                conversationId={selectedConversation.id}
-                                onMessageSent={handleMessageSent}
-                                onNewMessage={handleNewMessage}
-                                partnerName={selectedConversation.partnerName}
-                                partnerInitial={selectedConversation.partnerInitial}
-                            />
+                            <div className="h-full">
+                                <ChatWindow
+                                    messages={messages}
+                                    conversationId={selectedConversation.id}
+                                    onMessageSent={handleMessageSent}
+                                    onNewMessage={handleNewMessage}
+                                    partnerName={selectedConversation.partnerName}
+                                    partnerInitial={selectedConversation.partnerInitial}
+                                />
+                            </div>
                         )
                     ) : (
                         <div className="flex flex-col items-center justify-center h-full bg-white rounded-xl border border-zinc-200 text-zinc-400">

@@ -327,7 +327,7 @@ const AddLocationModal = ({ onClose, onSuccess }) => {
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="sticky top-0 bg-white border-b border-zinc-200 p-6 flex items-center justify-between">
           <div>
@@ -394,8 +394,8 @@ const AddLocationModal = ({ onClose, onSuccess }) => {
               type="button"
               onClick={() => setShowMap(false)}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${!showMap
-                  ? "bg-zinc-900 text-white"
-                  : "bg-zinc-100 text-zinc-700 hover:bg-zinc-200"
+                ? "bg-zinc-900 text-white"
+                : "bg-zinc-100 text-zinc-700 hover:bg-zinc-200"
                 }`}
             >
               <Search size={16} />
@@ -405,8 +405,8 @@ const AddLocationModal = ({ onClose, onSuccess }) => {
               type="button"
               onClick={() => setShowMap(true)}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${showMap
-                  ? "bg-zinc-900 text-white"
-                  : "bg-zinc-100 text-zinc-700 hover:bg-zinc-200"
+                ? "bg-zinc-900 text-white"
+                : "bg-zinc-100 text-zinc-700 hover:bg-zinc-200"
                 }`}
             >
               <Map size={16} />

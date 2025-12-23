@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.devteria.identityservice.dto.request.TourCreationRequest;
+import com.devteria.identityservice.dto.request.TourUpdateRequest;
 import com.devteria.identityservice.dto.response.TourResponse;
 import com.devteria.identityservice.dto.response.VietmapRouteResponse;
 import com.devteria.identityservice.entity.Location;
@@ -20,6 +21,7 @@ import com.devteria.identityservice.enums.TourStatus;
 import com.devteria.identityservice.exception.AppException;
 import com.devteria.identityservice.exception.ErrorCode;
 import com.devteria.identityservice.repository.LocationRepository;
+import com.devteria.identityservice.repository.ReviewRepository;
 import com.devteria.identityservice.repository.TourRepository;
 import com.devteria.identityservice.repository.TripRepository;
 import com.devteria.identityservice.repository.UserRepository;
@@ -40,6 +42,7 @@ public class TourService {
     TourRepository tourRepository;
     TripRepository tripRepository;
     LocationRepository locationRepository;
+    ReviewRepository reviewRepository;
     UserRepository userRepository;
     VietmapService vietmapService;
     ObjectMapper objectMapper;
@@ -116,6 +119,24 @@ public class TourService {
 
         // Create tour entity
         int numberOfDays = request.getNumberOfDays() != null ? request.getNumberOfDays() : 1;
+
+        // Serialize imageUrls to JSON
+        String imageUrlsJson = null;
+        if (request.getImageUrls() != null && !request.getImageUrls().isEmpty()) {
+            try {
+                imageUrlsJson = objectMapper.writeValueAsString(request.getImageUrls());
+            } catch (JsonProcessingException e) {
+                log.warn("Failed to serialize imageUrls", e);
+            }
+        }
+
+        // Use first image as thumbnail if imageUrl is not provided
+        String thumbnailUrl = request.getImageUrl();
+        if ((thumbnailUrl == null || thumbnailUrl.isEmpty()) && request.getImageUrls() != null
+                && !request.getImageUrls().isEmpty()) {
+            thumbnailUrl = request.getImageUrls().get(0);
+        }
+
         Tour tour = Tour.builder()
                 .name(request.getName())
                 .description(request.getDescription())
@@ -127,7 +148,8 @@ public class TourService {
                 .totalTime(time)
                 .routePolyline(polyline)
                 .routeInstructions(instructionsJson)
-                .imageUrl(request.getImageUrl()) // S3 image URL
+                .imageUrl(thumbnailUrl) // S3 image URL (thumbnail)
+                .imageUrls(imageUrlsJson) // JSON array of all images
                 .createdBy(user)
                 .tourPoints(new ArrayList<>())
                 .build();
@@ -173,9 +195,25 @@ public class TourService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public TourResponse getTourById(Long id) {
         Tour tour = tourRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Tour not found"));
+
+        // Force load lazy relationships to avoid LazyInitializationException
+        if (tour.getTourPoints() != null) {
+            tour.getTourPoints().size();
+            tour.getTourPoints().forEach(tp -> {
+                if (tp.getLocation() != null) {
+                    tp.getLocation().getName();
+                    tp.getLocation().getCityName();
+                }
+            });
+        }
+        if (tour.getCreatedBy() != null) {
+            tour.getCreatedBy().getUsername();
+        }
+
         return mapToResponse(tour);
     }
 
@@ -183,15 +221,77 @@ public class TourService {
     public void deleteTour(Long id) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         Tour tour = tourRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Tour not found"));
+                .orElseThrow(() -> new AppException(ErrorCode.TOUR_NOT_FOUND));
 
         // Verify ownership
         if (!tour.getCreatedBy().getUsername().equals(username)) {
-            throw new RuntimeException("Not authorized to delete this tour");
+            throw new AppException(ErrorCode.UNAUTHORIZED);
         }
 
         tour.setIsActive(false);
         tourRepository.save(tour);
+    }
+
+    @Transactional
+    public TourResponse updateTour(Long id, TourUpdateRequest request) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        Tour tour = tourRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.TOUR_NOT_FOUND));
+
+        // Verify ownership
+        if (!tour.getCreatedBy().getUsername().equals(username)) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+
+        // Only allow editing if tour is active
+        if (!tour.getIsActive()) {
+            throw new RuntimeException("Cannot edit inactive tour");
+        }
+
+        // Update tour description if provided
+        if (request.getDescription() != null) {
+            tour.setDescription(request.getDescription());
+        }
+
+        // Update tour images if provided
+        if (request.getImageUrls() != null) {
+            try {
+                String imageUrlsJson = objectMapper.writeValueAsString(request.getImageUrls());
+                tour.setImageUrls(imageUrlsJson);
+
+                // Update thumbnail (first image)
+                if (!request.getImageUrls().isEmpty()) {
+                    tour.setImageUrl(request.getImageUrls().get(0));
+                }
+            } catch (JsonProcessingException e) {
+                log.warn("Failed to serialize imageUrls during update", e);
+            }
+        }
+
+        // Update tour points activity, note and image
+        if (request.getPoints() != null) {
+            Map<Long, TourUpdateRequest.TourPointUpdateRequest> pointUpdateMap = request.getPoints().stream()
+                    .filter(p -> p.getId() != null)
+                    .collect(Collectors.toMap(TourUpdateRequest.TourPointUpdateRequest::getId, p -> p));
+
+            for (TourPoint point : tour.getTourPoints()) {
+                if (pointUpdateMap.containsKey(point.getId())) {
+                    TourUpdateRequest.TourPointUpdateRequest update = pointUpdateMap.get(point.getId());
+                    if (update.getActivity() != null) {
+                        point.setActivity(update.getActivity());
+                    }
+                    if (update.getNote() != null) {
+                        point.setNote(update.getNote());
+                    }
+                    if (update.getImageUrl() != null) {
+                        point.setImageUrl(update.getImageUrl());
+                    }
+                }
+            }
+        }
+
+        tour = tourRepository.save(tour);
+        return mapToResponse(tour);
     }
 
     // Admin: Get all pending tours
@@ -274,6 +374,36 @@ public class TourService {
                 .collect(Collectors.toList());
     }
 
+    // Get all active tours for AI suggestions
+    @Transactional(readOnly = true)
+    public List<TourResponse> getAllActiveTours() {
+        log.info("Getting all active tours for AI");
+        List<Tour> activeTours = tourRepository.findByIsActiveTrueOrderByCreatedAtDesc()
+                .stream()
+                .filter(t -> t.getStatus() == TourStatus.APPROVED)
+                .collect(Collectors.toList());
+
+        // Force load lazy relationships to avoid LazyInitializationException
+        activeTours.forEach(tour -> {
+            if (tour.getTourPoints() != null) {
+                tour.getTourPoints().size();
+                tour.getTourPoints().forEach(tp -> {
+                    if (tp.getLocation() != null) {
+                        tp.getLocation().getName();
+                        tp.getLocation().getCityName();
+                    }
+                });
+            }
+            if (tour.getCreatedBy() != null) {
+                tour.getCreatedBy().getUsername();
+            }
+        });
+
+        return activeTours.stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
     // Search tours with filters
     @Transactional(readOnly = true)
     public List<TourResponse> searchTours(
@@ -282,7 +412,7 @@ public class TourService {
             Double maxPrice,
             Integer numberOfDays,
             String vehicle,
-            Long locationId) {
+            String cityName) {
         try {
             // Normalize parameters: convert empty strings to null
             String normalizedKeyword = (keyword != null && !keyword.trim().isEmpty()) ? keyword.trim().toLowerCase()
@@ -292,12 +422,12 @@ public class TourService {
             Integer normalizedNumberOfDays = numberOfDays;
             String normalizedVehicle = (vehicle != null && !vehicle.trim().isEmpty()) ? vehicle.trim().toLowerCase()
                     : null;
-            Long normalizedLocationId = locationId;
+            String normalizedCityName = (cityName != null && !cityName.trim().isEmpty()) ? cityName.trim() : null;
 
             log.info(
-                    "Searching tours with params - keyword: {}, minPrice: {}, maxPrice: {}, numberOfDays: {}, vehicle: {}, locationId: {}",
+                    "Searching tours with params - keyword: {}, minPrice: {}, maxPrice: {}, numberOfDays: {}, vehicle: {}, cityName: {}",
                     normalizedKeyword, normalizedMinPrice, normalizedMaxPrice, normalizedNumberOfDays,
-                    normalizedVehicle, normalizedLocationId);
+                    normalizedVehicle, normalizedCityName);
 
             // Get all approved tours first - use repository method that returns active
             // tours
@@ -316,6 +446,7 @@ public class TourService {
                     tour.getTourPoints().forEach(tp -> {
                         if (tp.getLocation() != null) {
                             tp.getLocation().getName(); // Force load location
+                            tp.getLocation().getCityName(); // Force load cityName
                         }
                     });
                 }
@@ -367,12 +498,14 @@ public class TourService {
                             return false;
                         }
 
-                        // Location filter
-                        if (normalizedLocationId != null) {
-                            boolean hasLocation = tour.getTourPoints() != null && tour.getTourPoints().stream()
+                        // City name filter
+                        if (normalizedCityName != null) {
+                            boolean hasCity = tour.getTourPoints() != null && tour.getTourPoints().stream()
                                     .anyMatch(tp -> tp.getLocation() != null
-                                            && normalizedLocationId.equals(tp.getLocation().getId()));
-                            if (!hasLocation)
+                                            && tp.getLocation().getCityName() != null
+                                            && tp.getLocation().getCityName().toLowerCase()
+                                                    .contains(normalizedCityName.toLowerCase()));
+                            if (!hasCity)
                                 return false;
                         }
 
@@ -455,6 +588,14 @@ public class TourService {
         return mapToResponse(tour);
     }
 
+    /**
+     * Public method to convert Tour to TourResponse
+     * Used by AgentController to map tours for public agent profiles
+     */
+    public TourResponse toTourResponse(Tour tour) {
+        return mapToResponse(tour);
+    }
+
     private TourResponse mapToResponse(Tour tour) {
         List<TourResponse.TourPointResponse> pointResponses = new ArrayList<>();
         if (tour.getTourPoints() != null) {
@@ -475,12 +616,35 @@ public class TourService {
                                 .locationId(loc != null ? loc.getId() : null)
                                 .locationName(loc != null ? loc.getName() : null)
                                 .locationAddress(loc != null ? loc.getAddress() : null)
+                                .cityName(loc != null ? loc.getCityName() : null)
                                 .latitude(loc != null ? loc.getLatitude() : null)
                                 .longitude(loc != null ? loc.getLongitude() : null)
                                 .build();
                     })
                     .collect(Collectors.toList());
         }
+
+        // Parse imageUrls from JSON
+        List<String> imageUrlsList = new ArrayList<>();
+        if (tour.getImageUrls() != null && !tour.getImageUrls().isEmpty()) {
+            try {
+                imageUrlsList = objectMapper.readValue(tour.getImageUrls(),
+                        objectMapper.getTypeFactory().constructCollectionType(List.class, String.class));
+            } catch (JsonProcessingException e) {
+                log.warn("Failed to parse imageUrls", e);
+            }
+        }
+        // Fallback: if imageUrls is empty but imageUrl exists, add it
+        if (imageUrlsList.isEmpty() && tour.getImageUrl() != null) {
+            imageUrlsList.add(tour.getImageUrl());
+        }
+
+        // Extract distinct city names from tour points
+        List<String> cities = pointResponses.stream()
+                .map(TourResponse.TourPointResponse::getCityName)
+                .filter(city -> city != null && !city.isEmpty())
+                .distinct()
+                .collect(Collectors.toList());
 
         return TourResponse.builder()
                 .id(tour.getId())
@@ -493,8 +657,10 @@ public class TourService {
                 .totalDistance(tour.getTotalDistance())
                 .totalTime(tour.getTotalTime())
                 .routePolyline(tour.getRoutePolyline())
-                .imageUrl(tour.getImageUrl()) // S3 image URL
+                .imageUrl(tour.getImageUrl()) // S3 image URL (thumbnail)
+                .imageUrls(imageUrlsList) // List of all images
                 .points(pointResponses)
+                .cities(cities)
                 .createdByUsername(tour.getCreatedBy() != null ? tour.getCreatedBy().getUsername() : null)
                 .createdById(tour.getCreatedBy() != null ? tour.getCreatedBy().getId() : null)
                 .createdByAvatar(tour.getCreatedBy() != null ? tour.getCreatedBy().getAvatar() : null)
@@ -510,6 +676,9 @@ public class TourService {
                 .activeTrips(tour.getTrips() != null
                         ? (int) tour.getTrips().stream().filter(t -> t.getIsActive() && !t.isFull()).count()
                         : 0)
+                // Review statistics
+                .averageRating(reviewRepository.findAverageRatingByTourId(tour.getId()))
+                .reviewCount(reviewRepository.countByTourId(tour.getId()))
                 .build();
     }
 
@@ -531,6 +700,36 @@ public class TourService {
                         .isFull(trip.isFull())
                         .createdAt(trip.getCreatedAt())
                         .build())
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<TourResponse> getTrendingTours() {
+        List<Tour> trendingTours = tourRepository.findTrendingTours();
+
+        // Force load lazy relationships to avoid LazyInitializationException
+        trendingTours.forEach(tour -> {
+            // Force load tourPoints
+            if (tour.getTourPoints() != null) {
+                tour.getTourPoints().size();
+                tour.getTourPoints().forEach(tp -> {
+                    if (tp.getLocation() != null) {
+                        tp.getLocation().getName(); // Force load location
+                    }
+                });
+            }
+            // Force load createdBy
+            if (tour.getCreatedBy() != null) {
+                tour.getCreatedBy().getUsername();
+            }
+            // Force load trips
+            if (tour.getTrips() != null) {
+                tour.getTrips().size();
+            }
+        });
+
+        return trendingTours.stream()
+                .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
 }

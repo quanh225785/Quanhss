@@ -7,6 +7,7 @@ import {
     unsubscribeFromConversation,
     isWebSocketConnected
 } from "../../utils/websocket";
+import { useToast } from "../../context/ToastContext";
 
 const ChatWindow = ({
     messages,
@@ -25,31 +26,46 @@ const ChatWindow = ({
     const [wsConnected, setWsConnected] = useState(false);
     const messagesEndRef = useRef(null);
     const fileInputRef = useRef(null);
+    const { showToast } = useToast();
+
+    // Use ref to store the latest callback without causing re-subscription
+    const onNewMessageRef = useRef(onNewMessage);
+
+    // Keep the ref updated with the latest callback
+    useEffect(() => {
+        onNewMessageRef.current = onNewMessage;
+    }, [onNewMessage]);
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     };
 
+
     useEffect(() => {
         scrollToBottom();
     }, [messages]);
 
-    // WebSocket connection and subscription
+    // WebSocket connection and subscription - only depend on conversationId
     useEffect(() => {
         if (!conversationId) return;
+
+        let isSubscribed = false;
 
         const setupWebSocket = () => {
             connectWebSocket(
                 () => {
                     setWsConnected(true);
                     // Subscribe to conversation
-                    subscribeToConversation(conversationId, (message) => {
-                        // Always add message via onNewMessage callback
-                        // The parent component will handle duplicate checking
-                        if (onNewMessage) {
-                            onNewMessage(message);
-                        }
-                    });
+                    if (!isSubscribed) {
+                        isSubscribed = true;
+                        subscribeToConversation(conversationId, (message) => {
+                            // Use ref to get the latest callback
+                            // This prevents re-subscription when callback changes
+                            if (onNewMessageRef.current) {
+                                onNewMessageRef.current(message);
+                            }
+                        });
+                    }
                 },
                 (error) => {
                     console.error('WebSocket connection failed:', error);
@@ -60,13 +76,44 @@ const ChatWindow = ({
 
         setupWebSocket();
 
-        // Cleanup on unmount or conversation change
+        // Cleanup on unmount or conversation change ONLY
         return () => {
+            isSubscribed = false;
             if (conversationId) {
                 unsubscribeFromConversation(conversationId);
             }
         };
-    }, [conversationId, onNewMessage]);
+    }, [conversationId]); // Remove onNewMessage from dependencies
+
+    // POLLING FALLBACK: Sync messages every 3 seconds to handle load balancer issues
+    // This ensures messages are received even when WebSocket broadcasts to wrong instance
+    useEffect(() => {
+        if (!conversationId || !onNewMessageRef.current) return;
+
+        const pollMessages = async () => {
+            try {
+                const { getMessages } = await import("../../utils/chatApi");
+                const allMessages = await getMessages(conversationId);
+
+                // Find messages that we don't have yet
+                if (allMessages && allMessages.length > 0) {
+                    allMessages.forEach(msg => {
+                        if (onNewMessageRef.current) {
+                            onNewMessageRef.current(msg);
+                        }
+                    });
+                }
+            } catch (error) {
+                // Silent fail - WebSocket should handle most cases
+                console.debug('Polling fallback error:', error);
+            }
+        };
+
+        // Poll every 3 seconds
+        const interval = setInterval(pollMessages, 3000);
+
+        return () => clearInterval(interval);
+    }, [conversationId]);
 
     // Update wsConnected status periodically
     useEffect(() => {
@@ -80,7 +127,11 @@ const ChatWindow = ({
         const file = e.target.files[0];
         if (file) {
             if (file.size > 10 * 1024 * 1024) {
-                alert("Ảnh phải nhỏ hơn 10MB");
+                showToast({
+                    type: 'error',
+                    message: 'Ảnh quá lớn',
+                    description: 'Ảnh phải nhỏ hơn 10MB'
+                });
                 return;
             }
             setSelectedImage(file);
@@ -127,7 +178,11 @@ const ChatWindow = ({
             removeImage();
         } catch (error) {
             console.error("Failed to send message:", error);
-            alert("Không thể gửi tin nhắn. Vui lòng thử lại.");
+            showToast({
+                type: 'error',
+                message: 'Lỗi gửi tin nhắn',
+                description: 'Không thể gửi tin nhắn. Vui lòng thử lại.'
+            });
         } finally {
             setSending(false);
             setUploading(false);
@@ -171,9 +226,9 @@ const ChatWindow = ({
     }, {});
 
     return (
-        <div className="flex flex-col h-full bg-white rounded-lg shadow-sm border border-zinc-200 overflow-hidden">
+        <div className="flex flex-col h-full max-h-full bg-white rounded-lg shadow-sm border border-zinc-200 overflow-hidden">
             {/* Header */}
-            <div className="flex items-center justify-between px-4 py-3 bg-zinc-50 border-b border-zinc-200">
+            <div className="flex items-center justify-between px-4 py-3 bg-zinc-50 border-b border-zinc-200 flex-shrink-0">
                 <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold">
                         {partnerInitial}
@@ -206,7 +261,7 @@ const ChatWindow = ({
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
                 {Object.entries(groupedMessages).map(([date, dateMessages]) => (
                     <div key={date}>
                         <div className="flex justify-center mb-4">
@@ -264,7 +319,7 @@ const ChatWindow = ({
 
             {/* Image Preview */}
             {imagePreview && (
-                <div className="px-4 py-2 border-t border-zinc-100">
+                <div className="px-4 py-2 border-t border-zinc-100 flex-shrink-0">
                     <div className="relative inline-block">
                         <img
                             src={imagePreview}
@@ -282,7 +337,7 @@ const ChatWindow = ({
             )}
 
             {/* Input */}
-            <div className="p-4 border-t border-zinc-200 bg-zinc-50">
+            <div className="p-4 border-t border-zinc-200 bg-zinc-50 flex-shrink-0">
                 <div className="flex items-end gap-2">
                     <input
                         type="file"

@@ -130,7 +130,7 @@ public class UserService {
 
         // Verify current password
         if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
-            throw new AppException(ErrorCode.UNAUTHENTICATED);
+            throw new AppException(ErrorCode.CURRENT_PASSWORD_INVALID);
         }
 
         // Update to new password
@@ -155,5 +155,44 @@ public class UserService {
     public UserResponse getUser(String id) {
         return userMapper.toUserResponse(
                 userRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED)));
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @Transactional
+    public UserResponse lockUser(String userId, String lockReason) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        
+        user.setIsLocked(true);
+        user.setLockReason(lockReason);
+        
+        user = userRepository.save(user);
+        log.info("User {} has been locked. Reason: {}", user.getUsername(), lockReason);
+        
+        return userMapper.toUserResponse(user);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @Transactional
+    public UserResponse unlockUser(String userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        
+        user.setIsLocked(false);
+        user.setLockReason(null);
+        
+        user = userRepository.save(user);
+        log.info("User {} has been unlocked", user.getUsername());
+        
+        return userMapper.toUserResponse(user);
+    }
+
+    /**
+     * Get public profile of an agent (accessible by all authenticated users)
+     */
+    @Transactional(readOnly = true)
+    public User getAgentById(String agentId) {
+        return userRepository.findById(agentId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
     }
 }

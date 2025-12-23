@@ -24,4 +24,7 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> 
     
     @Query("SELECT m FROM ChatMessage m WHERE m.conversation.id = :conversationId ORDER BY m.createdAt DESC LIMIT 1")
     ChatMessage findLastMessage(@Param("conversationId") Long conversationId);
+
+    @Query("SELECT COUNT(m) FROM ChatMessage m WHERE (m.conversation.user.id = :userId OR m.conversation.agent.id = :userId) AND m.sender.id != :userId AND m.isRead = false")
+    Long countAllUnreadMessages(@Param("userId") String userId);
 }

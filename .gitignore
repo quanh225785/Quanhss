@@ -3,3 +3,4 @@ backend/src/main/resources/application.yaml
 .agent
 .shared
 application.yaml
+docs

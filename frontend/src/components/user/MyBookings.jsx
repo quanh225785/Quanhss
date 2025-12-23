@@ -1,11 +1,17 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
-import { Calendar, MapPin, Clock, ArrowRight, Loader2, AlertCircle, X, Users, QrCode, ChevronLeft, ChevronRight, List } from "lucide-react";
+import { Calendar, MapPin, Clock, ArrowRight, Loader2, AlertCircle, X, Users, QrCode, ChevronLeft, ChevronRight, List, Star, Timer, CreditCard } from "lucide-react";
+import ReviewModal from "./ReviewModal";
 import { api } from "../../utils/api";
+import ConfirmModal from "../shared/ConfirmModal";
 import { FaMoneyBillAlt } from "react-icons/fa";
 import { FaRegCheckCircle } from "react-icons/fa";
 import { PiKeyReturnBold } from "react-icons/pi";
+import { useToast } from "../../context/ToastContext";
+
+// 10 minutes timeout for payment
+const PAYMENT_TIMEOUT_MINUTES = 10;
 
 const MyBookings = () => {
   const navigate = useNavigate();
@@ -18,10 +24,112 @@ const MyBookings = () => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [popupBooking, setPopupBooking] = useState(null);
   const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
+  const [reviewBooking, setReviewBooking] = useState(null);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [bookingToCancel, setBookingToCancel] = useState(null);
+  const [countdownTimers, setCountdownTimers] = useState({}); // { bookingId: remainingSeconds }
+  const [payingId, setPayingId] = useState(null);
+  const { showToast } = useToast();
+  const countdownRef = useRef(null);
 
   useEffect(() => {
     fetchBookings();
   }, []);
+
+  // Countdown timer for pending payment bookings
+  useEffect(() => {
+    if (bookings.length === 0) return;
+
+    // Initialize countdown timers for pending payment bookings
+    const pendingBookings = bookings.filter(b => b.paymentStatus === 'PENDING' && b.status !== 'CANCELLED');
+
+    if (pendingBookings.length === 0) {
+      // Clear any existing interval when no pending bookings
+      if (countdownRef.current) {
+        clearInterval(countdownRef.current);
+        countdownRef.current = null;
+      }
+      return;
+    }
+
+    // Track if we've already triggered a refresh for expired bookings
+    let hasTriggeredRefresh = false;
+
+    const updateTimers = () => {
+      const now = new Date();
+      const newTimers = {};
+      let hasExpired = false;
+
+      pendingBookings.forEach(booking => {
+        // Handle timezone: If createdAt doesn't have timezone info (from Java LocalDateTime),
+        // treat it as UTC by appending 'Z' if not already present
+        let createdAtStr = booking.createdAt;
+        if (createdAtStr && !createdAtStr.endsWith('Z') && !createdAtStr.includes('+')) {
+          createdAtStr = createdAtStr + 'Z';
+        }
+        const createdAt = new Date(createdAtStr);
+        const expiresAt = new Date(createdAt.getTime() + PAYMENT_TIMEOUT_MINUTES * 60 * 1000);
+        const remaining = Math.max(0, Math.floor((expiresAt - now) / 1000));
+        newTimers[booking.id] = remaining;
+
+        // Check if any booking has expired
+        if (remaining === 0) {
+          hasExpired = true;
+        }
+      });
+
+      setCountdownTimers(newTimers);
+
+      // If any booking expired and we haven't triggered refresh yet, do it once
+      if (hasExpired && !hasTriggeredRefresh) {
+        hasTriggeredRefresh = true;
+        // Use setTimeout to avoid calling fetchBookings during render
+        setTimeout(() => {
+          fetchBookings();
+        }, 1000);
+      }
+    };
+
+    updateTimers();
+    countdownRef.current = setInterval(updateTimers, 1000);
+
+    return () => {
+      if (countdownRef.current) {
+        clearInterval(countdownRef.current);
+      }
+    };
+  }, [bookings.length, bookings.map(b => `${b.id}-${b.paymentStatus}-${b.status}`).join(',')]);
+
+  const formatTimeRemaining = (seconds) => {
+    if (seconds === undefined || seconds <= 0) return '00:00';
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const handlePayBooking = async (bookingId) => {
+    setPayingId(bookingId);
+    try {
+      const response = await api.put(`/bookings/${bookingId}/pay`);
+      if (response.data.code === 1000) {
+        showToast({
+          type: 'success',
+          message: 'Thanh toán thành công',
+          description: 'Đơn đặt tour của bạn đã được thanh toán.'
+        });
+        fetchBookings();
+      }
+    } catch (err) {
+      console.error('Error paying booking:', err);
+      showToast({
+        type: 'error',
+        message: 'Thanh toán thất bại',
+        description: err.response?.data?.message || 'Không thể xử lý thanh toán'
+      });
+    } finally {
+      setPayingId(null);
+    }
+  };
 
   const fetchBookings = async () => {
     try {
@@ -38,18 +146,34 @@ const MyBookings = () => {
     }
   };
 
-  const handleCancelBooking = async (id) => {
-    if (!confirm('Bạn có chắc muốn hủy đặt tour này?')) return;
+  const handleCancelBooking = (id) => {
+    setBookingToCancel(id);
+    setShowCancelConfirm(true);
+  };
 
-    setCancellingId(id);
+  const confirmCancel = async () => {
+    if (!bookingToCancel) return;
+
+    setCancellingId(bookingToCancel);
     try {
-      const response = await api.put(`/bookings/${id}/cancel`);
+      const response = await api.put(`/bookings/${bookingToCancel}/cancel`);
       if (response.data.code === 1000) {
+        setShowCancelConfirm(false);
+        setBookingToCancel(null);
         fetchBookings(); // Refresh list
+        showToast({
+          type: 'success',
+          message: 'Thành công',
+          description: 'Đã hủy đặt tour thành công'
+        });
       }
     } catch (err) {
       console.error('Error cancelling booking:', err);
-      alert(err.response?.data?.message || 'Không thể hủy đặt tour');
+      showToast({
+        type: 'error',
+        message: 'Lỗi hủy đặt tour',
+        description: err.response?.data?.message || 'Không thể hủy đặt tour'
+      });
     } finally {
       setCancellingId(null);
     }
@@ -494,7 +618,31 @@ const MyBookings = () => {
                       <div className="flex items-center justify-between">
                         <span className="text-lg font-bold text-primary">{formatPrice(booking.totalPrice)}</span>
 
-                        <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex flex-wrap gap-2" onClick={(e) => e.stopPropagation()}>
+                          {/* Payment button with countdown for pending payments */}
+                          {booking.paymentStatus === 'PENDING' && booking.status !== 'CANCELLED' && countdownTimers[booking.id] > 0 && (
+                            <button
+                              onClick={() => handlePayBooking(booking.id)}
+                              disabled={payingId === booking.id}
+                              className={`px-4 py-2 text-sm font-medium rounded-xl transition-all flex items-center gap-2 ${countdownTimers[booking.id] > 120
+                                ? 'text-green-700 bg-green-50 hover:bg-green-100 border border-green-200'
+                                : 'text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 animate-pulse'
+                                }`}
+                            >
+                              {payingId === booking.id ? (
+                                <Loader2 size={16} className="animate-spin" />
+                              ) : (
+                                <>
+                                  <CreditCard size={16} />
+                                  <span>Thanh toán</span>
+                                  <span className="font-mono font-bold flex items-center gap-1">
+                                    <Timer size={14} />
+                                    {formatTimeRemaining(countdownTimers[booking.id])}
+                                  </span>
+                                </>
+                              )}
+                            </button>
+                          )}
                           {booking.qrCodeUrl && (
                             <button
                               onClick={() => setSelectedBooking(booking)}
@@ -502,6 +650,15 @@ const MyBookings = () => {
                             >
                               <QrCode size={16} />
                               QR Code
+                            </button>
+                          )}
+                          {booking.status === 'COMPLETED' && !booking.hasReview && (
+                            <button
+                              onClick={() => setReviewBooking(booking)}
+                              className="px-4 py-2 text-sm font-medium text-amber-600 bg-amber-50 hover:bg-amber-100 rounded-xl border border-amber-200 transition-all flex items-center gap-2"
+                            >
+                              <Star size={16} />
+                              Đánh giá
                             </button>
                           )}
                           {booking.status === 'PENDING' && (
@@ -573,6 +730,31 @@ const MyBookings = () => {
         </div>,
         document.body
       )}
+
+      {/* Review Modal */}
+      {reviewBooking && (
+        <ReviewModal
+          booking={reviewBooking}
+          onClose={() => setReviewBooking(null)}
+          onSuccess={() => fetchBookings()}
+        />
+      )}
+
+      {/* Cancel Confirmation Modal */}
+      <ConfirmModal
+        isOpen={showCancelConfirm}
+        onClose={() => {
+          setShowCancelConfirm(false);
+          setBookingToCancel(null);
+        }}
+        onConfirm={confirmCancel}
+        title="Xác nhận hủy đặt tour"
+        message="Bạn có chắc muốn hủy đặt tour này? Hành động này không thể hoàn tác và tiền cọc sẽ được hoàn lại theo chính sách."
+        variant="danger"
+        confirmText="Hủy đặt tour"
+        cancelText="Quay lại"
+        isLoading={cancellingId === bookingToCancel}
+      />
     </div>
   );
 };

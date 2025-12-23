@@ -78,4 +78,15 @@ public class ChatController {
                 .message("Messages marked as read")
                 .build();
     }
+
+    /**
+     * Lấy tổng số tin nhắn chưa đọc của user hiện tại
+     */
+    @GetMapping("/unread-count")
+    public ApiResponse<Long> getUnreadCount() {
+        return ApiResponse.<Long>builder()
+                .code(1000)
+                .result(chatService.getTotalUnreadCount())
+                .build();
+    }
 }

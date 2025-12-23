@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { createPortal } from 'react-dom';
 import {
     ArrowLeft,
     MapPin,
@@ -18,11 +19,16 @@ import {
     Users,
     CalendarX,
     MessageCircle,
+    X,
+    ZoomIn,
 } from 'lucide-react';
 import { api } from '../utils/api';
 import { formatDistance, formatDuration } from '../utils/polylineUtils';
 import TourMap from '../components/agent/TourMap';
+import TourReviews from '../components/tour/TourReviews';
+import ImageCarousel from '../components/common/ImageCarousel';
 import { startConversation } from '../utils/chatApi';
+import { useToast } from '../context/ToastContext';
 
 const TourDetailPage = () => {
     const { id } = useParams();
@@ -34,9 +40,14 @@ const TourDetailPage = () => {
     const [activeDay, setActiveDay] = useState(1);
     const [selectedTrip, setSelectedTrip] = useState(null);  // Selected trip for booking
     const [contactingAgent, setContactingAgent] = useState(false);
+    const [fullscreenImage, setFullscreenImage] = useState(null);  // For tour point image fullscreen
+    const [dayRoute, setDayRoute] = useState(null);  // Route for currently selected day
+    const [isLoadingRoute, setIsLoadingRoute] = useState(false);
+    const { showToast } = useToast();
 
     useEffect(() => {
         fetchTourDetails();
+        checkFavoriteStatus();
     }, [id]);
 
     const fetchTourDetails = async () => {
@@ -50,6 +61,43 @@ const TourDetailPage = () => {
             setError('Không thể tải thông tin tour. Vui lòng thử lại sau.');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const checkFavoriteStatus = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) return; // Skip if not logged in
+
+            const response = await api.get(`/favorites/check/${id}`);
+            if (response.data && response.data.code === 1000) {
+                setIsFavorite(response.data.result);
+            }
+        } catch (error) {
+            console.error('Error checking favorite status:', error);
+        }
+    };
+
+    const toggleFavorite = async () => {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            navigate('/login');
+            return;
+        }
+
+        // Optimistic UI update
+        setIsFavorite(prev => !prev);
+
+        try {
+            if (isFavorite) {
+                await api.delete(`/favorites/${id}`);
+            } else {
+                await api.post(`/favorites/${id}`);
+            }
+        } catch (error) {
+            console.error('Error toggling favorite:', error);
+            // Revert on error
+            setIsFavorite(prev => !prev);
         }
     };
 
@@ -134,6 +182,62 @@ const TourDetailPage = () => {
         return grouped;
     };
 
+    // Calculate route for the active day
+    const calculateDayRoute = async (dayPoints, vehicle) => {
+        if (!dayPoints || dayPoints.length < 2) {
+            setDayRoute(null);
+            return;
+        }
+
+        const validPoints = dayPoints.filter(p => p.latitude && p.longitude);
+        if (validPoints.length < 2) {
+            setDayRoute(null);
+            return;
+        }
+
+        setIsLoadingRoute(true);
+        try {
+            const sortedPoints = [...validPoints].sort((a, b) => {
+                if (a.startTime && b.startTime) {
+                    return a.startTime.localeCompare(b.startTime);
+                }
+                return (a.orderIndex || 0) - (b.orderIndex || 0);
+            });
+
+            // Format points as "lat,lng" strings for backend API
+            const points = sortedPoints.map(loc => `${loc.latitude},${loc.longitude}`);
+
+            const response = await api.post('/vietmap/route', {
+                points,
+                vehicle: vehicle || 'car',
+                roundtrip: false,
+            });
+
+            if (response.data.code === 1000 && response.data.result?.paths?.[0]) {
+                const path = response.data.result.paths[0];
+                setDayRoute({
+                    polyline: path.points,  // Encoded polyline string from backend
+                    distance: path.distance,
+                    time: path.time,
+                });
+            } else {
+                setDayRoute(null);
+            }
+        } catch (error) {
+            console.error('Error calculating day route:', error);
+            setDayRoute(null);
+        } finally {
+            setIsLoadingRoute(false);
+        }
+    };
+
+    // Effect to calculate route when day changes
+    useEffect(() => {
+        if (tour && pointsByDay[activeDay]) {
+            calculateDayRoute(pointsByDay[activeDay], tour.vehicle);
+        }
+    }, [activeDay, tour]);
+
     const getDayTabs = () => {
         const numberOfDays = tour?.numberOfDays || 1;
         return Array.from({ length: numberOfDays }, (_, i) => i + 1);
@@ -205,15 +309,15 @@ const TourDetailPage = () => {
                             <h1 className="text-xl font-display font-bold text-slate-900 line-clamp-1">
                                 {tour.name}
                             </h1>
-                            <p className="text-sm text-slate-500 flex items-center gap-1">
+                            {/* <p className="text-sm text-slate-500 flex items-center gap-1">
                                 <User size={14} />
                                 Tạo bởi: {tour.createdByFirstName && tour.createdByLastName ? `${tour.createdByFirstName} ${tour.createdByLastName}` : tour.createdByUsername}
-                            </p>
+                            </p> */}
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
                         <button
-                            onClick={() => setIsFavorite(!isFavorite)}
+                            onClick={toggleFavorite}
                             className={`p-3 rounded-xl border transition-all ${isFavorite
                                 ? 'bg-red-50 border-red-200 text-red-500'
                                 : 'bg-white/60 border-white/60 text-slate-600 hover:text-red-500'
@@ -232,29 +336,39 @@ const TourDetailPage = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Main Content */}
                     <div className="lg:col-span-2 space-y-6">
-                        {/* Tour Hero Image */}
-                        {tour.imageUrl && (
-                            <div className="bg-white/60 backdrop-blur-md border border-white/60 shadow-sm rounded-[2rem] overflow-hidden">
-                                <img
-                                    src={tour.imageUrl}
+                        {/* Tour Images Carousel */}
+                        {(tour.imageUrls?.length > 0 || tour.imageUrl) && (
+                            <div className="bg-white/60 backdrop-blur-md border border-white/60 shadow-sm rounded-[2rem] overflow-hidden p-4">
+                                <ImageCarousel
+                                    images={tour.imageUrls?.length > 0 ? tour.imageUrls : [tour.imageUrl]}
                                     alt={tour.name}
-                                    className="w-full h-64 object-cover"
+                                    autoSlide={false}
                                 />
                             </div>
                         )}
 
                         {/* Map Section */}
                         <div className="bg-white/60 backdrop-blur-md border border-white/60 shadow-sm rounded-[2rem] overflow-hidden">
+                            <div className="p-4 border-b border-white/40 flex justify-between items-center">
+                                <h3 className="text-lg font-display font-bold text-slate-900 flex items-center gap-2">
+                                    <Route className="text-primary" size={20} />
+                                    Bản đồ - Ngày {activeDay}
+                                </h3>
+                                <span className="text-xs font-medium text-slate-500 bg-slate-100 px-3 py-1 rounded-full">
+                                    {pointsByDay[activeDay]?.length || 0} địa điểm
+                                </span>
+                            </div>
                             <TourMap
-                                points={tour.points?.map((p) => ({
+                                points={pointsByDay[activeDay]?.map((p) => ({
                                     latitude: p.latitude,
                                     longitude: p.longitude,
                                     name: p.locationName || p.activity,
                                     orderIndex: p.orderIndex,
                                 })) || []}
-                                routePolyline={tour.routePolyline}
-                                totalDistance={tour.totalDistance}
-                                totalTime={tour.totalTime}
+                                routePolyline={dayRoute?.polyline || null}
+                                totalDistance={dayRoute?.distance || null}
+                                totalTime={dayRoute?.time || null}
+                                isLoading={isLoadingRoute}
                             />
                         </div>
 
@@ -396,12 +510,21 @@ const TourDetailPage = () => {
 
                                                         {/* Tour Point Image - on the right */}
                                                         {point.imageUrl && (
-                                                            <div className="flex-shrink-0">
+                                                            <div
+                                                                className="flex-shrink-0 cursor-pointer group relative w-32 h-24 rounded-xl overflow-hidden"
+                                                                onClick={() => setFullscreenImage({
+                                                                    url: point.imageUrl,
+                                                                    alt: point.locationName || point.activity
+                                                                })}
+                                                            >
                                                                 <img
                                                                     src={point.imageUrl}
                                                                     alt={point.locationName || point.activity}
-                                                                    className="w-32 h-24 object-cover rounded-xl"
+                                                                    className="w-full h-full object-cover transition-transform group-hover:scale-110"
                                                                 />
+                                                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
+                                                                    <ZoomIn size={20} className="text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                                </div>
                                                             </div>
                                                         )}
                                                     </div>
@@ -417,6 +540,9 @@ const TourDetailPage = () => {
                                 )}
                             </div>
                         </div>
+
+                        {/* Reviews Section */}
+                        <TourReviews tourId={tour.id} />
                     </div>
 
                     {/* Sidebar */}
@@ -566,7 +692,7 @@ const TourDetailPage = () => {
                                 disabled={!canBook()}
                                 onClick={() => navigate(`/booking/${id}`, { state: { tripId: selectedTrip.id, trip: selectedTrip } })}
                                 className={`w-full py-4 font-bold rounded-2xl transition-all duration-200 flex items-center justify-center gap-2 ${canBook()
-                                    ? 'bg-gradient-to-r from-primary to-secondary text-white hover:shadow-lg hover:-translate-y-0.5'
+                                    ? 'bg-primary text-white hover:bg-primary/90 hover:shadow-lg hover:-translate-y-0.5'
                                     : 'bg-slate-200 text-slate-500 cursor-not-allowed'
                                     }`}
                             >
@@ -580,11 +706,13 @@ const TourDetailPage = () => {
                                 </p>
                             )}
                         </div>
-                        {console.log(tour)}
                         {/* Agent Info */}
                         <div className="bg-white/60 backdrop-blur-md border border-white/60 shadow-sm rounded-[2rem] p-6">
                             <h3 className="text-lg font-display font-bold text-slate-900 mb-4">Thông tin đại lý</h3>
-                            <div className="flex items-center gap-4">
+                            <div
+                                className="flex items-center gap-4 cursor-pointer hover:bg-white/50 rounded-xl p-2 -m-2 transition-colors"
+                                onClick={() => navigate(`/agent/view/${tour.createdById}`)}
+                            >
                                 <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary to-secondary text-white flex items-center justify-center text-xl font-bold shadow-md overflow-hidden">
                                     {tour.createdByAvatar ? (
                                         <img
@@ -596,7 +724,7 @@ const TourDetailPage = () => {
                                         tour.createdByUsername?.charAt(0)?.toUpperCase() || 'A'
                                     )}
                                 </div>
-                                <div>
+                                <div className="flex-1">
                                     <p className="font-bold text-slate-900">
                                         {tour.createdByFirstName && tour.createdByLastName
                                             ? `${tour.createdByFirstName} ${tour.createdByLastName}`
@@ -604,7 +732,15 @@ const TourDetailPage = () => {
                                     </p>
                                     <p className="text-sm text-slate-500">Đại lý du lịch</p>
                                 </div>
+                                <ChevronRight size={20} className="text-slate-400" />
                             </div>
+                            <button
+                                onClick={() => navigate(`/agent/view/${tour.createdById}`)}
+                                className="w-full mt-4 py-3 border border-slate-200 text-slate-600 font-medium rounded-xl hover:bg-slate-50 transition-colors flex items-center justify-center gap-2"
+                            >
+                                <User size={18} />
+                                Xem trang đại lý
+                            </button>
                             <button
                                 onClick={async () => {
                                     try {
@@ -615,13 +751,17 @@ const TourDetailPage = () => {
                                         navigate('/user/chat');
                                     } catch (error) {
                                         console.error('Failed to start conversation:', error);
-                                        alert('Không thể liên hệ đại lý. Vui lòng thử lại.');
+                                        showToast({
+                                            type: 'error',
+                                            message: 'Lỗi liên hệ',
+                                            description: 'Không thể liên hệ đại lý. Vui lòng thử lại.'
+                                        });
                                     } finally {
                                         setContactingAgent(false);
                                     }
                                 }}
                                 disabled={contactingAgent}
-                                className="w-full mt-4 py-3 border border-primary text-primary font-medium rounded-xl hover:bg-primary/5 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                                className="w-full mt-2 py-3 border border-primary text-primary font-medium rounded-xl hover:bg-primary/5 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
                             >
                                 {contactingAgent ? (
                                     <Loader2 size={18} className="animate-spin" />
@@ -634,6 +774,31 @@ const TourDetailPage = () => {
                     </div>
                 </div>
             </main>
+
+            {/* Fullscreen Image Modal for Tour Points */}
+            {fullscreenImage && createPortal(
+                <div
+                    className="fixed inset-0 z-[9999] bg-black flex items-center justify-center"
+                    onClick={() => setFullscreenImage(null)}
+                >
+                    {/* Close button */}
+                    <button
+                        onClick={() => setFullscreenImage(null)}
+                        className="absolute top-4 right-4 p-3 rounded-full bg-white/10 hover:bg-white/20 transition-colors z-10"
+                    >
+                        <X size={24} className="text-white" />
+                    </button>
+
+                    {/* Image */}
+                    <img
+                        src={fullscreenImage.url}
+                        alt={fullscreenImage.alt}
+                        className="max-w-full max-h-full object-contain p-4"
+                        onClick={(e) => e.stopPropagation()}
+                    />
+                </div>,
+                document.body
+            )}
         </div>
     );
 };

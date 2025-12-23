@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 
 const Modal = ({
@@ -46,17 +47,17 @@ const Modal = ({
     "6xl": "max-w-6xl",
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+  const modalContent = (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center">
       {/* Overlay */}
       <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
         onClick={closeOnOverlay ? onClose : undefined}
       />
 
       {/* Modal Content */}
       <div
-        className={`relative bg-white rounded-lg shadow-lg w-full ${sizeClasses[size]} mx-4 animate-in fade-in zoom-in duration-200`}
+        className={`relative bg-white rounded-xl shadow-2xl w-full ${sizeClasses[size]} mx-4 animate-in fade-in zoom-in duration-200`}
       >
         {/* Header */}
         {title && (
@@ -77,13 +78,15 @@ const Modal = ({
 
         {/* Footer */}
         {footer && (
-          <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-zinc-200 bg-zinc-50 rounded-b-lg">
+          <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-zinc-200 bg-zinc-50 rounded-b-xl">
             {footer}
           </div>
         )}
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 };
 
 export default Modal;

@@ -11,6 +11,7 @@ import {
   Loader2,
   SlidersHorizontal,
   ChevronRight,
+  Star,
 } from 'lucide-react';
 import { api } from '../utils/api';
 import { formatDistance } from '../utils/polylineUtils';
@@ -30,27 +31,42 @@ const ToursPage = () => {
   const [maxPrice, setMaxPrice] = useState(searchParams.get('maxPrice') || '');
   const [numberOfDays, setNumberOfDays] = useState(searchParams.get('numberOfDays') || '');
   const [vehicle, setVehicle] = useState(searchParams.get('vehicle') || '');
-  const [locationId, setLocationId] = useState(searchParams.get('locationId') || '');
+  const [cityName, setCityName] = useState(searchParams.get('cityName') || '');
 
-  const [locations, setLocations] = useState([]);
+  const [cities, setCities] = useState([]);
 
   useEffect(() => {
-    fetchLocations();
+    fetchCities();
     fetchTours();
+    fetchFavorites();
   }, []);
 
   useEffect(() => {
     fetchTours();
   }, [searchParams]);
 
-  const fetchLocations = async () => {
+  const fetchFavorites = async () => {
     try {
-      const response = await api.get('/locations');
-      if (response.data.code === 1000) {
-        setLocations(response.data.result || []);
+      const token = localStorage.getItem('token');
+      if (!token) return; // Skip if not logged in
+
+      const response = await api.get('/favorites/ids');
+      if (response.data && response.data.code === 1000) {
+        setFavorites(new Set(response.data.result || []));
       }
     } catch (error) {
-      console.error('Error fetching locations:', error);
+      console.error('Error fetching favorites:', error);
+    }
+  };
+
+  const fetchCities = async () => {
+    try {
+      const response = await api.get('/locations/cities');
+      if (response.data.code === 1000) {
+        setCities(response.data.result || []);
+      }
+    } catch (error) {
+      console.error('Error fetching cities:', error);
     }
   };
 
@@ -64,7 +80,7 @@ const ToursPage = () => {
       if (maxPrice) params.append('maxPrice', maxPrice);
       if (numberOfDays) params.append('numberOfDays', numberOfDays);
       if (vehicle) params.append('vehicle', vehicle);
-      if (locationId) params.append('locationId', locationId);
+      if (cityName) params.append('cityName', cityName);
 
       const url = `/tours/search${params.toString() ? '?' + params.toString() : ''}`;
 
@@ -100,7 +116,7 @@ const ToursPage = () => {
     if (maxPrice) params.set('maxPrice', maxPrice);
     if (numberOfDays) params.set('numberOfDays', numberOfDays);
     if (vehicle) params.set('vehicle', vehicle);
-    if (locationId) params.set('locationId', locationId);
+    if (cityName) params.set('cityName', cityName);
 
     setSearchParams(params);
   };
@@ -111,21 +127,51 @@ const ToursPage = () => {
     setMaxPrice('');
     setNumberOfDays('');
     setVehicle('');
-    setLocationId('');
+    setCityName('');
     setSearchParams({});
   };
 
-  const toggleFavorite = (e, tourId) => {
+  const toggleFavorite = async (e, tourId) => {
     e.stopPropagation();
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/login');
+      return;
+    }
+
+    const isFavorited = favorites.has(tourId);
+
+    // Optimistic UI update
     setFavorites(prev => {
       const newFavorites = new Set(prev);
-      if (newFavorites.has(tourId)) {
+      if (isFavorited) {
         newFavorites.delete(tourId);
       } else {
         newFavorites.add(tourId);
       }
       return newFavorites;
     });
+
+    try {
+      if (isFavorited) {
+        await api.delete(`/favorites/${tourId}`);
+      } else {
+        await api.post(`/favorites/${tourId}`);
+      }
+    } catch (error) {
+      console.error('Error toggling favorite:', error);
+      // Revert on error
+      setFavorites(prev => {
+        const newFavorites = new Set(prev);
+        if (isFavorited) {
+          newFavorites.add(tourId);
+        } else {
+          newFavorites.delete(tourId);
+        }
+        return newFavorites;
+      });
+    }
   };
 
   const formatPrice = (price) => {
@@ -150,7 +196,7 @@ const ToursPage = () => {
     maxPrice,
     numberOfDays,
     vehicle,
-    locationId,
+    cityName,
   ].filter(Boolean).length;
 
   return (
@@ -199,7 +245,7 @@ const ToursPage = () => {
             {/* Search Button */}
             <button
               onClick={handleSearch}
-              className="px-6 py-3 bg-gradient-to-r from-primary to-secondary text-white font-medium rounded-xl whitespace-nowrap hover:from-primary/90 hover:to-secondary/90 transition-colors"
+              className="px-6 py-3 bg-primary text-white font-medium rounded-xl whitespace-nowrap hover:bg-primary/90 transition-colors"
             >
               Tìm kiếm
             </button>
@@ -274,18 +320,18 @@ const ToursPage = () => {
                 </div>
               </div>
 
-              {/* Location */}
+              {/* City */}
               <div className="col-span-2 md:col-span-1">
-                <label className="block text-xs font-medium text-slate-600 mb-1.5">Địa điểm</label>
+                <label className="block text-xs font-medium text-slate-600 mb-1.5">Thành phố</label>
                 <select
-                  value={locationId}
-                  onChange={(e) => setLocationId(e.target.value)}
+                  value={cityName}
+                  onChange={(e) => setCityName(e.target.value)}
                   className="w-full px-3 py-2 text-sm bg-white/80 border-2 border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary text-slate-900"
                 >
                   <option value="">Tất cả</option>
-                  {locations.map((location) => (
-                    <option key={location.id} value={location.id}>
-                      {location.name}
+                  {cities.map((city) => (
+                    <option key={city} value={city}>
+                      {city}
                     </option>
                   ))}
                 </select>
@@ -381,6 +427,17 @@ const ToursPage = () => {
                       <h3 className="text-lg font-display font-bold text-slate-900 mb-2 line-clamp-1">
                         {tour.name}
                       </h3>
+
+                      {/* Rating Display */}
+                      {tour.reviewCount > 0 && (
+                        <div className="flex items-center gap-1.5 mb-2">
+                          <Star size={14} className="text-amber-400 fill-amber-400" />
+                          <span className="text-sm font-medium text-slate-900">
+                            {tour.averageRating?.toFixed(1) || '0'}
+                          </span>
+                        </div>
+                      )}
+
                       {tour.description && (
                         <p className="text-sm text-slate-600 line-clamp-2 mb-4">
                           {tour.description}

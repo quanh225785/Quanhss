@@ -4,6 +4,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import MainLayout from "../components/layout/MainLayout";
 import UserOverview from "../components/user/UserOverview";
 import MyBookings from "../components/user/MyBookings";
+import MyFavorites from "../components/user/MyFavorites";
 import MyLocationProposals from "../components/user/MyLocationProposals";
 import TripPlanner from "../components/user/TripPlanner";
 import UserProfile from "../components/user/UserProfile";
@@ -24,6 +25,7 @@ const UserDashboard = ({ onLogout }) => {
           <Routes>
             <Route path="/" element={<Navigate to="/user/dashboard" replace />} />
             <Route path="/dashboard" element={<UserOverview />} />
+            <Route path="/favorites" element={<MyFavorites />} />
             <Route path="/bookings" element={<MyBookings />} />
             <Route path="/locations" element={<MyLocationProposals />} />
             <Route path="/planner" element={<TripPlanner />} />

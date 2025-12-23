@@ -13,7 +13,12 @@ import {
 } from 'recharts';
 import StatCard from './StatCard';
 import { api } from '../../utils/api';
-import jsPDF from 'jspdf';
+import { useToast } from '../../context/ToastContext';
+import pdfMake from 'pdfmake/build/pdfmake';
+import pdfFonts from 'pdfmake/build/vfs_fonts';
+
+// Initialize pdfmake with fonts
+pdfMake.vfs = pdfFonts.vfs;
 
 const DashboardOverview = () => {
     const [stats, setStats] = useState(null);
@@ -24,6 +29,7 @@ const DashboardOverview = () => {
     const [showRevenueDetails, setShowRevenueDetails] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [sortBy, setSortBy] = useState('revenue-desc'); // revenue-desc, revenue-asc, bookings-desc, bookings-asc, name-asc
+    const { showToast } = useToast();
 
     useEffect(() => {
         fetchStats();
@@ -62,7 +68,7 @@ const DashboardOverview = () => {
         // Filter by search query
         if (searchQuery.trim()) {
             const query = searchQuery.toLowerCase().trim();
-            filtered = filtered.filter(tour => 
+            filtered = filtered.filter(tour =>
                 tour.tourName.toLowerCase().includes(query)
             );
         }
@@ -116,11 +122,6 @@ const DashboardOverview = () => {
         return new Intl.NumberFormat("vi-VN").format(num) + " VNĐ";
     };
 
-    const formatCurrencyForPDF = (num) => {
-        if (!num) return "0";
-        return new Intl.NumberFormat("vi-VN").format(num);
-    };
-
     // Chuẩn bị dữ liệu cho biểu đồ doanh thu theo tháng
     const getRevenueByMonthData = () => {
         if (!stats?.revenueByMonth) return [];
@@ -132,16 +133,7 @@ const DashboardOverview = () => {
             }));
     };
 
-    // Helper function để thêm text với wrap và xử lý ký tự đặc biệt
-    const addTextToPDF = (doc, text, x, y, maxWidth = 170) => {
-        // Thay thế ký tự Đ bằng D để tránh lỗi font
-        const safeText = text.replace(/Đ/g, 'D').replace(/đ/g, 'd');
-        const lines = doc.splitTextToSize(safeText, maxWidth);
-        doc.text(lines, x, y);
-        return y + (lines.length * 7);
-    };
-
-    // Xuất PDF report
+    // Xuất PDF report với pdfmake (hỗ trợ tiếng Việt)
     const exportToPDF = async () => {
         try {
             // Fetch revenue details if not already loaded
@@ -149,141 +141,288 @@ const DashboardOverview = () => {
                 await fetchRevenueDetails();
             }
 
-            const doc = new jsPDF();
             const user = JSON.parse(localStorage.getItem('user') || '{}');
-            const userName = user.firstName && user.lastName 
-                ? `${user.firstName} ${user.lastName}` 
+            const userName = user.firstName && user.lastName
+                ? `${user.firstName} ${user.lastName}`
                 : user.firstName || user.lastName || 'Agent';
-            
+
             const currentDate = new Date().toLocaleDateString('vi-VN');
-            
-            // Header
-            doc.setFontSize(18);
-            doc.text('BAO CAO THONG KE AGENT', 105, 20, { align: 'center' });
-            
-            doc.setFontSize(12);
-            doc.text(`Nguoi tao: ${userName}`, 20, 35);
-            doc.text(`Ngay xuat: ${currentDate}`, 20, 42);
-            
-            let yPos = 55;
-            
-            // Tổng quan
-            doc.setFontSize(14);
-            doc.text('TONG QUAN', 20, yPos);
-            yPos += 10;
-            doc.setFontSize(11);
-            yPos = addTextToPDF(doc, `Tong Tour: ${formatNumber(stats.totalTours)}`, 20, yPos);
-            yPos = addTextToPDF(doc, `Tong Chuyen: ${formatNumber(stats.totalTrips)}`, 20, yPos);
-            yPos = addTextToPDF(doc, `Tong Dat cho: ${formatNumber(stats.totalBookings)}`, 20, yPos);
-            yPos = addTextToPDF(doc, `Tong Doanh thu: ${formatCurrencyForPDF(stats.totalRevenue)} VND`, 20, yPos);
-            yPos = addTextToPDF(doc, `Doanh thu thang nay: ${formatCurrencyForPDF(stats.thisMonthRevenue)} VND`, 20, yPos);
-            yPos += 3;
-            
-            // Tours theo trạng thái
-            if (yPos > 270) {
-                doc.addPage();
-                yPos = 20;
-            }
-            doc.setFontSize(14);
-            doc.text('TOUR THEO TRANG THAI', 20, yPos);
-            yPos += 10;
-            doc.setFontSize(11);
-            yPos = addTextToPDF(doc, `Cho duyet: ${formatNumber(stats.pendingTours)}`, 20, yPos);
-            yPos = addTextToPDF(doc, `Da duyet: ${formatNumber(stats.approvedTours)}`, 20, yPos);
-            yPos = addTextToPDF(doc, `Da tu choi: ${formatNumber(stats.rejectedTours)}`, 20, yPos);
-            yPos = addTextToPDF(doc, `Da an: ${formatNumber(stats.hiddenTours)}`, 20, yPos);
-            yPos += 3;
-            
-            // Thống kê theo tháng
-            if (yPos > 270) {
-                doc.addPage();
-                yPos = 20;
-            }
-            doc.setFontSize(14);
-            doc.text('THONG KE THEO THANG (6 thang gan nhat)', 20, yPos);
-            yPos += 10;
-            doc.setFontSize(10);
-            
+
             const toursByMonth = getToursByMonthData();
             const bookingsByMonth = getBookingsByMonthData();
             const revenueByMonth = getRevenueByMonthData();
-            
-            // Header của bảng
-            doc.setFontSize(10);
-            doc.setFont(undefined, 'bold');
-            yPos = addTextToPDF(doc, 'Thang | Tours | Dat cho | Doanh thu', 20, yPos);
-            doc.setFont(undefined, 'normal');
-            yPos += 2;
-            
-            toursByMonth.forEach((item, index) => {
-                if (yPos > 280) {
-                    doc.addPage();
-                    yPos = 20;
-                }
-                const bookings = bookingsByMonth[index]?.bookings || 0;
-                const revenue = revenueByMonth[index]?.revenue || 0;
-                const rowText = `${item.name} | ${item.tours} | ${bookings} | ${formatCurrencyForPDF(revenue)} VND`;
-                yPos = addTextToPDF(doc, rowText, 20, yPos, 170);
-            });
-            
-            // Doanh thu chi tiết theo tour
-            if (revenueDetails && revenueDetails.length > 0) {
-                yPos += 5;
-                if (yPos > 270) {
-                    doc.addPage();
-                    yPos = 20;
-                }
-                doc.setFontSize(14);
-                doc.text('DOANH THU CHI TIET THEO TOUR', 20, yPos);
-                yPos += 10;
-                doc.setFontSize(10);
-                
-                revenueDetails.forEach((tour) => {
-                    if (yPos > 280) {
-                        doc.addPage();
-                        yPos = 20;
+
+            // Build PDF document definition
+            const docDefinition = {
+                pageSize: 'A4',
+                pageMargins: [40, 60, 40, 60],
+
+                // Header
+                header: {
+                    columns: [
+                        {
+                            text: 'BÁO CÁO THỐNG KÊ AGENT',
+                            style: 'headerTitle',
+                            alignment: 'center',
+                            margin: [0, 20, 0, 0]
+                        }
+                    ]
+                },
+
+                // Footer with page numbers
+                footer: function (currentPage, pageCount) {
+                    return {
+                        text: `Trang ${currentPage}/${pageCount}`,
+                        alignment: 'center',
+                        style: 'footer',
+                        margin: [0, 20, 0, 0]
+                    };
+                },
+
+                content: [
+                    // Report info
+                    {
+                        columns: [
+                            { text: `Người tạo: ${userName}`, style: 'infoText' },
+                            { text: `Ngày xuất: ${currentDate}`, style: 'infoText', alignment: 'right' }
+                        ],
+                        margin: [0, 0, 0, 20]
+                    },
+
+                    // TỔNG QUAN section
+                    { text: 'TỔNG QUAN', style: 'sectionHeader' },
+                    {
+                        table: {
+                            widths: ['*', '*'],
+                            body: [
+                                [
+                                    { text: 'Chỉ số', style: 'tableHeader' },
+                                    { text: 'Giá trị', style: 'tableHeader', alignment: 'right' }
+                                ],
+                                ['Tổng Tour', { text: formatNumber(stats.totalTours), alignment: 'right' }],
+                                ['Tổng Chuyến', { text: formatNumber(stats.totalTrips), alignment: 'right' }],
+                                ['Tổng Đặt chỗ', { text: formatNumber(stats.totalBookings), alignment: 'right' }],
+                                ['Tổng Doanh thu', { text: formatCurrency(stats.totalRevenue), alignment: 'right', bold: true, color: '#059669' }],
+                                ['Doanh thu tháng này', { text: formatCurrency(stats.thisMonthRevenue), alignment: 'right', color: '#059669' }]
+                            ]
+                        },
+                        layout: {
+                            hLineWidth: function (i, node) {
+                                return (i === 0 || i === 1 || i === node.table.body.length) ? 1 : 0.5;
+                            },
+                            vLineWidth: function () { return 0; },
+                            hLineColor: function (i) { return i === 1 ? '#3b82f6' : '#e5e7eb'; },
+                            paddingLeft: function () { return 10; },
+                            paddingRight: function () { return 10; },
+                            paddingTop: function () { return 8; },
+                            paddingBottom: function () { return 8; }
+                        },
+                        margin: [0, 0, 0, 20]
+                    },
+
+                    // TOUR THEO TRẠNG THÁI section
+                    { text: 'TOUR THEO TRẠNG THÁI', style: 'sectionHeader' },
+                    {
+                        table: {
+                            widths: ['*', 'auto'],
+                            body: [
+                                [
+                                    { text: 'Trạng thái', style: 'tableHeader' },
+                                    { text: 'Số lượng', style: 'tableHeader', alignment: 'center' }
+                                ],
+                                [
+                                    { text: '⏳ Chờ duyệt', fillColor: '#fef3c7' },
+                                    { text: formatNumber(stats.pendingTours), alignment: 'center', fillColor: '#fef3c7' }
+                                ],
+                                [
+                                    { text: '✅ Đã duyệt', fillColor: '#d1fae5' },
+                                    { text: formatNumber(stats.approvedTours), alignment: 'center', fillColor: '#d1fae5' }
+                                ],
+                                [
+                                    { text: '❌ Đã từ chối', fillColor: '#fee2e2' },
+                                    { text: formatNumber(stats.rejectedTours), alignment: 'center', fillColor: '#fee2e2' }
+                                ],
+                                [
+                                    { text: '👁 Đã ẩn', fillColor: '#f3f4f6' },
+                                    { text: formatNumber(stats.hiddenTours), alignment: 'center', fillColor: '#f3f4f6' }
+                                ]
+                            ]
+                        },
+                        layout: {
+                            hLineWidth: function (i, node) {
+                                return (i === 0 || i === 1 || i === node.table.body.length) ? 1 : 0.5;
+                            },
+                            vLineWidth: function () { return 0; },
+                            hLineColor: function (i) { return i === 1 ? '#3b82f6' : '#e5e7eb'; },
+                            paddingLeft: function () { return 10; },
+                            paddingRight: function () { return 10; },
+                            paddingTop: function () { return 8; },
+                            paddingBottom: function () { return 8; }
+                        },
+                        margin: [0, 0, 0, 20]
+                    },
+
+                    // THỐNG KÊ THEO THÁNG section
+                    { text: 'THỐNG KÊ THEO THÁNG (6 tháng gần nhất)', style: 'sectionHeader' },
+                    {
+                        table: {
+                            widths: ['*', 'auto', 'auto', '*'],
+                            body: [
+                                [
+                                    { text: 'Tháng', style: 'tableHeader' },
+                                    { text: 'Tours', style: 'tableHeader', alignment: 'center' },
+                                    { text: 'Đặt chỗ', style: 'tableHeader', alignment: 'center' },
+                                    { text: 'Doanh thu', style: 'tableHeader', alignment: 'right' }
+                                ],
+                                ...toursByMonth.map((item, index) => {
+                                    const bookings = bookingsByMonth[index]?.bookings || 0;
+                                    const revenue = revenueByMonth[index]?.revenue || 0;
+                                    const isEven = index % 2 === 0;
+                                    return [
+                                        { text: item.name, fillColor: isEven ? '#f9fafb' : null },
+                                        { text: formatNumber(item.tours), alignment: 'center', fillColor: isEven ? '#f9fafb' : null },
+                                        { text: formatNumber(bookings), alignment: 'center', fillColor: isEven ? '#f9fafb' : null },
+                                        { text: formatCurrency(revenue), alignment: 'right', fillColor: isEven ? '#f9fafb' : null }
+                                    ];
+                                })
+                            ]
+                        },
+                        layout: {
+                            hLineWidth: function (i, node) {
+                                return (i === 0 || i === 1 || i === node.table.body.length) ? 1 : 0.5;
+                            },
+                            vLineWidth: function () { return 0; },
+                            hLineColor: function (i) { return i === 1 ? '#3b82f6' : '#e5e7eb'; },
+                            paddingLeft: function () { return 10; },
+                            paddingRight: function () { return 10; },
+                            paddingTop: function () { return 8; },
+                            paddingBottom: function () { return 8; }
+                        },
+                        margin: [0, 0, 0, 20]
                     }
-                    
+                ],
+
+                // Styles
+                styles: {
+                    headerTitle: {
+                        fontSize: 18,
+                        bold: true,
+                        color: '#1e40af'
+                    },
+                    sectionHeader: {
+                        fontSize: 14,
+                        bold: true,
+                        color: '#1f2937',
+                        margin: [0, 10, 0, 10],
+                        decoration: 'underline',
+                        decorationColor: '#3b82f6'
+                    },
+                    tableHeader: {
+                        bold: true,
+                        fontSize: 11,
+                        color: '#1e40af',
+                        fillColor: '#eff6ff'
+                    },
+                    infoText: {
+                        fontSize: 10,
+                        color: '#6b7280'
+                    },
+                    footer: {
+                        fontSize: 9,
+                        color: '#9ca3af'
+                    }
+                },
+
+                defaultStyle: {
+                    fontSize: 10,
+                    color: '#374151'
+                }
+            };
+
+            // Add revenue details section if available
+            if (revenueDetails && revenueDetails.length > 0) {
+                docDefinition.content.push(
+                    { text: 'DOANH THU CHI TIẾT THEO TOUR', style: 'sectionHeader', pageBreak: 'before' }
+                );
+
+                revenueDetails.forEach((tour, tourIndex) => {
                     // Tour header
-                    doc.setFontSize(11);
-                    doc.setFont(undefined, 'bold');
-                    const tourName = tour.tourName.length > 50 ? tour.tourName.substring(0, 50) + '...' : tour.tourName;
-                    yPos = addTextToPDF(doc, tourName, 20, yPos, 170);
-                    doc.setFont(undefined, 'normal');
-                    doc.setFontSize(10);
-                    const tourInfo = `  Dat cho: ${formatNumber(tour.totalBookings)} | Doanh thu: ${formatCurrencyForPDF(tour.totalRevenue)} VND`;
-                    yPos = addTextToPDF(doc, tourInfo, 20, yPos, 170);
-                    
-                    // Trips
+                    docDefinition.content.push({
+                        text: `${tourIndex + 1}. ${tour.tourName}`,
+                        fontSize: 12,
+                        bold: true,
+                        color: '#1f2937',
+                        margin: [0, 15, 0, 5]
+                    });
+
+                    docDefinition.content.push({
+                        columns: [
+                            { text: `Tổng đặt chỗ: ${formatNumber(tour.totalBookings)}`, fontSize: 10, color: '#6b7280' },
+                            { text: `Tổng doanh thu: ${formatCurrency(tour.totalRevenue)}`, fontSize: 10, color: '#059669', bold: true, alignment: 'right' }
+                        ],
+                        margin: [0, 0, 0, 10]
+                    });
+
+                    // Trips table
                     if (tour.trips && tour.trips.length > 0) {
-                        tour.trips.forEach((trip) => {
-                            if (yPos > 280) {
-                                doc.addPage();
-                                yPos = 20;
-                            }
+                        const tripTableBody = [
+                            [
+                                { text: 'Ngày bắt đầu', style: 'tableHeader' },
+                                { text: 'Ngày kết thúc', style: 'tableHeader' },
+                                { text: 'Đặt chỗ', style: 'tableHeader', alignment: 'center' },
+                                { text: 'Doanh thu', style: 'tableHeader', alignment: 'right' }
+                            ]
+                        ];
+
+                        tour.trips.forEach((trip, tripIndex) => {
                             const startDate = new Date(trip.startDate).toLocaleDateString('vi-VN');
                             const endDate = new Date(trip.endDate).toLocaleDateString('vi-VN');
-                            const tripInfo = `    - ${startDate} -> ${endDate}: ${formatNumber(trip.totalBookings)} dat cho, ${formatCurrencyForPDF(trip.totalRevenue)} VND`;
-                            yPos = addTextToPDF(doc, tripInfo, 20, yPos, 170);
+                            const isEven = tripIndex % 2 === 0;
+                            tripTableBody.push([
+                                { text: startDate, fillColor: isEven ? '#f9fafb' : null },
+                                { text: endDate, fillColor: isEven ? '#f9fafb' : null },
+                                { text: formatNumber(trip.totalBookings), alignment: 'center', fillColor: isEven ? '#f9fafb' : null },
+                                { text: formatCurrency(trip.totalRevenue), alignment: 'right', fillColor: isEven ? '#f9fafb' : null }
+                            ]);
+                        });
+
+                        docDefinition.content.push({
+                            table: {
+                                widths: ['*', '*', 'auto', '*'],
+                                body: tripTableBody
+                            },
+                            layout: {
+                                hLineWidth: function (i, node) {
+                                    return (i === 0 || i === 1 || i === node.table.body.length) ? 1 : 0.5;
+                                },
+                                vLineWidth: function () { return 0; },
+                                hLineColor: function (i) { return i === 1 ? '#10b981' : '#e5e7eb'; },
+                                paddingLeft: function () { return 8; },
+                                paddingRight: function () { return 8; },
+                                paddingTop: function () { return 6; },
+                                paddingBottom: function () { return 6; }
+                            },
+                            margin: [10, 0, 0, 10]
                         });
                     }
-                    yPos += 3;
                 });
             }
-            
-            // Footer
-            const pageCount = doc.internal.pages.length - 1;
-            for (let i = 1; i <= pageCount; i++) {
-                doc.setPage(i);
-                doc.setFontSize(10);
-                doc.text(`Trang ${i}/${pageCount}`, 105, 285, { align: 'center' });
-            }
-            
-            // Lưu file
-            doc.save(`bao-cao-agent-${currentDate.replace(/\//g, '-')}.pdf`);
+
+            // Generate and download PDF
+            pdfMake.createPdf(docDefinition).download(`bao-cao-agent-${currentDate.replace(/\//g, '-')}.pdf`);
+
+            showToast({
+                type: 'success',
+                message: 'Xuất PDF thành công',
+                description: 'Báo cáo đã được tải xuống.'
+            });
         } catch (error) {
             console.error("Error exporting PDF:", error);
-            alert("Co loi xay ra khi xuat PDF. Vui long thu lai.");
+            showToast({
+                type: 'error',
+                message: 'Lỗi xuất PDF',
+                description: 'Có lỗi xảy ra khi xuất PDF. Vui lòng thử lại.'
+            });
         }
     };
 
@@ -482,14 +621,14 @@ const DashboardOverview = () => {
                         <BarChart data={getRevenueByMonthData()}>
                             <CartesianGrid strokeDasharray="3 3" vertical={false} />
                             <XAxis dataKey="name" />
-                            <YAxis 
+                            <YAxis
                                 tickFormatter={(value) => {
                                     if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
                                     if (value >= 1000) return `${(value / 1000).toFixed(0)}K`;
                                     return value.toString();
                                 }}
                             />
-                            <Tooltip 
+                            <Tooltip
                                 formatter={(value) => formatCurrency(value)}
                                 contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                             />
@@ -570,129 +709,126 @@ const DashboardOverview = () => {
                                 filteredRevenueDetails.length > 0 ? (
                                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                         {filteredRevenueDetails.map((tour, index) => (
-                                        <div 
-                                            key={tour.tourId} 
-                                            className="bg-white rounded-xl shadow-lg border border-zinc-200 overflow-hidden hover:shadow-xl transition-all"
-                                        >
-                                            {/* Tour Header */}
-                                            <div className="p-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-zinc-200">
-                                                <div className="flex items-start gap-5">
-                                                    {tour.tourImageUrl ? (
-                                                        <img
-                                                            src={tour.tourImageUrl}
-                                                            alt={tour.tourName}
-                                                            className="w-32 h-32 object-cover rounded-xl shadow-lg border-2 border-white"
-                                                        />
-                                                    ) : (
-                                                        <div className="w-32 h-32 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-xl shadow-lg flex items-center justify-center">
-                                                            <Map className="text-white" size={48} />
-                                                        </div>
-                                                    )}
-                                                    <div className="flex-1 min-w-0">
-                                                        <div className="flex items-start justify-between gap-4">
-                                                            <div className="flex-1">
-                                                                <h3 className="text-2xl font-bold text-zinc-900 mb-3 line-clamp-2">
-                                                                    {tour.tourName}
-                                                                </h3>
-                                                                <div className="flex flex-wrap gap-3">
-                                                                    <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg shadow-md">
-                                                                        <Users size={18} className="text-blue-600" />
-                                                                        <span className="text-base font-semibold text-zinc-700">
-                                                                            {formatNumber(tour.totalBookings)} đặt chỗ
-                                                                        </span>
-                                                                    </div>
-                                                                    <div className="flex items-center gap-2 px-4 py-2 bg-green-50 rounded-lg shadow-md border border-green-200">
-                                                                        <DollarSign size={18} className="text-green-600" />
-                                                                        <span className="text-base font-bold text-green-700">
-                                                                            {formatCurrency(tour.totalRevenue)}
-                                                                        </span>
+                                            <div
+                                                key={tour.tourId}
+                                                className="bg-white rounded-xl shadow-lg border border-zinc-200 overflow-hidden hover:shadow-xl transition-all"
+                                            >
+                                                {/* Tour Header */}
+                                                <div className="p-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-zinc-200">
+                                                    <div className="flex items-start gap-5">
+                                                        {tour.tourImageUrl ? (
+                                                            <img
+                                                                src={tour.tourImageUrl}
+                                                                alt={tour.tourName}
+                                                                className="w-32 h-32 object-cover rounded-xl shadow-lg border-2 border-white"
+                                                            />
+                                                        ) : (
+                                                            <div className="w-32 h-32 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-xl shadow-lg flex items-center justify-center">
+                                                                <Map className="text-white" size={48} />
+                                                            </div>
+                                                        )}
+                                                        <div className="flex-1 min-w-0">
+                                                            <div className="flex items-start justify-between gap-4">
+                                                                <div className="flex-1">
+                                                                    <h3 className="text-2xl font-bold text-zinc-900 mb-3 line-clamp-2">
+                                                                        {tour.tourName}
+                                                                    </h3>
+                                                                    <div className="flex flex-wrap gap-3">
+                                                                        <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg shadow-md">
+                                                                            <Users size={18} className="text-blue-600" />
+                                                                            <span className="text-base font-semibold text-zinc-700">
+                                                                                {formatNumber(tour.totalBookings)} đặt chỗ
+                                                                            </span>
+                                                                        </div>
+                                                                        <div className="flex items-center gap-2 px-4 py-2 bg-green-50 rounded-lg shadow-md border border-green-200">
+                                                                            <DollarSign size={18} className="text-green-600" />
+                                                                            <span className="text-base font-bold text-green-700">
+                                                                                {formatCurrency(tour.totalRevenue)}
+                                                                            </span>
+                                                                        </div>
                                                                     </div>
                                                                 </div>
                                                             </div>
                                                         </div>
                                                     </div>
                                                 </div>
-                                            </div>
 
-                                            {/* Trips List */}
-                                            {tour.trips && tour.trips.length > 0 && (
-                                                <div className="p-6">
-                                                    <div className="flex items-center gap-2 mb-5">
-                                                        <CalendarDays size={20} className="text-indigo-600" />
-                                                        <h4 className="text-base font-semibold text-zinc-700 uppercase tracking-wide">
-                                                            Chi tiết theo chuyến ({tour.trips.length} chuyến)
-                                                        </h4>
-                                                    </div>
-                                                    <div className="space-y-3 max-h-[400px] overflow-y-auto">
-                                                        {tour.trips.map((trip) => {
-                                                            const startDate = new Date(trip.startDate);
-                                                            const endDate = new Date(trip.endDate);
-                                                            const hasRevenue = trip.totalRevenue > 0;
-                                                            
-                                                            return (
-                                                                <div 
-                                                                    key={trip.tripId} 
-                                                                    className={`p-5 rounded-xl border-2 transition-all ${
-                                                                        hasRevenue 
-                                                                            ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-200 hover:border-green-300 hover:shadow-md' 
+                                                {/* Trips List */}
+                                                {tour.trips && tour.trips.length > 0 && (
+                                                    <div className="p-6">
+                                                        <div className="flex items-center gap-2 mb-5">
+                                                            <CalendarDays size={20} className="text-indigo-600" />
+                                                            <h4 className="text-base font-semibold text-zinc-700 uppercase tracking-wide">
+                                                                Chi tiết theo chuyến ({tour.trips.length} chuyến)
+                                                            </h4>
+                                                        </div>
+                                                        <div className="space-y-3 max-h-[400px] overflow-y-auto">
+                                                            {tour.trips.map((trip) => {
+                                                                const startDate = new Date(trip.startDate);
+                                                                const endDate = new Date(trip.endDate);
+                                                                const hasRevenue = trip.totalRevenue > 0;
+
+                                                                return (
+                                                                    <div
+                                                                        key={trip.tripId}
+                                                                        className={`p-5 rounded-xl border-2 transition-all ${hasRevenue
+                                                                            ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-200 hover:border-green-300 hover:shadow-md'
                                                                             : 'bg-zinc-50 border-zinc-200'
-                                                                    }`}
-                                                                >
-                                                                    <div className="flex items-center justify-between gap-4">
-                                                                        <div className="flex items-center gap-4 flex-1">
-                                                                            <div className={`p-3 rounded-xl ${
-                                                                                hasRevenue ? 'bg-green-100' : 'bg-zinc-200'
-                                                                            }`}>
-                                                                                <Calendar className={hasRevenue ? 'text-green-700' : 'text-zinc-600'} size={24} />
-                                                                            </div>
-                                                                            <div className="flex-1 min-w-0">
-                                                                                <div className="flex items-center gap-3 text-base font-semibold text-zinc-900">
-                                                                                    <span className="text-zinc-700">
-                                                                                        {startDate.toLocaleDateString('vi-VN', { 
-                                                                                            day: '2-digit', 
-                                                                                            month: '2-digit', 
-                                                                                            year: 'numeric' 
-                                                                                        })}
-                                                                                    </span>
-                                                                                    <ArrowRight size={16} className="text-zinc-400" />
-                                                                                    <span className="text-zinc-700">
-                                                                                        {endDate.toLocaleDateString('vi-VN', { 
-                                                                                            day: '2-digit', 
-                                                                                            month: '2-digit', 
-                                                                                            year: 'numeric' 
-                                                                                        })}
-                                                                                    </span>
-                                                                                </div>
-                                                                            </div>
-                                                                        </div>
-                                                                        <div className="flex items-center gap-6">
-                                                                            <div className="text-right">
-                                                                                <div className="flex items-center gap-2 text-base">
-                                                                                    <Users size={18} className="text-zinc-500" />
-                                                                                    <span className="text-zinc-700 font-semibold">
-                                                                                        {formatNumber(trip.totalBookings)}
-                                                                                    </span>
-                                                                                </div>
-                                                                            </div>
-                                                                            <div className="text-right min-w-[150px]">
-                                                                                <div className="flex items-center gap-2">
-                                                                                    <DollarSign size={20} className={hasRevenue ? 'text-green-600' : 'text-zinc-400'} />
-                                                                                    <span className={`font-bold text-base ${
-                                                                                        hasRevenue ? 'text-green-700' : 'text-zinc-500'
+                                                                            }`}
+                                                                    >
+                                                                        <div className="flex items-center justify-between gap-4">
+                                                                            <div className="flex items-center gap-4 flex-1">
+                                                                                <div className={`p-3 rounded-xl ${hasRevenue ? 'bg-green-100' : 'bg-zinc-200'
                                                                                     }`}>
-                                                                                        {formatCurrency(trip.totalRevenue)}
-                                                                                    </span>
+                                                                                    <Calendar className={hasRevenue ? 'text-green-700' : 'text-zinc-600'} size={24} />
+                                                                                </div>
+                                                                                <div className="flex-1 min-w-0">
+                                                                                    <div className="flex items-center gap-3 text-base font-semibold text-zinc-900">
+                                                                                        <span className="text-zinc-700">
+                                                                                            {startDate.toLocaleDateString('vi-VN', {
+                                                                                                day: '2-digit',
+                                                                                                month: '2-digit',
+                                                                                                year: 'numeric'
+                                                                                            })}
+                                                                                        </span>
+                                                                                        <ArrowRight size={16} className="text-zinc-400" />
+                                                                                        <span className="text-zinc-700">
+                                                                                            {endDate.toLocaleDateString('vi-VN', {
+                                                                                                day: '2-digit',
+                                                                                                month: '2-digit',
+                                                                                                year: 'numeric'
+                                                                                            })}
+                                                                                        </span>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div className="flex items-center gap-6">
+                                                                                <div className="text-right">
+                                                                                    <div className="flex items-center gap-2 text-base">
+                                                                                        <Users size={18} className="text-zinc-500" />
+                                                                                        <span className="text-zinc-700 font-semibold">
+                                                                                            {formatNumber(trip.totalBookings)}
+                                                                                        </span>
+                                                                                    </div>
+                                                                                </div>
+                                                                                <div className="text-right min-w-[150px]">
+                                                                                    <div className="flex items-center gap-2">
+                                                                                        <DollarSign size={20} className={hasRevenue ? 'text-green-600' : 'text-zinc-400'} />
+                                                                                        <span className={`font-bold text-base ${hasRevenue ? 'text-green-700' : 'text-zinc-500'
+                                                                                            }`}>
+                                                                                            {formatCurrency(trip.totalRevenue)}
+                                                                                        </span>
+                                                                                    </div>
                                                                                 </div>
                                                                             </div>
                                                                         </div>
                                                                     </div>
-                                                                </div>
-                                                            );
-                                                        })}
+                                                                );
+                                                            })}
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            )}
-                                        </div>
+                                                )}
+                                            </div>
                                         ))}
                                     </div>
                                 ) : (

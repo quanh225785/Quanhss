@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { X, MapPin, Loader2, Check, AlertCircle, Plus, Trash2, Route, Sparkles, Car, Bike, Search, Calendar, Clock, Coffee, Sun, Moon, Image as ImageIcon } from 'lucide-react';
+import { X, MapPin, Loader2, Check, AlertCircle, Plus, Trash2, Route, Sparkles, Car, Bike, Search, Calendar, Clock, Coffee, Sun, Moon, Image as ImageIcon, Images } from 'lucide-react';
 import { api } from '../../utils/api';
 import TourMap from './TourMap';
 import ImageUpload from '../common/ImageUpload';
+import MultipleImageUpload from '../common/MultipleImageUpload';
 
 const CreateTourModal = ({ onClose, onSuccess }) => {
-    // Form state
     const [formData, setFormData] = useState({
         name: '',
         description: '',
@@ -14,7 +14,7 @@ const CreateTourModal = ({ onClose, onSuccess }) => {
         vehicle: 'car',
         useOptimization: false,
         roundtrip: false,
-        imageUrl: '',  // Tour thumbnail image
+        imageUrls: [],  // Multiple tour images
     });
 
     // Available approved locations
@@ -41,6 +41,55 @@ const CreateTourModal = ({ onClose, onSuccess }) => {
     useEffect(() => {
         fetchApprovedLocations();
     }, []);
+
+    // Auto-calculate route when activeDay or selectedLocations changes
+    useEffect(() => {
+        const dayLocations = getLocationsForDay(activeDay);
+        if (dayLocations.length >= 2) {
+            // Auto-preview route for the active day
+            autoCalculateRoute(dayLocations);
+        } else {
+            setRoutePreview(null);
+        }
+    }, [activeDay, selectedLocations]);
+
+    const autoCalculateRoute = async (dayLocations) => {
+        const locationPoints = dayLocations
+            .filter(loc => loc.latitude && loc.longitude)
+            .sort((a, b) => a.orderIndex - b.orderIndex);
+
+        if (locationPoints.length < 2) {
+            setRoutePreview(null);
+            return;
+        }
+
+        setIsLoadingRoute(true);
+        try {
+            const points = locationPoints.map(loc => `${loc.latitude},${loc.longitude}`);
+            const endpoint = formData.useOptimization ? '/vietmap/tsp' : '/vietmap/route';
+            const response = await api.post(endpoint, {
+                points,
+                vehicle: formData.vehicle,
+                roundtrip: formData.roundtrip,
+            });
+
+            if (response.data.code === 1000 && response.data.result?.paths?.[0]) {
+                const path = response.data.result.paths[0];
+                setRoutePreview({
+                    polyline: path.points,
+                    distance: path.distance,
+                    time: path.time,
+                });
+            } else {
+                setRoutePreview(null);
+            }
+        } catch (err) {
+            console.error('Error auto-calculating route:', err);
+            setRoutePreview(null);
+        } finally {
+            setIsLoadingRoute(false);
+        }
+    };
 
     const fetchApprovedLocations = async () => {
         setIsLoadingLocations(true);
@@ -275,8 +324,9 @@ const CreateTourModal = ({ onClose, onSuccess }) => {
     };
 
     const handlePreviewRoute = async () => {
-        if (selectedLocations.length < 2) {
-            setError('Cần ít nhất 2 địa điểm để xem tuyến đường');
+        const dayLocations = getLocationsForDay(activeDay);
+        if (dayLocations.length < 2) {
+            setError(`Ngày ${activeDay} cần ít nhất 2 địa điểm để xem tuyến đường`);
             return;
         }
 
@@ -284,13 +334,10 @@ const CreateTourModal = ({ onClose, onSuccess }) => {
         setError(null);
 
         try {
-            // Only include locations with coordinates for route preview
-            const locationPoints = selectedLocations
+            // Only include locations with coordinates for route preview (for active day only)
+            const locationPoints = dayLocations
                 .filter(loc => loc.latitude && loc.longitude)
-                .sort((a, b) => {
-                    if (a.dayNumber !== b.dayNumber) return a.dayNumber - b.dayNumber;
-                    return a.orderIndex - b.orderIndex;
-                });
+                .sort((a, b) => a.orderIndex - b.orderIndex);
 
             if (locationPoints.length < 2) {
                 setError('Cần ít nhất 2 địa điểm có vị trí để xem tuyến đường');
@@ -354,7 +401,8 @@ const CreateTourModal = ({ onClose, onSuccess }) => {
                 vehicle: formData.vehicle,
                 useOptimization: formData.useOptimization,
                 roundtrip: formData.roundtrip,
-                imageUrl: formData.imageUrl,  // Tour thumbnail
+                imageUrl: formData.imageUrls.length > 0 ? formData.imageUrls[0] : null,  // First image as thumbnail
+                imageUrls: formData.imageUrls,  // All images
                 points: sortedLocations.map((loc, index) => ({
                     locationId: loc.locationId || null,  // Can be null for free activities
                     orderIndex: index,
@@ -468,23 +516,24 @@ const CreateTourModal = ({ onClose, onSuccess }) => {
                     {/* Info note about trips */}
                     <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
                         <p className="text-sm text-blue-800">
-                            <strong>💡 Lưu ý:</strong> Sau khi tour được Admin duyệt, bạn có thể tạo các <strong>"Chuyến"</strong> với ngày cụ thể và số lượng người tham gia. Khách hàng sẽ đặt chỗ theo từng chuyến.
+                            <strong>Lưu ý:</strong> Sau khi tour được Admin duyệt, bạn có thể tạo các <strong>"Chuyến"</strong> với ngày cụ thể và số lượng người tham gia. Khách hàng sẽ đặt chỗ theo từng chuyến.
                         </p>
                     </div>
 
-                    {/* Tour Thumbnail Image */}
+                    {/* Tour Images (Multiple) */}
                     <div className="space-y-2">
                         <label className="block text-sm font-medium text-zinc-900">
                             <div className="flex items-center gap-2">
-                                <ImageIcon size={16} />
-                                Ảnh đại diện Tour
+                                <Images size={16} />
+                                Ảnh Tour
+                                <span className="text-xs text-zinc-500 font-normal">(Ảnh đầu tiên sẽ là ảnh bìa)</span>
                             </div>
                         </label>
-                        <ImageUpload
+                        <MultipleImageUpload
                             folder="tours"
-                            currentImageUrl={formData.imageUrl}
-                            onUploadComplete={(url) => setFormData(prev => ({ ...prev, imageUrl: url }))}
-                            onRemove={() => setFormData(prev => ({ ...prev, imageUrl: '' }))}
+                            imageUrls={formData.imageUrls}
+                            onImagesChange={(urls) => setFormData(prev => ({ ...prev, imageUrls: urls }))}
+                            maxImages={10}
                         />
                     </div>
 
@@ -560,7 +609,10 @@ const CreateTourModal = ({ onClose, onSuccess }) => {
                                 <button
                                     key={day}
                                     type="button"
-                                    onClick={() => setActiveDay(day)}
+                                    onClick={() => {
+                                        setActiveDay(day);
+                                        setRoutePreview(null); // Clear route preview when switching days
+                                    }}
                                     className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${activeDay === day
                                         ? 'bg-blue-600 text-white'
                                         : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200'
@@ -777,7 +829,7 @@ const CreateTourModal = ({ onClose, onSuccess }) => {
                     {/* All Days Summary */}
                     {selectedLocations.length > 0 && (
                         <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4">
-                            <h3 className="text-sm font-semibold text-zinc-800 mb-3">📅 Tổng quan lịch trình</h3>
+                            <h3 className="text-sm font-semibold text-zinc-800 mb-3">Tổng quan lịch trình</h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                 {Array.from({ length: formData.numberOfDays }, (_, i) => i + 1).map(day => {
                                     const dayLocs = getLocationsForDay(day).sort((a, b) => a.orderIndex - b.orderIndex);
@@ -813,8 +865,8 @@ const CreateTourModal = ({ onClose, onSuccess }) => {
                         </div>
                     )}
 
-                    {/* Preview Route Button */}
-                    {selectedLocations.length >= 2 && (
+                    {/* Preview Route Button - Only show when active day has 2+ locations */}
+                    {getLocationsForDay(activeDay).length >= 2 && (
                         <button
                             type="button"
                             onClick={handlePreviewRoute}
@@ -826,19 +878,18 @@ const CreateTourModal = ({ onClose, onSuccess }) => {
                             ) : (
                                 <Route size={16} />
                             )}
-                            Xem trước tuyến đường
+                            Xem trước tuyến đường Ngày {activeDay}
                         </button>
                     )}
 
-                    {/* Map Preview */}
-                    {(selectedLocations.length > 0 || routePreview) && (
+                    {/* Map Preview - Shows only active day's locations */}
+                    {(getLocationsForDay(activeDay).length > 0 || routePreview) && (
                         <div className="space-y-2">
-                            <label className="block text-sm font-medium text-zinc-900">Bản đồ</label>
+                            <label className="block text-sm font-medium text-zinc-900">
+                                Bản đồ - Ngày {activeDay}
+                            </label>
                             <TourMap
-                                points={selectedLocations.sort((a, b) => {
-                                    if (a.dayNumber !== b.dayNumber) return a.dayNumber - b.dayNumber;
-                                    return a.orderIndex - b.orderIndex;
-                                })}
+                                points={getLocationsForDay(activeDay).sort((a, b) => a.orderIndex - b.orderIndex)}
                                 routePolyline={routePreview?.polyline}
                                 totalDistance={routePreview?.distance}
                                 totalTime={routePreview?.time}

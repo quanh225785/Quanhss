@@ -29,7 +29,7 @@ function Dashboard({ onLogout }) {
             <nav className="dashboard-nav">
                 <div className="container">
                     <div className="nav-content">
-                        <div className="logo">Jadoo.</div>
+                        <div className="logo">Quanh.</div>
                         <button onClick={handleLogout} className="btn-logout">
                             Đăng xuất
                         </button>

@@ -79,12 +79,21 @@ public class AuthenticationService {
         String loginIdentifier = request.getUsernameOrEmail();
         User user = userRepository.findByUsername(loginIdentifier)
                 .or(() -> userRepository.findByEmail(loginIdentifier))
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+                .orElseThrow(() -> new AppException(ErrorCode.UNAUTHENTICATED));
 
         boolean authenticated = passwordEncoder.matches(request.getPassword(), user.getPassword());
 
         if (!authenticated)
             throw new AppException(ErrorCode.UNAUTHENTICATED);
+
+        // Check if account is locked
+        if (user.getIsLocked() != null && user.getIsLocked()) {
+            String message = "Tài khoản đã bị khoá";
+            if (user.getLockReason() != null && !user.getLockReason().isEmpty()) {
+                message += ". Lý do: " + user.getLockReason();
+            }
+            throw new AppException(ErrorCode.ACCOUNT_LOCKED, message);
+        }
 
         // Check if email is verified
         if (user.getIsVerified() == null || !user.getIsVerified()) {

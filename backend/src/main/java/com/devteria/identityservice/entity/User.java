@@ -1,6 +1,7 @@
 package com.devteria.identityservice.entity;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Set;
 
 import jakarta.persistence.*;
@@ -30,6 +31,18 @@ public class User {
     String email;
     String avatar;
     Boolean isVerified;
+    Boolean isLocked;
+    @Column(columnDefinition = "TEXT")
+    String lockReason;
     @ManyToMany
     Set<Role> roles;
+
+    LocalDateTime createdAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        if (isVerified == null) isVerified = false;
+        if (isLocked == null) isLocked = false;
+    }
 }

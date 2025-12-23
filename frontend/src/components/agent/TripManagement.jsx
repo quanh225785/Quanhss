@@ -1,13 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { X, Plus, Calendar, Users, Loader2, Trash2, Edit, Check, AlertCircle } from 'lucide-react';
 import { api } from '../../utils/api';
+import { useToast } from '../../context/ToastContext';
 import Modal from '../shared/Modal';
+import ConfirmModal from '../shared/ConfirmModal';
 
 const TripManagement = ({ tour, onClose, onSuccess }) => {
     const [trips, setTrips] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const { showToast } = useToast();
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [tripToDelete, setTripToDelete] = useState(null);
 
     // Form for new/edit trip
     const [showForm, setShowForm] = useState(false);
@@ -94,12 +99,24 @@ const TripManagement = ({ tour, onClose, onSuccess }) => {
         setShowForm(true);
     };
 
-    const handleDelete = async (tripId) => {
-        if (!window.confirm('Bạn có chắc muốn xóa chuyến này?')) return;
+    const handleDelete = (tripId) => {
+        setTripToDelete(tripId);
+        setShowDeleteConfirm(true);
+    };
+
+    const confirmDelete = async () => {
+        if (!tripToDelete) return;
 
         try {
-            await api.delete(`/trips/${tripId}`);
+            await api.delete(`/trips/${tripToDelete}`);
             await fetchTrips();
+            setShowDeleteConfirm(false);
+            setTripToDelete(null);
+            showToast({
+                type: 'success',
+                message: 'Thành công',
+                description: 'Đã xóa chuyến thành công'
+            });
             onSuccess?.();
         } catch (err) {
             setError(err.response?.data?.message || 'Không thể xóa chuyến');
@@ -311,6 +328,20 @@ const TripManagement = ({ tour, onClose, onSuccess }) => {
                     )}
                 </div>
             </div>
+            {/* Delete Confirmation Modal */}
+            <ConfirmModal
+                isOpen={showDeleteConfirm}
+                onClose={() => {
+                    setShowDeleteConfirm(false);
+                    setTripToDelete(null);
+                }}
+                onConfirm={confirmDelete}
+                title="Xác nhận xóa"
+                message="Bạn có chắc muốn xóa chuyến này? Hành động này không thể hoàn tác."
+                variant="danger"
+                confirmText="Xóa"
+                cancelText="Hủy"
+            />
         </Modal>
     );
 };

@@ -28,7 +28,8 @@ public class SecurityConfig {
             "/users/forgot-password", "/users/reset-password",
             "/vietmap/tiles/**", // Map tiles need to be public for Leaflet
             "/tours/search", "/tours/approved", "/tours/{id}", // Public tour search and viewing
-            "/locations", // Public location list for filters
+            "/locations", "/locations/cities", // Public location list and cities for filters
+            "/ai-chat", // AI Chatbot endpoint
             "/ws/**" // WebSocket endpoint
     };
 
@@ -46,7 +47,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/auth/verify").permitAll()
                         .requestMatchers(HttpMethod.GET, "/vietmap/tiles/**").permitAll() // Map tiles for Leaflet
                         .requestMatchers(HttpMethod.GET, "/tours/search", "/tours/approved", "/tours/{id}").permitAll() // Public tour endpoints
-                        .requestMatchers(HttpMethod.GET, "/locations").permitAll() // Public location list
+                        .requestMatchers(HttpMethod.GET, "/locations", "/locations/cities").permitAll() // Public location list and cities
                         .requestMatchers("/ws/**").permitAll() // WebSocket endpoint
                         .anyRequest().authenticated());
 
