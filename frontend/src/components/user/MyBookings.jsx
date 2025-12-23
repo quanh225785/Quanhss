@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
-import { Calendar, MapPin, Clock, ArrowRight, Loader2, AlertCircle, X, Users, QrCode, ChevronLeft, ChevronRight, List, Star, Timer, CreditCard } from "lucide-react";
+import { Calendar, MapPin, Clock, ArrowRight, Loader2, AlertCircle, X, Users, QrCode, ChevronLeft, ChevronRight, List, Star, Timer, CreditCard, Edit3 } from "lucide-react";
 import ReviewModal from "./ReviewModal";
+import EditBookingContactModal from "./EditBookingContactModal";
 import { api } from "../../utils/api";
 import ConfirmModal from "../shared/ConfirmModal";
 import { FaMoneyBillAlt } from "react-icons/fa";
@@ -27,6 +28,7 @@ const MyBookings = () => {
   const [reviewBooking, setReviewBooking] = useState(null);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [bookingToCancel, setBookingToCancel] = useState(null);
+  const [editBooking, setEditBooking] = useState(null);
   const [countdownTimers, setCountdownTimers] = useState({}); // { bookingId: remainingSeconds }
   const [payingId, setPayingId] = useState(null);
   const { showToast } = useToast();
@@ -674,6 +676,16 @@ const MyBookings = () => {
                               )}
                             </button>
                           )}
+                          {/* Edit contact button for PAID but not COMPLETED bookings */}
+                          {booking.paymentStatus === 'PAID' && booking.status === 'CONFIRMED' && (
+                            <button
+                              onClick={() => setEditBooking(booking)}
+                              className="px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-xl border border-blue-200 transition-all flex items-center gap-2"
+                            >
+                              <Edit3 size={16} />
+                              Sửa thông tin
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -755,6 +767,15 @@ const MyBookings = () => {
         cancelText="Quay lại"
         isLoading={cancellingId === bookingToCancel}
       />
+
+      {/* Edit Booking Contact Modal */}
+      {editBooking && (
+        <EditBookingContactModal
+          booking={editBooking}
+          onClose={() => setEditBooking(null)}
+          onSuccess={() => fetchBookings()}
+        />
+      )}
     </div>
   );
 };

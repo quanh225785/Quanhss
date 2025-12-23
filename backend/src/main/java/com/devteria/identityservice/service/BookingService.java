@@ -20,6 +20,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.devteria.identityservice.dto.request.BookingContactUpdateRequest;
 import com.devteria.identityservice.dto.request.BookingCreationRequest;
 import com.devteria.identityservice.dto.request.BookingEmailRequest;
 import com.devteria.identityservice.dto.response.BookingResponse;
@@ -384,6 +385,63 @@ public class BookingService {
         booking = bookingRepository.save(booking);
 
         log.info("Check-in completed for booking: {}", bookingCode);
+
+        return mapToResponse(booking);
+    }
+
+    /**
+     * Update booking contact info (participant names and phone)
+     * Only allowed for PAID bookings that are not yet COMPLETED
+     */
+    @Transactional
+    public BookingResponse updateBookingContact(Long id, BookingContactUpdateRequest request) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        Booking booking = bookingRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Booking not found"));
+
+        // Check if user owns this booking
+        if (!booking.getUser().getId().equals(user.getId())) {
+            throw new RuntimeException("You are not authorized to update this booking");
+        }
+
+        // Check if booking is paid
+        if (booking.getPaymentStatus() != PaymentStatus.PAID) {
+            throw new RuntimeException("Chỉ có thể sửa thông tin khi đã thanh toán");
+        }
+
+        // Check if booking is not completed (not checked-in yet)
+        if (booking.getStatus() == BookingStatus.COMPLETED) {
+            throw new RuntimeException("Không thể sửa thông tin sau khi đã check-in");
+        }
+
+        // Check if booking is cancelled
+        if (booking.getStatus() == BookingStatus.CANCELLED) {
+            throw new RuntimeException("Không thể sửa thông tin đặt tour đã hủy");
+        }
+
+        // Validate number of participants matches
+        if (request.getParticipantNames().size() != booking.getNumberOfParticipants()) {
+            throw new RuntimeException("Số lượng người tham gia phải giữ nguyên (" + booking.getNumberOfParticipants() + " người)");
+        }
+
+        // Update contact phone
+        if (request.getContactPhone() != null) {
+            booking.setContactPhone(request.getContactPhone());
+        }
+
+        // Update participant names
+        List<Participant> participants = booking.getParticipants();
+        List<String> newNames = request.getParticipantNames();
+        for (int i = 0; i < participants.size(); i++) {
+            participants.get(i).setFullName(newNames.get(i).trim());
+        }
+
+        booking = bookingRepository.save(booking);
+
+        log.info("Booking contact info updated: {}", booking.getBookingCode());
 
         return mapToResponse(booking);
     }

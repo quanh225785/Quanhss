@@ -5,6 +5,7 @@ import jakarta.validation.Valid;
 
 import org.springframework.web.bind.annotation.*;
 
+import com.devteria.identityservice.dto.request.BookingContactUpdateRequest;
 import com.devteria.identityservice.dto.request.BookingCreationRequest;
 import com.devteria.identityservice.dto.request.ApiResponse;
 import com.devteria.identityservice.dto.response.BookingResponse;
@@ -106,6 +107,20 @@ public class BookingController {
         log.info("Check-in for booking: {}", bookingCode);
         return ApiResponse.<BookingResponse>builder()
                 .result(bookingService.checkIn(bookingCode))
+                .build();
+    }
+
+    /**
+     * Update booking contact info (USER)
+     * Only allowed for PAID bookings that are not yet checked-in (COMPLETED)
+     */
+    @PutMapping("/{id}/contact")
+    public ApiResponse<BookingResponse> updateBookingContact(
+            @PathVariable Long id,
+            @Valid @RequestBody BookingContactUpdateRequest request) {
+        log.info("Updating contact info for booking: {}", id);
+        return ApiResponse.<BookingResponse>builder()
+                .result(bookingService.updateBookingContact(id, request))
                 .build();
     }
 }
