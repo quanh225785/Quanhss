@@ -291,7 +291,7 @@ const AgentTourDetail = () => {
 
             {/* Itinerary */}
             <div className="bg-white border border-zinc-200 rounded-xl p-6">
-                <h3 className="font-bold text-lg mb-4">📅 Lịch trình</h3>
+                <h3 className="font-bold text-lg mb-4"> Lịch trình</h3>
 
                 {dayTabs.length > 1 && (
                     <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
@@ -321,7 +321,7 @@ const AgentTourDetail = () => {
                                     {point.activity || point.locationName}
                                 </p>
                                 {point.locationName && point.activity && (
-                                    <p className="text-xs text-zinc-500">📍 {point.locationName}</p>
+                                    <p className="text-xs text-zinc-500"> {point.locationName}</p>
                                 )}
                             </div>
                         </div>

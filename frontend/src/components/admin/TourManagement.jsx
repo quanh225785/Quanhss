@@ -522,7 +522,7 @@ const TourManagement = () => {
             {/* Itinerary by Day */}
             <div>
               <h4 className="text-sm font-medium text-zinc-700 mb-2">
-                📅 Lịch trình ({selectedTour.points?.length || 0} điểm)
+                 Lịch trình ({selectedTour.points?.length || 0} điểm)
               </h4>
               <div className="space-y-3 max-h-64 overflow-y-auto">
                 {Array.from({ length: selectedTour.numberOfDays || 1 }, (_, i) => i + 1).map(day => {
@@ -553,7 +553,7 @@ const TourManagement = () => {
                                 {point.locationName ? (
                                   <>
                                     <p className="text-xs text-zinc-500 truncate">
-                                      📍 {point.locationName}
+                                       {point.locationName}
                                     </p>
                                     {point.locationAddress && (
                                       <p className="text-xs text-zinc-400 truncate">{point.locationAddress}</p>
