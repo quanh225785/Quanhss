@@ -7,7 +7,7 @@ const AiChatbot = () => {
     const [isMinimized, setIsMinimized] = useState(false);
     const [isFullScreen, setIsFullScreen] = useState(false);
     const [messages, setMessages] = useState([
-        { role: 'ai', content: 'Xin chào! Tôi là trợ lý Quanh xinh gái. Tôi có thể giúp gì cho bạn hôm nay?' }
+        { role: 'ai', content: 'Xin chào! Tớ là trợ lý Quanh xinh gái. Tớ có thể giúp gì cho cậu?' }
     ]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);

@@ -294,7 +294,7 @@ const TourDetailPage = () => {
     }
 
     return (
-        <div className="h-full bg-surface font-sans p-4 md:p-8">
+        <div className="min-h-screen bg-surface font-sans p-4 md:p-8 pb-32 md:pb-12">
             {/* Header */}
             <header className="sticky top-0 bg-white/70 backdrop-blur-xl border-b border-white/40 z-50 rounded-2xl mb-6">
                 <div className="px-4 md:px-8 py-4 flex items-center justify-between">
@@ -347,31 +347,6 @@ const TourDetailPage = () => {
                             </div>
                         )}
 
-                        {/* Map Section */}
-                        <div className="bg-white/60 backdrop-blur-md border border-white/60 shadow-sm rounded-[2rem] overflow-hidden">
-                            <div className="p-4 border-b border-white/40 flex justify-between items-center">
-                                <h3 className="text-lg font-display font-bold text-slate-900 flex items-center gap-2">
-                                    <Route className="text-primary" size={20} />
-                                    Bản đồ - Ngày {activeDay}
-                                </h3>
-                                <span className="text-xs font-medium text-slate-500 bg-slate-100 px-3 py-1 rounded-full">
-                                    {pointsByDay[activeDay]?.length || 0} địa điểm
-                                </span>
-                            </div>
-                            <TourMap
-                                points={pointsByDay[activeDay]?.map((p) => ({
-                                    latitude: p.latitude,
-                                    longitude: p.longitude,
-                                    name: p.locationName || p.activity,
-                                    orderIndex: p.orderIndex,
-                                })) || []}
-                                routePolyline={dayRoute?.polyline || null}
-                                totalDistance={dayRoute?.distance || null}
-                                totalTime={dayRoute?.time || null}
-                                isLoading={isLoadingRoute}
-                            />
-                        </div>
-
                         {/* Tour Info Cards */}
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                             <div className="bg-white/60 backdrop-blur-md border border-white/60 rounded-2xl p-4 text-center">
@@ -415,6 +390,31 @@ const TourDetailPage = () => {
                                 </p>
                             </div>
                         )}
+
+                        {/* Map Section */}
+                        <div className="bg-white/60 backdrop-blur-md border border-white/60 shadow-sm rounded-[2rem] overflow-hidden">
+                            <div className="p-4 border-b border-white/40 flex justify-between items-center">
+                                <h3 className="text-lg font-display font-bold text-slate-900 flex items-center gap-2">
+                                    <Route className="text-primary" size={20} />
+                                    Bản đồ - Ngày {activeDay}
+                                </h3>
+                                <span className="text-xs font-medium text-slate-500 bg-slate-100 px-3 py-1 rounded-full">
+                                    {pointsByDay[activeDay]?.length || 0} địa điểm
+                                </span>
+                            </div>
+                            <TourMap
+                                points={pointsByDay[activeDay]?.map((p) => ({
+                                    latitude: p.latitude,
+                                    longitude: p.longitude,
+                                    name: p.locationName || p.activity,
+                                    orderIndex: p.orderIndex,
+                                })) || []}
+                                routePolyline={dayRoute?.polyline || null}
+                                totalDistance={dayRoute?.distance || null}
+                                totalTime={dayRoute?.time || null}
+                                isLoading={isLoadingRoute}
+                            />
+                        </div>
 
                         {/* Itinerary */}
                         <div className="bg-white/60 backdrop-blur-md border border-white/60 shadow-sm rounded-[2rem] p-6">

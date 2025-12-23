@@ -44,7 +44,8 @@ export const ChatProvider = ({ children }) => {
 
         setupWebSocket();
 
-        const interval = setInterval(fetchUnreadCount, 10000);
+        // Poll every 3 seconds for reliability in multi-instance environments
+        const interval = setInterval(fetchUnreadCount, 3000);
 
         return () => clearInterval(interval);
     }, [fetchUnreadCount]);

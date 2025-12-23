@@ -78,7 +78,7 @@ const MainLayout = ({ children, onLogout }) => {
                 </button>
 
                 <div className={`${isCollapsed ? 'p-4 items-center' : 'p-8'} pb-4 flex flex-col`}>
-                    <Link to="/" className="text-2xl font-display font-bold tracking-tighter flex items-center gap-1 text-slate-900 hover:text-primary transition-all duration-300 overflow-hidden">
+                    <Link to="/dashboard" className="text-2xl font-display font-bold tracking-tighter flex items-center gap-1 text-slate-900 hover:text-primary transition-all duration-300 overflow-hidden">
                         <span className="shrink-0 text-primary">Q</span>
                         {!isCollapsed && <span className="transition-opacity duration-300">uanh.</span>}
                     </Link>

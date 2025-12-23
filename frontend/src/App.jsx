@@ -92,7 +92,16 @@ function App() {
       <ChatProvider>
         <Router>
           <Routes>
-            <Route path="/" element={<LandingPage />} />
+            <Route
+              path="/"
+              element={
+                isAuthenticated ? (
+                  <Navigate to="/dashboard" replace />
+                ) : (
+                  <LandingPage />
+                )
+              }
+            />
             {/* ... rest of the routes ... */}
             <Route
               path="/login"
