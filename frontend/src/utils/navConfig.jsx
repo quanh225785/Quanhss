@@ -8,6 +8,7 @@ import {
     MessageCircle,
     MessageSquare,
     Heart,
+    Flag,
 } from 'lucide-react';
 
 // User navigation items
@@ -38,6 +39,7 @@ export const adminNavItems = [
     { icon: <User size={20} />, label: 'Quản lý người dùng', shortLabel: 'Users', path: '/users' },
     { icon: <MapPin size={20} />, label: 'Quản lý địa điểm', shortLabel: 'Địa điểm', path: '/locations' },
     { icon: <Map size={20} />, label: 'Quản lý tour', shortLabel: 'Tour', path: '/tours' },
+    { icon: <Flag size={20} />, label: 'Quản lý báo cáo', shortLabel: 'Báo cáo', path: '/reports' },
 ];
 
 // Get nav items by role with prefix

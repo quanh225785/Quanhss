@@ -163,7 +163,7 @@ function App() {
             }
           />
           <Route
-            path="/agent/:id"
+            path="/agent/view/:id"
             element={
               isAuthenticated ? (
                 <MainLayout onLogout={handleLogout}>

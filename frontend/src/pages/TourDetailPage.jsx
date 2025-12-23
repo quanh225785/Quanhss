@@ -654,7 +654,7 @@ const TourDetailPage = () => {
                             <h3 className="text-lg font-display font-bold text-slate-900 mb-4">Thông tin đại lý</h3>
                             <div
                                 className="flex items-center gap-4 cursor-pointer hover:bg-white/50 rounded-xl p-2 -m-2 transition-colors"
-                                onClick={() => navigate(`/agent/${tour.createdById}`)}
+                                onClick={() => navigate(`/agent/view/${tour.createdById}`)}
                             >
                                 <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary to-secondary text-white flex items-center justify-center text-xl font-bold shadow-md overflow-hidden">
                                     {tour.createdByAvatar ? (
@@ -678,7 +678,7 @@ const TourDetailPage = () => {
                                 <ChevronRight size={20} className="text-slate-400" />
                             </div>
                             <button
-                                onClick={() => navigate(`/agent/${tour.createdById}`)}
+                                onClick={() => navigate(`/agent/view/${tour.createdById}`)}
                                 className="w-full mt-4 py-3 border border-slate-200 text-slate-600 font-medium rounded-xl hover:bg-slate-50 transition-colors flex items-center justify-center gap-2"
                             >
                                 <User size={18} />

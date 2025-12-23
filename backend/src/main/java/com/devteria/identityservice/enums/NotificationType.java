@@ -5,5 +5,6 @@ public enum NotificationType {
     BOOKING_CANCELLED,  // Đặt chỗ bị hủy
     NEW_REVIEW,         // Có đánh giá mới
     TOUR_APPROVED,      // Tour được duyệt
-    TOUR_REJECTED       // Tour bị từ chối
+    TOUR_REJECTED,      // Tour bị từ chối
+    REPORT_WARNING      // Cảnh báo vi phạm từ báo cáo
 }

@@ -41,6 +41,10 @@ public enum ErrorCode {
         NOTIFICATION_NOT_FOUND(1028, "Không tìm thấy thông báo", HttpStatus.NOT_FOUND),
         ACCOUNT_LOCKED(1029, "Tài khoản đã bị khóa", HttpStatus.FORBIDDEN),
         CURRENT_PASSWORD_INVALID(1030, "Mật khẩu hiện tại không hợp lệ", HttpStatus.BAD_REQUEST),
+        REPORT_NOT_FOUND(1031, "Không tìm thấy báo cáo", HttpStatus.NOT_FOUND),
+        REPORT_ALREADY_PROCESSED(1032, "Báo cáo đã được xử lý", HttpStatus.BAD_REQUEST),
+        CANNOT_REPORT_SELF(1033, "Không thể tự báo cáo bản thân", HttpStatus.BAD_REQUEST),
+        ALREADY_REPORTED(1034, "Bạn đã báo cáo đối tượng này trước đó", HttpStatus.BAD_REQUEST),
         ;
 
         ErrorCode(int code, String message, HttpStatusCode statusCode) {

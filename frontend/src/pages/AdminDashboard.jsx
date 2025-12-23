@@ -9,6 +9,7 @@ import LocationManagement from "../components/admin/LocationManagement";
 import BookingManagement from "../components/admin/BookingManagement";
 import ContentManagement from "../components/admin/ContentManagement";
 import AdminProfile from "../components/admin/AdminProfile";
+import ReportManagement from "../components/admin/ReportManagement";
 
 const AdminDashboard = ({ onLogout }) => {
   const [user] = useState(
@@ -29,6 +30,7 @@ const AdminDashboard = ({ onLogout }) => {
           <Route path="/locations" element={<LocationManagement />} />
           <Route path="/bookings" element={<BookingManagement />} />
           <Route path="/content" element={<ContentManagement />} />
+          <Route path="/reports" element={<ReportManagement />} />
           <Route path="/profile" element={<AdminProfile user={user} onLogout={onLogout} />} />
         </Routes>
       </div>

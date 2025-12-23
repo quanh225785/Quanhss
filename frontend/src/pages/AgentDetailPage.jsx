@@ -13,10 +13,12 @@ import {
     Award,
     TrendingUp,
     Clock,
+    Flag,
 } from 'lucide-react';
 import { api } from '../utils/api';
 import { startConversation } from '../utils/chatApi';
 import { useToast } from '../context/ToastContext';
+import ReportModal from '../components/shared/ReportModal';
 
 const AgentDetailPage = () => {
     const { id } = useParams();
@@ -26,6 +28,7 @@ const AgentDetailPage = () => {
     const [error, setError] = useState(null);
     const [contactingAgent, setContactingAgent] = useState(false);
     const [favorites, setFavorites] = useState(new Set());
+    const [showReportModal, setShowReportModal] = useState(false);
     const { showToast } = useToast();
 
     useEffect(() => {
@@ -257,19 +260,29 @@ const AgentDetailPage = () => {
                                 </div>
                             </div>
 
-                            {/* Contact Button */}
-                            <button
-                                onClick={handleContactAgent}
-                                disabled={contactingAgent}
-                                className="px-6 py-3 bg-primary text-white font-medium rounded-xl hover:bg-primary/90 transition-colors flex items-center gap-2 disabled:opacity-50"
-                            >
-                                {contactingAgent ? (
-                                    <Loader2 size={18} className="animate-spin" />
-                                ) : (
-                                    <MessageCircle size={18} />
-                                )}
-                                Liên hệ đại lý
-                            </button>
+                            {/* Action Buttons */}
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={handleContactAgent}
+                                    disabled={contactingAgent}
+                                    className="px-6 py-3 bg-primary text-white font-medium rounded-xl hover:bg-primary/90 transition-colors flex items-center gap-2 disabled:opacity-50"
+                                >
+                                    {contactingAgent ? (
+                                        <Loader2 size={18} className="animate-spin" />
+                                    ) : (
+                                        <MessageCircle size={18} />
+                                    )}
+                                    Liên hệ đại lý
+                                </button>
+                                <button
+                                    onClick={() => setShowReportModal(true)}
+                                    className="px-4 py-3 border border-red-200 text-red-600 font-medium rounded-xl hover:bg-red-50 transition-colors flex items-center gap-2"
+                                    title="Báo cáo đại lý"
+                                >
+                                    <Flag size={18} />
+                                    Báo cáo
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -306,8 +319,8 @@ const AgentDetailPage = () => {
                                         <button
                                             onClick={(e) => toggleFavorite(e, tour.id)}
                                             className={`absolute top-3 right-3 p-2 rounded-full transition-all ${favorites.has(tour.id)
-                                                    ? 'bg-red-500 text-white'
-                                                    : 'bg-white/90 text-slate-600 hover:text-red-500'
+                                                ? 'bg-red-500 text-white'
+                                                : 'bg-white/90 text-slate-600 hover:text-red-500'
                                                 }`}
                                         >
                                             <Heart
@@ -384,6 +397,15 @@ const AgentDetailPage = () => {
                     )}
                 </div>
             </main>
+
+            {/* Report Modal */}
+            <ReportModal
+                isOpen={showReportModal}
+                onClose={() => setShowReportModal(false)}
+                targetType="AGENT"
+                targetId={id}
+                targetName={getAgentName()}
+            />
         </div>
     );
 };
