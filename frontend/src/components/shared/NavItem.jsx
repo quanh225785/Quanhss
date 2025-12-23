@@ -1,6 +1,6 @@
 import React from "react";
 
-const NavItem = ({ icon, label, active, onClick, isCollapsed }) => (
+const NavItem = ({ icon, label, active, onClick, isCollapsed, unreadCount }) => (
   <button
     onClick={onClick}
     className={`w-full flex items-center ${isCollapsed ? 'justify-center px-0' : 'gap-3 px-4'} py-3 text-sm font-medium rounded-xl transition-all duration-200 group relative overflow-hidden ${active
@@ -14,9 +14,14 @@ const NavItem = ({ icon, label, active, onClick, isCollapsed }) => (
         }`}
     ></div>
 
-    <span className={`relative z-10 transition-transform duration-300 ${active && !isCollapsed ? 'translate-x-1.5' : active && isCollapsed ? 'scale-110' : 'group-hover:scale-110'}`}>
-      {icon}
-    </span>
+    <div className="relative">
+      <span className={`relative z-10 block transition-transform duration-300 ${active && !isCollapsed ? 'translate-x-1.5' : active && isCollapsed ? 'scale-110' : 'group-hover:scale-110'}`}>
+        {icon}
+      </span>
+      {unreadCount > 0 && (
+        <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white z-20" />
+      )}
+    </div>
     {!isCollapsed && (
       <span className={`relative z-10 font-bold transition-all duration-300 ${active ? 'translate-x-1' : ''}`}>
         {label}

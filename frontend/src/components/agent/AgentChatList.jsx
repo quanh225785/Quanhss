@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { MessageCircle, ArrowLeft, Search, Loader2 } from "lucide-react";
 import ChatWindow from "../shared/ChatWindow";
 import { getConversations, getMessages } from "../../utils/chatApi";
+import { useChat } from "../../context/ChatContext";
 
 const AgentChatList = () => {
     const [conversations, setConversations] = useState([]);
@@ -10,6 +11,7 @@ const AgentChatList = () => {
     const [loading, setLoading] = useState(true);
     const [loadingMessages, setLoadingMessages] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
+    const { refreshUnreadCount } = useChat();
 
     useEffect(() => {
         loadConversations();
@@ -39,6 +41,7 @@ const AgentChatList = () => {
             setConversations(prev => prev.map(c =>
                 c.id === conv.id ? { ...c, unreadCount: 0 } : c
             ));
+            refreshUnreadCount();
         } catch (error) {
             console.error("Failed to load messages:", error);
         } finally {
@@ -64,6 +67,7 @@ const AgentChatList = () => {
                 }
                 : c
         ));
+        refreshUnreadCount();
     };
 
     // Handle new message from WebSocket
@@ -85,6 +89,7 @@ const AgentChatList = () => {
                 }
                 : c
         ));
+        refreshUnreadCount();
     };
 
     const formatTime = (dateString) => {

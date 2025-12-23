@@ -23,6 +23,7 @@ import ToursPage from "./pages/ToursPage";
 import { setAuthToken } from "./utils/api";
 import { registerVietmapServiceWorker } from "./utils/serviceWorker";
 import { ToastProvider } from "./context/ToastContext";
+import { ChatProvider } from "./context/ChatContext";
 import AiChatbot from "./components/shared/AiChatbot";
 import "./App.css";
 function App() {
@@ -88,145 +89,148 @@ function App() {
 
   return (
     <ToastProvider>
-      <Router>
-        <Routes>
-          <Route path="/" element={<LandingPage />} />
-          <Route
-            path="/login"
-            element={
-              isAuthenticated ? (
-                <Navigate to="/dashboard" replace />
-              ) : (
-                <Login onLogin={handleLogin} />
-              )
-            }
-          />
-          <Route
-            path="/register"
-            element={
-              isAuthenticated ? (
-                <Navigate to="/dashboard" replace />
-              ) : (
-                <Register />
-              )
-            }
-          />
-          <Route path="/verify" element={<VerifyEmail />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
-
-          {/* Protected routes with sidebar */}
-          <Route
-            path="/tour/:id"
-            element={
-              isAuthenticated ? (
-                <MainLayout onLogout={handleLogout}>
-                  <TourDetailPage />
-                </MainLayout>
-              ) : (
-                <Navigate to="/login" replace />
-              )
-            }
-          />
-          <Route
-            path="/tours"
-            element={
-              isAuthenticated ? (
-                <MainLayout onLogout={handleLogout}>
-                  <ToursPage />
-                </MainLayout>
-              ) : (
-                <Navigate to="/login" replace />
-              )
-            }
-          />
-          <Route
-            path="/tour/:id"
-            element={
-              isAuthenticated ? (
-                <MainLayout onLogout={handleLogout}>
-                  <TourDetailPage />
-                </MainLayout>
-              ) : (
-                <Navigate to="/login" replace />
-              )
-            }
-          />
-          <Route
-            path="/booking/:tourId"
-            element={
-              isAuthenticated ? (
-                <BookingPage />
-              ) : (
-                <Navigate to="/login" replace />
-              )
-            }
-          />
-          <Route
-            path="/agent/view/:id"
-            element={
-              isAuthenticated ? (
-                <MainLayout onLogout={handleLogout}>
-                  <AgentDetailPage />
-                </MainLayout>
-              ) : (
-                <Navigate to="/login" replace />
-              )
-            }
-          />
-          {/* Admin Dashboard Routes */}
-          <Route
-            path="/admin/*"
-            element={
-              isAuthenticated && userRole === "ADMIN" ? (
-                <AdminDashboard onLogout={handleLogout} />
-              ) : (
-                <Navigate to="/login" replace />
-              )
-            }
-          />
-          {/* Agent Dashboard Routes */}
-          <Route
-            path="/agent/*"
-            element={
-              isAuthenticated && userRole === "AGENT" ? (
-                <AgentDashboard onLogout={handleLogout} />
-              ) : (
-                <Navigate to="/login" replace />
-              )
-            }
-          />
-          {/* User Dashboard Routes */}
-          <Route
-            path="/user/*"
-            element={
-              isAuthenticated && userRole === "USER" ? (
-                <UserDashboard onLogout={handleLogout} />
-              ) : (
-                <Navigate to="/login" replace />
-              )
-            }
-          />
-          {/* Legacy /dashboard route - redirect to role-specific dashboard */}
-          <Route
-            path="/dashboard"
-            element={
-              isAuthenticated ? (
-                userRole === "ADMIN" ? (
-                  <Navigate to="/admin" replace />
-                ) : userRole === "AGENT" ? (
-                  <Navigate to="/agent" replace />
+      <ChatProvider>
+        <Router>
+          <Routes>
+            <Route path="/" element={<LandingPage />} />
+            {/* ... rest of the routes ... */}
+            <Route
+              path="/login"
+              element={
+                isAuthenticated ? (
+                  <Navigate to="/dashboard" replace />
                 ) : (
-                  <Navigate to="/user" replace />
+                  <Login onLogin={handleLogin} />
                 )
-              ) : (
-                <Navigate to="/login" replace />
-              )
-            }
-          />
-        </Routes>
-      </Router>
-      {isAuthenticated && <AiChatbot />}
+              }
+            />
+            <Route
+              path="/register"
+              element={
+                isAuthenticated ? (
+                  <Navigate to="/dashboard" replace />
+                ) : (
+                  <Register />
+                )
+              }
+            />
+            <Route path="/verify" element={<VerifyEmail />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+
+            {/* Protected routes with sidebar */}
+            <Route
+              path="/tour/:id"
+              element={
+                isAuthenticated ? (
+                  <MainLayout onLogout={handleLogout}>
+                    <TourDetailPage />
+                  </MainLayout>
+                ) : (
+                  <Navigate to="/login" replace />
+                )
+              }
+            />
+            <Route
+              path="/tours"
+              element={
+                isAuthenticated ? (
+                  <MainLayout onLogout={handleLogout}>
+                    <ToursPage />
+                  </MainLayout>
+                ) : (
+                  <Navigate to="/login" replace />
+                )
+              }
+            />
+            <Route
+              path="/tour/:id"
+              element={
+                isAuthenticated ? (
+                  <MainLayout onLogout={handleLogout}>
+                    <TourDetailPage />
+                  </MainLayout>
+                ) : (
+                  <Navigate to="/login" replace />
+                )
+              }
+            />
+            <Route
+              path="/booking/:tourId"
+              element={
+                isAuthenticated ? (
+                  <BookingPage />
+                ) : (
+                  <Navigate to="/login" replace />
+                )
+              }
+            />
+            <Route
+              path="/agent/view/:id"
+              element={
+                isAuthenticated ? (
+                  <MainLayout onLogout={handleLogout}>
+                    <AgentDetailPage />
+                  </MainLayout>
+                ) : (
+                  <Navigate to="/login" replace />
+                )
+              }
+            />
+            {/* Admin Dashboard Routes */}
+            <Route
+              path="/admin/*"
+              element={
+                isAuthenticated && userRole === "ADMIN" ? (
+                  <AdminDashboard onLogout={handleLogout} />
+                ) : (
+                  <Navigate to="/login" replace />
+                )
+              }
+            />
+            {/* Agent Dashboard Routes */}
+            <Route
+              path="/agent/*"
+              element={
+                isAuthenticated && userRole === "AGENT" ? (
+                  <AgentDashboard onLogout={handleLogout} />
+                ) : (
+                  <Navigate to="/login" replace />
+                )
+              }
+            />
+            {/* User Dashboard Routes */}
+            <Route
+              path="/user/*"
+              element={
+                isAuthenticated && userRole === "USER" ? (
+                  <UserDashboard onLogout={handleLogout} />
+                ) : (
+                  <Navigate to="/login" replace />
+                )
+              }
+            />
+            {/* Legacy /dashboard route - redirect to role-specific dashboard */}
+            <Route
+              path="/dashboard"
+              element={
+                isAuthenticated ? (
+                  userRole === "ADMIN" ? (
+                    <Navigate to="/admin" replace />
+                  ) : userRole === "AGENT" ? (
+                    <Navigate to="/agent" replace />
+                  ) : (
+                    <Navigate to="/user" replace />
+                  )
+                ) : (
+                  <Navigate to="/login" replace />
+                )
+              }
+            />
+          </Routes>
+        </Router>
+        {isAuthenticated && <AiChatbot />}
+      </ChatProvider>
     </ToastProvider>
   );
 }

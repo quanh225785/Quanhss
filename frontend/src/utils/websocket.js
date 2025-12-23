@@ -189,6 +189,35 @@ export const subscribeToAgentNotifications = (userId, onNotification) => {
 };
 
 /**
+ * Subscribe vào chat updates topic
+ */
+export const subscribeToChatUpdates = (userId, onUpdate) => {
+    if (!stompClient || !isConnected) {
+        console.warn('WebSocket not connected, cannot subscribe to chat updates');
+        return null;
+    }
+
+    const destination = `/topic/chat/updates/${userId}`;
+
+    // Check if already subscribed
+    if (subscriptions.has(destination)) {
+        return subscriptions.get(destination);
+    }
+
+    const subscription = stompClient.subscribe(destination, (frame) => {
+        try {
+            if (onUpdate) onUpdate(frame.body);
+        } catch (e) {
+            console.error('Error in chat update subscription:', e);
+        }
+    });
+
+    subscriptions.set(destination, subscription);
+
+    return subscription;
+};
+
+/**
  * Gửi tin nhắn qua WebSocket
  */
 export const sendMessageViaWebSocket = (conversationId, content, imageUrl = null) => {

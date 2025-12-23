@@ -4,10 +4,12 @@ import { LogOut, ChevronLeft, ChevronRight } from 'lucide-react';
 import NavItem from '../shared/NavItem';
 import NotificationBell from '../shared/NotificationBell';
 import { userNavItems, agentNavItems, adminNavItems } from '../../utils/navConfig';
+import { useChat } from '../../context/ChatContext';
 
 const MainLayout = ({ children, onLogout }) => {
     const navigate = useNavigate();
     const location = useLocation();
+    const { unreadCount } = useChat();
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [user] = useState(
         JSON.parse(
@@ -95,6 +97,7 @@ const MainLayout = ({ children, onLogout }) => {
                                 label={item.label}
                                 active={isNavItemActive(item)}
                                 isCollapsed={isCollapsed}
+                                unreadCount={item.label === 'Tin nhắn' ? unreadCount : 0}
                             />
                         </div>
                     ))}
@@ -160,9 +163,14 @@ const MainLayout = ({ children, onLogout }) => {
                                 : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
                                 }`}
                         >
-                            <span className={`transition-transform duration-200 ${isNavItemActive(item) ? 'scale-110' : ''}`}>
-                                {React.cloneElement(item.icon, { size: 22 })}
-                            </span>
+                            <div className="relative">
+                                <span className={`transition-transform duration-200 ${isNavItemActive(item) ? 'scale-110' : ''}`}>
+                                    {React.cloneElement(item.icon, { size: 22 })}
+                                </span>
+                                {item.label === 'Tin nhắn' && unreadCount > 0 && (
+                                    <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white z-20" />
+                                )}
+                            </div>
                             <span className="text-[10px] font-medium truncate max-w-[60px]">
                                 {item.shortLabel}
                             </span>

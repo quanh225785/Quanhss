@@ -259,7 +259,25 @@ public class ChatService {
         // Let frontend determine isCurrentUser by comparing senderId
         broadcastMessageToConversation(message);
 
+        // Send unread count update signal to recipient
+        sendChatUpdateSignal(conversation, currentUser);
+
         return response;
+    }
+
+    /**
+     * Gửi tín hiệu cập nhật chat cho người nhận
+     */
+    private void sendChatUpdateSignal(ChatConversation conversation, User sender) {
+        User recipient = conversation.getUser().getId().equals(sender.getId())
+                ? conversation.getAgent()
+                : conversation.getUser();
+
+        if (messagingTemplate != null) {
+            String destination = "/topic/chat/updates/" + recipient.getId();
+            messagingTemplate.convertAndSend(destination, "REFRESH");
+            log.info("Chat update signal sent to: {}", destination);
+        }
     }
 
     /**
@@ -304,5 +322,13 @@ public class ChatService {
         }
 
         messageRepository.markAsRead(conversationId, currentUser.getId());
+    }
+
+    /**
+     * Lấy tổng số tin nhắn chưa đọc của user hiện tại
+     */
+    public Long getTotalUnreadCount() {
+        User currentUser = getCurrentUser();
+        return messageRepository.countAllUnreadMessages(currentUser.getId());
     }
 }
