@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Bot, X, Send, Loader2, Minimize2, Maximize2, ChevronUp, ChevronDown } from 'lucide-react';
+import { X, Send, Loader2, Minimize2, Maximize2, ChevronUp, ChevronDown } from 'lucide-react';
 import { api } from '../../utils/api';
 
 const AiChatbot = () => {
@@ -13,6 +13,10 @@ const AiChatbot = () => {
     const [isLoading, setIsLoading] = useState(false);
     const messagesEndRef = useRef(null);
 
+    // Get user info and role to check permissions
+    const userData = JSON.parse(localStorage.getItem('user') || '{}');
+    const userRole = userData?.roles?.[0]?.name || userData?.role;
+
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     };
@@ -20,6 +24,13 @@ const AiChatbot = () => {
     useEffect(() => {
         scrollToBottom();
     }, [messages]);
+
+    // Only show for USER role (not for AGENT or ADMIN)
+    // If not logged in, userRole might be undefined, we might want to show it for guests too?
+    // User requested "chỉ trong user", implying regular users.
+    if (userRole && userRole !== 'USER') {
+        return null;
+    }
 
     // Extract image URLs from content
     const extractImages = (content) => {
@@ -101,12 +112,12 @@ const AiChatbot = () => {
         return (
             <button
                 onClick={() => setIsOpen(true)}
-                className="fixed bottom-24 right-6 w-14 h-14 bg-primary text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 transition-all z-50 group"
+                className="fixed bottom-24 right-6 w-14 h-14 bg-primary text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 transition-all z-50 group p-0 overflow-hidden border-2 border-white"
             >
-                <Bot size={28} className="group-hover:rotate-12 transition-transform" />
-                <span className="absolute -top-1 -right-1 flex h-3 w-3">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-3 w-3 bg-secondary"></span>
+                <img src="/Quanh.jpeg" alt="Quanh AI" className="w-full h-full object-cover group-hover:rotate-6 transition-transform" />
+                <span className="absolute top-0 right-0 flex h-3 w-3">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500 border border-white"></span>
                 </span>
             </button>
         );
@@ -122,8 +133,8 @@ const AiChatbot = () => {
             {/* Header */}
             <div className="bg-primary p-4 text-white flex items-center justify-between shrink-0">
                 <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
-                        <Bot size={20} />
+                    <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center overflow-hidden border border-white/30 shadow-inner">
+                        <img src="/Quanh.jpeg" alt="Quanh" className="w-full h-full object-cover" />
                     </div>
                     <div>
                         <h3 className="font-bold text-sm">Trợ lý Quanh xinh gái</h3>
@@ -172,7 +183,12 @@ const AiChatbot = () => {
                         {messages.map((msg, index) => {
                             const { images, text } = extractImages(msg.content);
                             return (
-                                <div key={index} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                                <div key={index} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} items-end gap-2`}>
+                                    {msg.role === 'ai' && (
+                                        <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 border border-slate-200 shadow-sm mb-1">
+                                            <img src="/Quanh.jpeg" alt="Quanh" className="w-full h-full object-cover" />
+                                        </div>
+                                    )}
                                     <div className={`max-w-[90%] rounded-2xl text-sm shadow-sm ${msg.role === 'user'
                                         ? 'bg-primary text-white rounded-tr-none'
                                         : 'bg-white text-slate-700 rounded-tl-none border border-slate-100'
@@ -201,7 +217,10 @@ const AiChatbot = () => {
                             );
                         })}
                         {isLoading && (
-                            <div className="flex justify-start">
+                            <div className="flex justify-start items-center gap-2">
+                                <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 border border-slate-200 shadow-sm">
+                                    <img src="/Quanh.jpeg" alt="Quanh" className="w-full h-full object-cover" />
+                                </div>
                                 <div className="bg-white p-3 rounded-2xl rounded-tl-none border border-slate-100 shadow-sm flex items-center gap-2">
                                     <div className="flex gap-1">
                                         <span className="w-1.5 h-1.5 bg-primary/40 rounded-full animate-bounce"></span>
