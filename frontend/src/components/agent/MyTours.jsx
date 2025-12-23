@@ -203,7 +203,7 @@ const MyTours = () => {
                                     </div>
 
                                     {tour.description && (
-                                        <p className="text-sm text-zinc-600 mb-3">{tour.description}</p>
+                                        <p className="text-sm text-zinc-600 mb-3 line-clamp-2">{tour.description}</p>
                                     )}
 
                                     <div className="flex flex-wrap gap-4 text-sm text-zinc-600">
