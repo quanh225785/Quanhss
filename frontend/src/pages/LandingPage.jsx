@@ -17,6 +17,7 @@ import {
 } from "react-icons/fi";
 import { MdFlightTakeoff } from "react-icons/md";
 import { BsBuilding } from "react-icons/bs";
+import landingImg from '../assets/landing.png';
 
 function LandingPage() {
     return (
@@ -69,7 +70,7 @@ function LandingPage() {
                     </div>
                     <div className="hero-image relative animate-float">
                         <div className="relative z-10 rounded-[3rem] overflow-hidden shadow-2xl border-4 border-white">
-                            <img src="landing.png" alt="Du khách" className="w-full object-cover" />
+                            <img src={landingImg} alt="Du khách" className="w-full object-cover" />
                         </div>
                         {/* Decorative background elements */}
                         <div className="absolute top-10 -right-10 w-full h-full border-2 border-primary/20 rounded-[3rem] -z-10"></div>
