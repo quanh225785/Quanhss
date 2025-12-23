@@ -44,15 +44,17 @@ public interface TourRepository extends JpaRepository<Tour, Long> {
                         @Param("vehicle") String vehicle,
                         @Param("locationId") Long locationId);
 
-        @EntityGraph(attributePaths = { "tourPoints", "tourPoints.location", "createdBy" })
-        @Query("SELECT t FROM Tour t " +
+        // EntityGraph removed to avoid GROUP BY conflict with MySQL ONLY_FULL_GROUP_BY
+        // mode
+        // tourPoints and createdBy will be lazy loaded in service layer
+        @Query("SELECT DISTINCT t FROM Tour t " +
                         "LEFT JOIN t.trips tr " +
                         "LEFT JOIN Booking b ON b.trip = tr " +
                         "LEFT JOIN Review r ON r.tour = t " +
                         "LEFT JOIN FavoriteTour f ON f.tour = t " +
                         "WHERE t.isActive = true " +
                         "AND t.status = com.devteria.identityservice.enums.TourStatus.APPROVED " +
-                        "GROUP BY t " +
+                        "GROUP BY t.id " +
                         "ORDER BY (COUNT(DISTINCT b.id) * 3.0 + " +
                         "          COALESCE(AVG(r.rating), 0) * 2.0 + " +
                         "          COUNT(DISTINCT r.id) * 1.5 + " +

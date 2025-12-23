@@ -149,9 +149,9 @@ const UserOverview = () => {
           <h2 className="text-2xl md:text-4xl font-display font-black text-slate-900 tracking-tight">
             Khám phá trải nghiệm mới
           </h2>
-          <p className="text-slate-500 mt-2 text-lg">
+          {/* <p className="text-slate-500 mt-2 text-lg">
             Những hành trình độc đáo được thiết kế riêng cho bạn.
-          </p>
+          </p> */}
         </div>
         <div className="flex gap-4">
           <div className="px-5 py-2.5 bg-white/70 backdrop-blur-md rounded-2xl border border-white/50 shadow-sm flex items-center gap-3">
@@ -171,7 +171,7 @@ const UserOverview = () => {
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-2xl font-display font-black text-slate-900 flex items-center gap-2">
             <TrendingUp className="text-rose-500" size={24} />
-            Top 10 Xu hướng
+            Top 10 Trending Tours
           </h3>
           <button
             type="button"
