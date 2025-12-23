@@ -179,7 +179,7 @@ const NotificationBell = () => {
                     navigate("/user/bookings");
                     break;
                 case "REVIEW_REPLIED":
-                    navigate(`/tours/${notification.referenceId}`);
+                    navigate(`/tour/${notification.referenceId}`);
                     break;
 
                 default:
