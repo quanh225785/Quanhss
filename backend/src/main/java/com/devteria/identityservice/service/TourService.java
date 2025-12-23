@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.devteria.identityservice.dto.request.TourCreationRequest;
+import com.devteria.identityservice.dto.request.TourUpdateRequest;
 import com.devteria.identityservice.dto.response.TourResponse;
 import com.devteria.identityservice.dto.response.VietmapRouteResponse;
 import com.devteria.identityservice.entity.Location;
@@ -220,15 +221,59 @@ public class TourService {
     public void deleteTour(Long id) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         Tour tour = tourRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Tour not found"));
+                .orElseThrow(() -> new AppException(ErrorCode.TOUR_NOT_FOUND));
 
         // Verify ownership
         if (!tour.getCreatedBy().getUsername().equals(username)) {
-            throw new RuntimeException("Not authorized to delete this tour");
+            throw new AppException(ErrorCode.UNAUTHORIZED);
         }
 
         tour.setIsActive(false);
         tourRepository.save(tour);
+    }
+
+    @Transactional
+    public TourResponse updateTour(Long id, TourUpdateRequest request) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        Tour tour = tourRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.TOUR_NOT_FOUND));
+
+        // Verify ownership
+        if (!tour.getCreatedBy().getUsername().equals(username)) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+
+        // Only allow editing if tour is active
+        if (!tour.getIsActive()) {
+            throw new RuntimeException("Cannot edit inactive tour");
+        }
+
+        // Update tour description if provided
+        if (request.getDescription() != null) {
+            tour.setDescription(request.getDescription());
+        }
+
+        // Update tour points activity and note
+        if (request.getPoints() != null) {
+            Map<Long, TourUpdateRequest.TourPointUpdateRequest> pointUpdateMap = request.getPoints().stream()
+                    .filter(p -> p.getId() != null)
+                    .collect(Collectors.toMap(TourUpdateRequest.TourPointUpdateRequest::getId, p -> p));
+
+            for (TourPoint point : tour.getTourPoints()) {
+                if (pointUpdateMap.containsKey(point.getId())) {
+                    TourUpdateRequest.TourPointUpdateRequest update = pointUpdateMap.get(point.getId());
+                    if (update.getActivity() != null) {
+                        point.setActivity(update.getActivity());
+                    }
+                    if (update.getNote() != null) {
+                        point.setNote(update.getNote());
+                    }
+                }
+            }
+        }
+
+        tour = tourRepository.save(tour);
+        return mapToResponse(tour);
     }
 
     // Admin: Get all pending tours

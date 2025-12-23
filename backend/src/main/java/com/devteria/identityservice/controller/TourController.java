@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.*;
 
 import com.devteria.identityservice.dto.request.ApiResponse;
 import com.devteria.identityservice.dto.request.TourCreationRequest;
+import com.devteria.identityservice.dto.request.TourUpdateRequest;
 import com.devteria.identityservice.dto.response.TourResponse;
 import com.devteria.identityservice.service.TourService;
 
@@ -107,6 +108,20 @@ public class TourController {
         ApiResponse<TourResponse> getTourById(@PathVariable Long id) {
                 return ApiResponse.<TourResponse>builder()
                                 .result(tourService.getTourById(id))
+                                .build();
+        }
+
+        /**
+         * Update tour (Agent only)
+         * PUT /tours/{id}
+         */
+        @PutMapping("/{id}")
+        ApiResponse<TourResponse> updateTour(
+                        @PathVariable Long id,
+                        @RequestBody TourUpdateRequest request) {
+                log.info("Updating tour: {}", id);
+                return ApiResponse.<TourResponse>builder()
+                                .result(tourService.updateTour(id, request))
                                 .build();
         }
 

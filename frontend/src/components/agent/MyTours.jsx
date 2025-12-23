@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, CheckCircle, XCircle, Loader2, Route, Clock, MapPin, Trash2, Eye, Calendar, Users } from 'lucide-react';
+import { Plus, CheckCircle, XCircle, Loader2, Route, Clock, MapPin, Trash2, Eye, Calendar, Users, Pencil } from 'lucide-react';
 import { api } from '../../utils/api';
 import { useToast } from '../../context/ToastContext';
 import { formatDistance, formatDuration } from '../../utils/polylineUtils';
 import CreateTourModal from './CreateTourModal';
+import EditTourModal from './EditTourModal';
 import Modal from '../shared/Modal';
 import ConfirmModal from '../shared/ConfirmModal';
 
@@ -13,6 +14,7 @@ const MyTours = () => {
     const [tours, setTours] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [showCreateModal, setShowCreateModal] = useState(false);
+    const [tourToEdit, setTourToEdit] = useState(null);
     const [error, setError] = useState(null);
     const [tourToHide, setTourToHide] = useState(null);
     const [tourToDelete, setTourToDelete] = useState(null);
@@ -101,6 +103,11 @@ const MyTours = () => {
 
     const handleTourCreated = () => {
         setShowCreateModal(false);
+        fetchTours();
+    };
+
+    const handleTourUpdated = () => {
+        setTourToEdit(null);
         fetchTours();
     };
 
@@ -244,6 +251,13 @@ const MyTours = () => {
 
                                 <div className="flex items-center gap-2">
                                     <button
+                                        onClick={() => setTourToEdit(tour)}
+                                        className="p-2 text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 rounded-lg transition-colors"
+                                        title="Sửa tour"
+                                    >
+                                        <Pencil size={18} />
+                                    </button>
+                                    <button
                                         onClick={() => navigate(`/agent/tours/${tour.id}`)}
                                         className="p-2 text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 rounded-lg transition-colors"
                                         title="Xem chi tiết & đơn đặt"
@@ -331,6 +345,15 @@ const MyTours = () => {
                 <CreateTourModal
                     onClose={() => setShowCreateModal(false)}
                     onSuccess={handleTourCreated}
+                />
+            )}
+
+            {/* Edit Tour Modal */}
+            {tourToEdit && (
+                <EditTourModal
+                    tour={tourToEdit}
+                    onClose={() => setTourToEdit(null)}
+                    onSuccess={handleTourUpdated}
                 />
             )}
         </div>

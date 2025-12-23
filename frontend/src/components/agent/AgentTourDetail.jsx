@@ -12,6 +12,7 @@ import {
     CheckCircle,
     QrCode,
     X,
+    Pencil,
 } from 'lucide-react';
 import { api } from '../../utils/api';
 import { formatDistance, formatDuration } from '../../utils/polylineUtils';
@@ -19,6 +20,7 @@ import TourMap from './TourMap';
 import QrScanner from './QrScanner';
 import Toast from '../shared/Toast';
 import ImageCarousel from '../common/ImageCarousel';
+import EditTourModal from './EditTourModal';
 
 const AgentTourDetail = () => {
     const { id } = useParams();
@@ -29,6 +31,7 @@ const AgentTourDetail = () => {
     const [error, setError] = useState(null);
     const [activeDay, setActiveDay] = useState(1);
     const [showQrScanner, setShowQrScanner] = useState(false);
+    const [showEditModal, setShowEditModal] = useState(false);
     const [checkInStatus, setCheckInStatus] = useState(null);
 
     useEffect(() => {
@@ -224,6 +227,13 @@ const AgentTourDetail = () => {
                             <Calendar size={16} />
                             Quản lý chuyến
                         </button>
+                        <button
+                            onClick={() => setShowEditModal(true)}
+                            className="flex items-center gap-2 px-4 py-2 border border-zinc-200 text-zinc-700 rounded-lg hover:bg-zinc-50 transition-colors"
+                        >
+                            <Pencil size={16} />
+                            Sửa Tour
+                        </button>
                     </div>
                 )}
             </div>
@@ -320,6 +330,18 @@ const AgentTourDetail = () => {
                         )}
                 </div>
             </div>
+
+            {/* Edit Tour Modal */}
+            {showEditModal && (
+                <EditTourModal
+                    tour={tour}
+                    onClose={() => setShowEditModal(false)}
+                    onSuccess={() => {
+                        setShowEditModal(false);
+                        fetchTourDetails();
+                    }}
+                />
+            )}
         </div>
     );
 };
