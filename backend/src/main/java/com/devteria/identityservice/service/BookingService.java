@@ -64,6 +64,7 @@ public class BookingService {
     UserRepository userRepository;
     S3Client s3Client;
     NotificationService notificationService;
+    EmailVerify emailVerify;
 
     @NonFinal
     @Value("${aws.s3.bucket-name}")
@@ -332,6 +333,13 @@ public class BookingService {
         booking = bookingRepository.save(booking);
 
         log.info("Payment confirmed for booking: {}", booking.getBookingCode());
+
+        // Gửi email thông báo đặt tour thành công
+        try {
+            emailVerify.sendBookingSuccessEmail(booking);
+        } catch (Exception e) {
+            log.error("Failed to send booking success email for booking: {}", booking.getBookingCode(), e);
+        }
 
         return mapToResponse(booking);
     }

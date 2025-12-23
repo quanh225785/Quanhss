@@ -1,0 +1,175 @@
+<!DOCTYPE html
+    PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns:th="http://www.thymeleaf.org" xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href='http://fonts.googleapis.com/css?family=Roboto' rel='stylesheet' type='text/css' />
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f4f4f5;
+            margin: 0;
+            padding: 0;
+            color: #09090b;
+        }
+
+        .email-container {
+            max-width: 600px;
+            margin: 40px auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid #e4e4e7;
+        }
+
+        .email-header {
+            padding: 32px 32px 0 32px;
+            text-align: left;
+        }
+
+        .email-header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 600;
+            color: #10b981;
+            letter-spacing: -0.5px;
+        }
+
+        .email-body {
+            padding: 24px 32px 32px 32px;
+            color: #09090b;
+            line-height: 1.5;
+        }
+
+        .email-body h2 {
+            color: #09090b;
+            font-size: 18px;
+            margin-bottom: 16px;
+            font-weight: 500;
+        }
+
+        .email-body p {
+            margin: 12px 0;
+            font-size: 14px;
+            color: #71717a;
+        }
+
+        .info-box {
+            background-color: #f4f4f5;
+            padding: 16px;
+            border-radius: 6px;
+            margin: 24px 0;
+            border: 1px solid #e4e4e7;
+            font-size: 14px;
+        }
+
+        .info-item {
+            margin: 8px 0;
+            display: block;
+            width: 100%;
+        }
+
+        .info-label {
+            color: #71717a;
+            font-weight: 400;
+            display: inline-block;
+            width: 140px;
+        }
+
+        .info-value {
+            color: #09090b;
+            font-weight: 500;
+            display: inline-block;
+        }
+
+        .qr-section {
+            text-align: center;
+            margin: 32px 0;
+            padding: 20px;
+            background-color: #f8fafc;
+            border-radius: 12px;
+            border: 2px dashed #e2e8f0;
+        }
+
+        .qr-code {
+            width: 200px;
+            height: 200px;
+            margin-bottom: 12px;
+        }
+
+        .email-footer {
+            background-color: #ffffff;
+            padding: 24px 32px;
+            font-size: 12px;
+            color: #a1a1aa;
+            border-top: 1px solid #e4e4e7;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="email-container">
+        <div class="email-header">
+            <h1>Đặt Tour Thành Công!</h1>
+        </div>
+
+        <div class="email-body">
+            <h2 th:text="${'Xin chào, ' + name}"></h2>
+
+            <p>Chúc mừng! Tour của bạn đã được đặt và thanh toán thành công. Dưới đây là thông tin chi tiết về chuyến đi của bạn.</p>
+
+            <div class="info-box">
+                <div style="margin-bottom: 12px; color: #09090b; font-weight: 600; border-bottom: 1px solid #e4e4e7; padding-bottom: 8px;">Chi tiết đơn đặt</div>
+                
+                <div class="info-item">
+                    <span class="info-label">Mã đơn hàng:</span>
+                    <span class="info-value" th:text="${bookingCode}"></span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Tour:</span>
+                    <span class="info-value" th:text="${tourName}"></span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Ngày khởi hành:</span>
+                    <span class="info-value" th:text="${startDate}"></span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Số người:</span>
+                    <span class="info-value" th:text="${participants + ' người'}"></span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Tổng thanh toán:</span>
+                    <span class="info-value" th:text="${#numbers.formatDecimal(totalPrice, 0, 'COMMA', 0, 'POINT') + ' VND'}"></span>
+                </div>
+            </div>
+
+            <div class="qr-section">
+                <p style="color: #09090b; font-weight: 600; margin-bottom: 16px;">Mã QR Check-in của bạn</p>
+                <img th:src="${qrCodeUrl}" alt="QR Code" class="qr-code" />
+                <p style="font-size: 12px; margin-top: 8px;">Vui lòng xuất trình mã này cho hướng dẫn viên khi bắt đầu tour.</p>
+            </div>
+
+            <p>Chúng tôi hy vọng bạn sẽ có một chuyến đi tuyệt vời và đầy kỷ niệm!</p>
+
+            <p style="margin-top: 24px; font-size: 12px;">
+                Nếu bạn có bất kỳ thắc mắc nào, vui lòng liên hệ với bộ phận hỗ trợ của chúng tôi qua hotline hoặc email.
+            </p>
+        </div>
+
+        <div class="email-footer">
+            <p style="margin: 4px 0;">
+                Cảm ơn bạn đã lựa chọn dịch vụ của chúng tôi.
+            </p>
+            <p style="margin: 4px 0;">
+                Đây là email tự động, vui lòng không trả lời.
+            </p>
+            <p style="margin: 12px 0 0 0;">
+                © 2025 Quanhss Travel. All rights reserved.
+            </p>
+        </div>
+    </div>
+</body>
+
+</html>

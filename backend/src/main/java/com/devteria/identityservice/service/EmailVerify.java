@@ -10,7 +10,9 @@ import org.springframework.stereotype.Service;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 
+import com.devteria.identityservice.entity.Booking;
 import com.devteria.identityservice.entity.User;
+import java.time.format.DateTimeFormatter;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
@@ -147,6 +149,49 @@ public class EmailVerify {
             log.error("Failed to send password reset email to: {}", user.getEmail(), e);
         } catch (Exception e) {
             log.error("Unexpected error while sending password reset email to: {}", user.getEmail(), e);
+        }
+    }
+
+    /**
+     * Gửi email thông báo đặt tour thành công sau khi thanh toán
+     */
+    @Async("emailTaskExecutor")
+    public void sendBookingSuccessEmail(Booking booking) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(
+                    message,
+                    MimeMessageHelper.MULTIPART_MODE_MIXED_RELATED,
+                    StandardCharsets.UTF_8.name());
+
+            Context context = new Context();
+            User user = booking.getUser();
+            String fullName = (user.getFirstName() != null ? user.getFirstName() : "") + " " + 
+                             (user.getLastName() != null ? user.getLastName() : "");
+            if (fullName.trim().isEmpty()) fullName = user.getUsername();
+            
+            context.setVariable("name", fullName);
+            context.setVariable("bookingCode", booking.getBookingCode());
+            context.setVariable("tourName", booking.getTour().getName());
+            context.setVariable("totalPrice", booking.getTotalPrice());
+            context.setVariable("startDate", booking.getTrip().getStartDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
+            context.setVariable("participants", booking.getParticipants().size());
+            context.setVariable("qrCodeUrl", booking.getQrCodeUrl());
+
+            String htmlContent = templateEngine.process("booking_success", context);
+
+            helper.setTo(user.getEmail());
+            helper.setFrom(fromEmail);
+            helper.setSubject("Xác nhận đặt tour thành công - " + booking.getBookingCode());
+            helper.setText(htmlContent, true);
+
+            mailSender.send(message);
+            log.info("Booking success email sent successfully to: {}", user.getEmail());
+
+        } catch (MessagingException e) {
+            log.error("Failed to send booking success email to: {}", booking.getUser().getEmail(), e);
+        } catch (Exception e) {
+            log.error("Unexpected error while sending booking success email to: {}", booking.getUser().getEmail(), e);
         }
     }
 }
