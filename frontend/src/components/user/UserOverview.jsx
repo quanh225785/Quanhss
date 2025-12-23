@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { MapPin, Star, ArrowRight, TrendingUp, Compass, Heart, Loader2, Calendar, Route } from "lucide-react";
 import { api } from "../../utils/api";
@@ -9,6 +9,7 @@ const UserOverview = () => {
   const [tours, setTours] = useState([]);
   const [loading, setLoading] = useState(true);
   const [favorites, setFavorites] = useState(new Set());
+  const trendingScrollRef = useRef(null);
 
   useEffect(() => {
     fetchApprovedTours();
@@ -107,6 +108,13 @@ const UserOverview = () => {
     .sort((a, b) => (b.reviewCount || 0) - (a.reviewCount || 0) || (b.averageRating || 0) - (a.averageRating || 0))
     .slice(0, 10);
 
+  const handleScrollTrendingNext = () => {
+    if (!trendingScrollRef.current) return;
+    const container = trendingScrollRef.current;
+    const cardWidth = container.firstElementChild?.getBoundingClientRect().width || 320;
+    container.scrollBy({ left: cardWidth + 24, behavior: "smooth" });
+  };
+
   return (
     <div className="space-y-12 animate-fade-in-up pb-10">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
@@ -138,10 +146,14 @@ const UserOverview = () => {
             <TrendingUp className="text-rose-500" size={24} />
             Top 10 Xu hướng
           </h3>
-          <div className="flex items-center gap-2 text-slate-400 text-sm font-medium">
+          <button
+            type="button"
+            onClick={handleScrollTrendingNext}
+            className="flex items-center gap-2 text-slate-400 text-sm font-medium hover:text-primary transition-colors"
+          >
             <span>Vuốt để xem thêm</span>
             <ArrowRight size={16} />
-          </div>
+          </button>
         </div>
 
         {loading ? (
@@ -157,7 +169,10 @@ const UserOverview = () => {
             <p className="text-slate-500">Chúng tôi đang cập nhật những điểm đến hot nhất.</p>
           </div>
         ) : (
-          <div className="flex gap-6 overflow-x-auto pb-8 snap-x no-scrollbar -mx-2 px-2">
+          <div
+            ref={trendingScrollRef}
+            className="flex gap-6 overflow-x-auto pb-8 snap-x no-scrollbar -mx-2 px-2"
+          >
             {trendingTours.map((tour, index) => (
               <div
                 key={tour.id}
