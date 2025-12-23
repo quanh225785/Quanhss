@@ -10,6 +10,9 @@ const UserOverview = () => {
   const [loading, setLoading] = useState(true);
   const [favorites, setFavorites] = useState(new Set());
   const trendingScrollRef = useRef(null);
+  const isDraggingRef = useRef(false);
+  const dragStartXRef = useRef(0);
+  const dragScrollLeftRef = useRef(0);
 
   useEffect(() => {
     fetchApprovedTours();
@@ -115,6 +118,24 @@ const UserOverview = () => {
     container.scrollBy({ left: cardWidth + 24, behavior: "smooth" });
   };
 
+  const handleTrendingMouseDown = (e) => {
+    if (!trendingScrollRef.current) return;
+    isDraggingRef.current = true;
+    dragStartXRef.current = e.clientX;
+    dragScrollLeftRef.current = trendingScrollRef.current.scrollLeft;
+  };
+
+  const handleTrendingMouseMove = (e) => {
+    if (!isDraggingRef.current || !trendingScrollRef.current) return;
+    e.preventDefault();
+    const deltaX = e.clientX - dragStartXRef.current;
+    trendingScrollRef.current.scrollLeft = dragScrollLeftRef.current - deltaX;
+  };
+
+  const handleTrendingMouseUpOrLeave = () => {
+    isDraggingRef.current = false;
+  };
+
   return (
     <div className="space-y-12 animate-fade-in-up pb-10">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
@@ -171,7 +192,11 @@ const UserOverview = () => {
         ) : (
           <div
             ref={trendingScrollRef}
-            className="flex gap-6 overflow-x-auto pb-8 snap-x no-scrollbar -mx-2 px-2"
+            className="flex gap-6 overflow-x-auto pb-8 snap-x no-scrollbar -mx-2 px-2 cursor-grab active:cursor-grabbing select-none"
+            onMouseDown={handleTrendingMouseDown}
+            onMouseMove={handleTrendingMouseMove}
+            onMouseUp={handleTrendingMouseUpOrLeave}
+            onMouseLeave={handleTrendingMouseUpOrLeave}
           >
             {trendingTours.map((tour, index) => (
               <div
