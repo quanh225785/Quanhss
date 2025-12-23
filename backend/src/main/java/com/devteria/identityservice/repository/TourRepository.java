@@ -55,10 +55,8 @@ public interface TourRepository extends JpaRepository<Tour, Long> {
 
     // Find approved tours by agent
     @EntityGraph(attributePaths = { "tourPoints", "tourPoints.location", "createdBy" })
-    @Query("SELECT t FROM Tour t " +
-            "WHERE t.isActive = true " +
-            "AND t.status = com.devteria.identityservice.enums.TourStatus.APPROVED " +
-            "AND t.createdBy.id = :agentId " +
-            "ORDER BY t.createdAt DESC")
+    @Query("SELECT t FROM Tour t WHERE t.isActive = true AND t.status = com.devteria.identityservice.enums.TourStatus.APPROVED AND t.createdBy.id = :agentId ORDER BY t.createdAt DESC")
     List<Tour> findApprovedToursByAgentId(@Param("agentId") String agentId);
+
+    long countByStatusAndIsActiveTrue(TourStatus status);
 }

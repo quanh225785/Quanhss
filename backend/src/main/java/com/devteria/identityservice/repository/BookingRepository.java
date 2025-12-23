@@ -54,4 +54,11 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
         @Param("excludeStatus") com.devteria.identityservice.enums.BookingStatus excludeStatus,
         @Param("cutoffTime") LocalDateTime cutoffTime
     );
+
+    long countByStatus(com.devteria.identityservice.enums.BookingStatus status);
+
+    long countByPaymentStatus(com.devteria.identityservice.enums.PaymentStatus paymentStatus);
+
+    @Query("SELECT COALESCE(SUM(b.totalPrice), 0) FROM Booking b WHERE b.paymentStatus = :paymentStatus")
+    Double sumTotalPriceByPaymentStatus(@Param("paymentStatus") com.devteria.identityservice.enums.PaymentStatus paymentStatus);
 }
