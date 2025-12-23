@@ -89,6 +89,66 @@ const UserOverview = () => {
         </div>
       </div>
 
+      {/* Top xu hướng - danh sách ngang vuốt để xem thêm */}
+      {tours.length > 0 && (
+        <section className="space-y-4">
+          <div className="flex justify-between items-center">
+            <h3 className="text-xl font-display font-bold text-slate-900 flex items-center gap-2">
+              <TrendingUp className="text-primary" size={20} />
+              Top xu hướng
+            </h3>
+            <span className="text-xs md:text-sm text-slate-500">
+              Vuốt ngang để xem thêm
+            </span>
+          </div>
+
+          <div className="relative">
+            <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2 -mx-4 px-4 md:mx-0 md:px-0 scroll-smooth snap-x snap-mandatory">
+              {tours.slice(0, 10).map((tour, index) => (
+                <button
+                  key={tour.id}
+                  type="button"
+                  onClick={() => navigate(`/tour/${tour.id}`)}
+                  className="min-w-[220px] max-w-[260px] flex-shrink-0 snap-start bg-white/70 border border-white/60 rounded-2xl px-4 py-3 text-left shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0">
+                      <img
+                        src={getTourImage(tour, index)}
+                        alt={tour.name}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs uppercase tracking-wide text-slate-400 mb-0.5">
+                        Xu hướng #{index + 1}
+                      </p>
+                      <h4 className="text-sm font-semibold text-slate-900 line-clamp-1">
+                        {tour.name}
+                      </h4>
+                      <div className="mt-1 flex items-center justify-between text-[11px] text-slate-500 gap-2">
+                        <span className="flex items-center gap-1">
+                          <Calendar size={12} />
+                          {tour.numberOfDays || 1} ngày
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Star size={12} className="text-yellow-400 fill-yellow-400" />
+                          4.{5 + (tour.id % 5)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            {/* gradient hai bên để gợi ý có thể vuốt */}
+            <div className="pointer-events-none absolute inset-y-0 left-0 w-6 bg-gradient-to-r from-white/80 via-white/40 to-transparent md:hidden" />
+            <div className="pointer-events-none absolute inset-y-0 right-0 w-6 bg-gradient-to-l from-white/80 via-white/40 to-transparent md:hidden" />
+          </div>
+        </section>
+      )}
+
       <section>
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-xl font-display font-bold text-slate-900 flex items-center gap-2">
