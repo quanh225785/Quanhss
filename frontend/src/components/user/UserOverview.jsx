@@ -140,7 +140,7 @@ const UserOverview = () => {
     <div className="space-y-12 animate-fade-in-up pb-10">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div>
-          <h2 className="text-4xl font-display font-black text-slate-900 tracking-tight">
+          <h2 className="text-2xl md:text-4xl font-display font-black text-slate-900 tracking-tight">
             Khám phá trải nghiệm mới
           </h2>
           <p className="text-slate-500 mt-2 text-lg">
@@ -192,7 +192,7 @@ const UserOverview = () => {
         ) : (
           <div
             ref={trendingScrollRef}
-            className="flex gap-6 overflow-x-auto pb-8 snap-x no-scrollbar -mx-2 px-2 cursor-grab active:cursor-grabbing select-none"
+            className="flex gap-4 md:gap-6 overflow-x-auto pb-8 snap-x no-scrollbar -mx-2 px-2 cursor-grab active:cursor-grabbing select-none"
             onMouseDown={handleTrendingMouseDown}
             onMouseMove={handleTrendingMouseMove}
             onMouseUp={handleTrendingMouseUpOrLeave}
@@ -229,7 +229,7 @@ const UserOverview = () => {
                   </button>
                 </div>
 
-                <div className="absolute bottom-0 left-0 right-0 p-8">
+                <div className="absolute bottom-0 left-0 right-0 p-4 md:p-8">
                   <div className="space-y-4">
                     <div className="flex gap-2">
                       <span className="px-3 py-1 bg-white/20 backdrop-blur-md border border-white/20 text-white text-[10px] uppercase tracking-widest font-black rounded-lg">
@@ -299,39 +299,39 @@ const UserOverview = () => {
                 <div
                   key={tour.id}
                   onClick={() => navigate(`/tour/${tour.id}`)}
-                  className="flex items-center gap-4 p-4 bg-white/60 backdrop-blur-md border border-white/60 rounded-2xl hover:shadow-md hover:-translate-y-0.5 transition-all cursor-pointer group"
+                  className="flex items-center gap-3 md:gap-4 p-3 md:p-4 bg-white/60 backdrop-blur-md border border-white/60 rounded-2xl hover:shadow-md hover:-translate-y-0.5 transition-all cursor-pointer group"
                 >
                   <img
                     src={getTourImage(tour)}
                     alt={tour.name}
-                    className="w-20 h-20 rounded-xl object-cover"
+                    className="w-16 h-16 md:w-20 md:h-20 rounded-xl object-cover flex-shrink-0"
                   />
                   <div className="flex-1 min-w-0">
-                    <h5 className="font-bold text-slate-900 line-clamp-1 group-hover:text-primary transition-colors">{tour.name}</h5>
-                    <div className="flex items-center gap-3 text-sm text-slate-500 mt-1">
+                    <h5 className="font-bold text-slate-900 text-sm md:text-base line-clamp-1 group-hover:text-primary transition-colors">{tour.name}</h5>
+                    <div className="flex flex-wrap items-center gap-x-2 md:gap-x-3 gap-y-1 text-[11px] md:text-sm text-slate-500 mt-1">
                       <span className="flex items-center gap-1">
-                        <Calendar size={14} />
+                        <Calendar size={12} className="md:w-[14px] md:h-[14px]" />
                         {tour.numberOfDays || 1} ngày
                       </span>
                       <span className="flex items-center gap-1">
-                        <MapPin size={14} />
+                        <MapPin size={12} className="md:w-[14px] md:h-[14px]" />
                         {tour.points?.length || 0} điểm
                       </span>
                       {tour.averageRating ? (
                         <span className="flex items-center gap-1">
-                          <Star size={14} className="text-yellow-400 fill-yellow-400" />
-                          {tour.averageRating.toFixed(1)} ({tour.reviewCount || 0})
+                          <Star size={12} className="text-yellow-400 fill-yellow-400 md:w-[14px] md:h-[14px]" />
+                          {tour.averageRating.toFixed(1)} {tour.reviewCount > 0 && `(${tour.reviewCount})`}
                         </span>
                       ) : (
-                        <span className="text-slate-400 text-xs">Chưa có đánh giá</span>
+                        <span className="text-slate-400 text-[10px] md:text-xs">Chưa có đánh giá</span>
                       )}
                     </div>
                   </div>
-                  <div className="text-right">
-                    <span className="text-lg font-bold text-slate-900">{formatPrice(tour.price)}đ</span>
-                    <p className="text-xs text-slate-500">/người</p>
+                  <div className="text-right flex-shrink-0">
+                    <div className="text-sm md:text-lg font-bold text-slate-900 whitespace-nowrap">{formatPrice(tour.price)}đ</div>
+                    <p className="text-[10px] md:text-xs text-slate-500">/người</p>
                   </div>
-                  <ArrowRight className="text-slate-400 group-hover:text-primary transition-colors" size={20} />
+                  <ArrowRight className="text-slate-400 group-hover:text-primary transition-colors flex-shrink-0 w-4 h-4 md:w-5 md:h-5" />
                 </div>
               ))}
           </div>

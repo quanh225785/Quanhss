@@ -216,11 +216,11 @@ const MyBookings = () => {
     const payment = paymentConfig[paymentStatus] || paymentConfig.PENDING;
 
     return (
-      <div className="flex flex-wrap gap-2">
-        <span className={`px-3 py-1 rounded-lg text-xs font-medium ${config.bg} ${config.text} ${config.border} border`}>
+      <div className="flex flex-wrap gap-1.5 md:gap-2">
+        <span className={`px-2 md:px-3 py-1 rounded-lg text-[10px] md:text-xs font-medium ${config.bg} ${config.text} ${config.border} border whitespace-nowrap`}>
           {config.label}
         </span>
-        <span className="px-3 py-1 rounded-lg text-xs font-medium bg-slate-50 text-slate-600 border border-slate-200">
+        <span className="px-2 md:px-3 py-1 rounded-lg text-[10px] md:text-xs font-medium bg-slate-50 text-slate-600 border border-slate-200 whitespace-nowrap">
           {payment.label}
         </span>
       </div>
@@ -499,10 +499,10 @@ const MyBookings = () => {
 
   return (
     <div className="space-y-6 animate-fade-in-up">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-display font-bold text-slate-900 tracking-tight">Chuyến đi của tôi</h2>
-          <p className="text-slate-500 mt-2">
+          <h2 className="text-2xl md:text-3xl font-display font-bold text-slate-900 tracking-tight">Chuyến đi của tôi</h2>
+          <p className="text-slate-500 mt-1 text-sm md:text-base">
             Quản lý các tour đã đặt và lịch sử chuyến đi.
           </p>
         </div>
@@ -511,22 +511,22 @@ const MyBookings = () => {
         <div className="flex gap-2 bg-white/60 backdrop-blur-md rounded-xl p-1 border border-white/60">
           <button
             onClick={() => setViewMode('list')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${viewMode === 'list'
+            className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all flex items-center gap-1.5 sm:gap-2 ${viewMode === 'list'
               ? 'bg-primary text-white shadow-sm'
               : 'text-slate-600 hover:bg-white/80'
               }`}
           >
-            <List size={16} />
+            <List size={14} className="sm:w-4 sm:h-4" />
             Danh sách
           </button>
           <button
             onClick={() => setViewMode('calendar')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${viewMode === 'calendar'
+            className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all flex items-center gap-1.5 sm:gap-2 ${viewMode === 'calendar'
               ? 'bg-primary text-white shadow-sm'
               : 'text-slate-600 hover:bg-white/80'
               }`}
           >
-            <Calendar size={16} />
+            <Calendar size={14} className="sm:w-4 sm:h-4" />
             Lịch
           </button>
         </div>
@@ -607,7 +607,9 @@ const MyBookings = () => {
                           </div>
                         </div>
 
-                        {getStatusBadge(booking.status, booking.paymentStatus)}
+                        <div className="flex flex-wrap items-start justify-between gap-2 overflow-hidden">
+                          {getStatusBadge(booking.status, booking.paymentStatus)}
+                        </div>
                       </div>
 
                       {/* Participants */}
@@ -617,16 +619,17 @@ const MyBookings = () => {
                       </div>
 
                       {/* Price */}
-                      <div className="flex items-center justify-between">
+                      {/* Price & Actions */}
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-2">
                         <span className="text-lg font-bold text-primary">{formatPrice(booking.totalPrice)}</span>
 
-                        <div className="flex flex-wrap gap-2" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto" onClick={(e) => e.stopPropagation()}>
                           {/* Payment button with countdown for pending payments */}
                           {booking.paymentStatus === 'PENDING' && booking.status !== 'CANCELLED' && countdownTimers[booking.id] > 0 && (
                             <button
                               onClick={() => handlePayBooking(booking.id)}
                               disabled={payingId === booking.id}
-                              className={`px-4 py-2 text-sm font-medium rounded-xl transition-all flex items-center gap-2 ${countdownTimers[booking.id] > 120
+                              className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium rounded-xl transition-all flex items-center justify-center gap-2 ${countdownTimers[booking.id] > 120
                                 ? 'text-green-700 bg-green-50 hover:bg-green-100 border border-green-200'
                                 : 'text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 animate-pulse'
                                 }`}
@@ -637,8 +640,8 @@ const MyBookings = () => {
                                 <>
                                   <CreditCard size={16} />
                                   <span>Thanh toán</span>
-                                  <span className="font-mono font-bold flex items-center gap-1">
-                                    <Timer size={14} />
+                                  <span className="font-mono font-bold flex items-center gap-1 bg-white/50 px-1.5 py-0.5 rounded-lg border border-black/5">
+                                    <Timer size={12} className="sm:w-3.5 sm:h-3.5" />
                                     {formatTimeRemaining(countdownTimers[booking.id])}
                                   </span>
                                 </>
@@ -648,7 +651,7 @@ const MyBookings = () => {
                           {booking.qrCodeUrl && (
                             <button
                               onClick={() => setSelectedBooking(booking)}
-                              className="px-4 py-2 text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 rounded-xl border border-slate-200 shadow-sm transition-all flex items-center gap-2"
+                              className="px-4 py-2 text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 rounded-xl border border-slate-200 shadow-sm transition-all flex items-center justify-center gap-2"
                             >
                               <QrCode size={16} />
                               QR Code
@@ -657,7 +660,7 @@ const MyBookings = () => {
                           {booking.status === 'COMPLETED' && !booking.hasReview && (
                             <button
                               onClick={() => setReviewBooking(booking)}
-                              className="px-4 py-2 text-sm font-medium text-amber-600 bg-amber-50 hover:bg-amber-100 rounded-xl border border-amber-200 transition-all flex items-center gap-2"
+                              className="px-4 py-2 text-sm font-medium text-amber-600 bg-amber-50 hover:bg-amber-100 rounded-xl border border-amber-200 transition-all flex items-center justify-center gap-2"
                             >
                               <Star size={16} />
                               Đánh giá
@@ -667,7 +670,7 @@ const MyBookings = () => {
                             <button
                               onClick={() => handleCancelBooking(booking.id)}
                               disabled={cancellingId === booking.id}
-                              className="px-4 py-2 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-xl border border-red-200 transition-all disabled:opacity-50"
+                              className="px-4 py-2 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-xl border border-red-200 transition-all justify-center disabled:opacity-50"
                             >
                               {cancellingId === booking.id ? (
                                 <Loader2 size={16} className="animate-spin" />
@@ -680,7 +683,7 @@ const MyBookings = () => {
                           {booking.paymentStatus === 'PAID' && booking.status === 'CONFIRMED' && (
                             <button
                               onClick={() => setEditBooking(booking)}
-                              className="px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-xl border border-blue-200 transition-all flex items-center gap-2"
+                              className="px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-xl border border-blue-200 transition-all flex items-center justify-center gap-2"
                             >
                               <Edit3 size={16} />
                               Sửa thông tin
