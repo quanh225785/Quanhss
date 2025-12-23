@@ -46,6 +46,10 @@ public enum ErrorCode {
         CANNOT_REPORT_SELF(1033, "Không thể tự báo cáo bản thân", HttpStatus.BAD_REQUEST),
         ALREADY_REPORTED(1034, "Bạn đã báo cáo đối tượng này trước đó", HttpStatus.BAD_REQUEST),
         INVALID_PHONE_NUMBER(1035, "Số điện thoại không hợp lệ", HttpStatus.BAD_REQUEST),
+        BOOKING_NOT_PAID(1036, "Không thể check-in: Booking chưa được thanh toán", HttpStatus.BAD_REQUEST),
+        BOOKING_ALREADY_COMPLETED(1037, "Booking đã được check-in trước đó", HttpStatus.BAD_REQUEST),
+        UNAUTHORIZED_CHECKIN(1038, "Bạn không có quyền check-in cho tour này", HttpStatus.FORBIDDEN),
+        INVALID_QR_CODE(1039, "Mã QR không hợp lệ", HttpStatus.BAD_REQUEST),
         ;
 
         ErrorCode(int code, String message, HttpStatusCode statusCode) {

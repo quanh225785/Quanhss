@@ -164,17 +164,16 @@ public class BookingService {
         // Gửi notification cho Agent owner của tour
         try {
             User agent = tour.getCreatedBy();
-            String userName = user.getFirstName() != null 
-                    ? user.getFirstName() + " " + user.getLastName() 
+            String userName = user.getFirstName() != null
+                    ? user.getFirstName() + " " + user.getLastName()
                     : user.getUsername();
             notificationService.createNotification(
                     agent,
                     NotificationType.NEW_BOOKING,
                     "Đặt tour mới!",
                     String.format("%s vừa đặt tour %s với %d người", userName, tour.getName(), numberOfParticipants),
-                    tour.getId(),  // Gửi tourId để agent có thể navigate đến trang quản lý chuyến
-                    "TOUR"
-            );
+                    tour.getId(), // Gửi tourId để agent có thể navigate đến trang quản lý chuyến
+                    "TOUR");
         } catch (Exception e) {
             log.error("Failed to send notification for booking: {}", bookingCode, e);
             // Don't fail the booking if notification fails
@@ -194,7 +193,7 @@ public class BookingService {
 
         // Use optimized query with JOIN FETCH
         List<Booking> bookings = bookingRepository.findByUserWithDetailsOrderByCreatedAtDesc(user);
-        
+
         if (bookings.isEmpty()) {
             return List.of();
         }
@@ -203,10 +202,9 @@ public class BookingService {
         List<Long> bookingIds = bookings.stream()
                 .map(Booking::getId)
                 .collect(Collectors.toList());
-        
+
         Set<Long> bookingsWithReviews = new HashSet<>(
-                reviewRepository.findBookingIdsWithReviews(bookingIds)
-        );
+                reviewRepository.findBookingIdsWithReviews(bookingIds));
 
         // Map to response with pre-loaded review status
         return bookings.stream()
@@ -337,12 +335,14 @@ public class BookingService {
         log.info("Payment confirmed for booking: {}", booking.getBookingCode());
 
         // Tạo DTO với dữ liệu đã load sẵn trước khi gọi async method
-        // Điều này tránh LazyInitializationException khi async thread truy cập entity sau khi session đóng
+        // Điều này tránh LazyInitializationException khi async thread truy cập entity
+        // sau khi session đóng
         try {
             User bookingUser = booking.getUser();
-            String fullName = (bookingUser.getFirstName() != null ? bookingUser.getFirstName() : "") + " " + 
-                             (bookingUser.getLastName() != null ? bookingUser.getLastName() : "");
-            if (fullName.trim().isEmpty()) fullName = bookingUser.getUsername();
+            String fullName = (bookingUser.getFirstName() != null ? bookingUser.getFirstName() : "") + " " +
+                    (bookingUser.getLastName() != null ? bookingUser.getLastName() : "");
+            if (fullName.trim().isEmpty())
+                fullName = bookingUser.getUsername();
 
             BookingEmailRequest emailRequest = BookingEmailRequest.builder()
                     .recipientEmail(bookingUser.getEmail())
@@ -365,26 +365,77 @@ public class BookingService {
 
     /**
      * Check-in using booking code (for agent)
+     * Validates:
+     * 1. QR code format is valid (BK-YYYYMMDD-XXX)
+     * 2. Booking exists
+     * 3. Agent owns the tour
+     * 4. Booking is not already completed
+     * 5. Payment status is PAID
      */
     @Transactional
     public BookingResponse checkIn(String bookingCode) {
-        Booking booking = bookingRepository.findByBookingCode(bookingCode)
-                .orElseThrow(() -> new RuntimeException("Booking not found"));
+        // 1. Validate QR code format (bookingCode format: BK-YYYYMMDD-XXX)
+        if (bookingCode == null || bookingCode.trim().isEmpty()) {
+            log.error("Check-in failed: Empty or null booking code");
+            throw new AppException(ErrorCode.INVALID_QR_CODE);
+        }
 
-        // Verify tour ownership
+        if (!bookingCode.matches("^BK-\\d{8}-\\d{3}$")) {
+            log.error("Check-in failed: Invalid booking code format: {}", bookingCode);
+            throw new AppException(ErrorCode.INVALID_QR_CODE);
+        }
+
+        // 2. Check if booking exists
+        Booking booking = bookingRepository.findByBookingCode(bookingCode)
+                .orElseThrow(() -> new AppException(ErrorCode.BOOKING_NOT_FOUND));
+
+        log.info("Attempting check-in for booking: {} - Current status: {}, Payment status: {}",
+                bookingCode, booking.getStatus(), booking.getPaymentStatus());
+
+        // 3. Verify tour ownership (must be done before other checks for security)
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
         if (!booking.getTour().getCreatedBy().getId().equals(user.getId())) {
-            throw new RuntimeException("You are not authorized to check-in for this tour");
+            log.error("Unauthorized check-in attempt for booking: {} by user: {}", bookingCode, username);
+            throw new AppException(ErrorCode.UNAUTHORIZED_CHECKIN);
         }
 
-        // Mark as completed
+        // 4. Check if booking is already completed
+        if (booking.getStatus() == BookingStatus.COMPLETED) {
+            log.error("Check-in failed: Booking {} is already completed", bookingCode);
+            throw new AppException(ErrorCode.BOOKING_ALREADY_COMPLETED);
+        }
+
+        // 5. Check if booking is paid
+        if (booking.getPaymentStatus() != PaymentStatus.PAID) {
+            log.error("Check-in failed: Booking {} has payment status: {}",
+                    bookingCode, booking.getPaymentStatus());
+            throw new AppException(ErrorCode.BOOKING_NOT_PAID);
+        }
+
+        // All validations passed - Mark as completed
         booking.setStatus(BookingStatus.COMPLETED);
         booking = bookingRepository.save(booking);
 
-        log.info("Check-in completed for booking: {}", bookingCode);
+        log.info("Check-in completed successfully for booking: {} - User: {}, Tour: {}",
+                bookingCode, booking.getUser().getUsername(), booking.getTour().getName());
+
+        // Gửi thông báo cho khách hàng về check-in thành công
+        try {
+            User customer = booking.getUser();
+            Tour tour = booking.getTour();
+            notificationService.createNotification(
+                    customer,
+                    NotificationType.CHECKIN_CONFIRMED,
+                    "Check-in thành công!",
+                    String.format("Bạn đã check-in tour %s thành công. Chúc bạn có chuyến đi vui vẻ!", tour.getName()),
+                    booking.getId(),
+                    "BOOKING");
+        } catch (Exception e) {
+            log.error("Failed to send check-in notification for booking: {}", bookingCode, e);
+        }
 
         return mapToResponse(booking);
     }
@@ -424,7 +475,8 @@ public class BookingService {
 
         // Validate number of participants matches
         if (request.getParticipantNames().size() != booking.getNumberOfParticipants()) {
-            throw new RuntimeException("Số lượng người tham gia phải giữ nguyên (" + booking.getNumberOfParticipants() + " người)");
+            throw new RuntimeException(
+                    "Số lượng người tham gia phải giữ nguyên (" + booking.getNumberOfParticipants() + " người)");
         }
 
         // Update contact phone
@@ -511,7 +563,8 @@ public class BookingService {
     }
 
     /**
-     * Map Booking entity to BookingResponse with pre-loaded review status (avoids N+1)
+     * Map Booking entity to BookingResponse with pre-loaded review status (avoids
+     * N+1)
      */
     private BookingResponse mapToResponseWithReviewStatus(Booking booking, boolean hasReview) {
         Tour tour = booking.getTour();

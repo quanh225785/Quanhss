@@ -152,24 +152,43 @@ const NotificationBell = () => {
         }
         setIsOpen(false); // Close dropdown
 
+        const user = JSON.parse(localStorage.getItem("user") || "{}");
+        const isAgent = user.roles?.includes("AGENT");
+
         // Navigate based on notification type and referenceType
         if (notification.referenceId && notification.referenceType) {
-            switch (notification.referenceType) {
-                case "TOUR":
-                    // Navigate to tour trips management page
+            switch (notification.type) {
+                // Agent notifications - navigate to agent pages
+                case "NEW_BOOKING":
                     navigate(`/agent/tours/${notification.referenceId}/trips`);
                     break;
-                case "BOOKING":
-                    // Navigate to tour detail page
-                    navigate(`/agent/tours/${notification.referenceId}`);
-                    break;
-                case "REVIEW":
-                    // Navigate to reviews page
+                case "NEW_REVIEW":
                     navigate("/agent/reviews");
                     break;
+                case "TOUR_APPROVED":
+                case "TOUR_REJECTED":
+                    navigate(`/agent/tours`);
+                    break;
+                case "BOOKING_CANCELLED":
+                    navigate(`/agent/tours/${notification.referenceId}/trips`);
+                    break;
+
+                // Customer notifications - navigate to user pages
+                case "CHECKIN_CONFIRMED":
+                case "TRIP_REMINDER":
+                    navigate("/user/bookings");
+                    break;
+                case "REVIEW_REPLIED":
+                    navigate(`/tours/${notification.referenceId}`);
+                    break;
+
                 default:
-                    // Navigate to dashboard
-                    navigate("/agent/dashboard");
+                    // Fallback based on role
+                    if (isAgent) {
+                        navigate("/agent/dashboard");
+                    } else {
+                        navigate("/user/overview");
+                    }
             }
         }
     };
@@ -177,6 +196,7 @@ const NotificationBell = () => {
     // Get icon based on notification type
     const getNotificationIcon = (type) => {
         switch (type) {
+            // Agent notifications
             case "NEW_BOOKING":
                 return <Package className="text-blue-500" size={18} />;
             case "NEW_REVIEW":
@@ -187,6 +207,13 @@ const NotificationBell = () => {
                 return <XCircle className="text-red-500" size={18} />;
             case "BOOKING_CANCELLED":
                 return <XCircle className="text-orange-500" size={18} />;
+            // Customer notifications
+            case "CHECKIN_CONFIRMED":
+                return <CheckCircle className="text-green-500" size={18} />;
+            case "REVIEW_REPLIED":
+                return <Star className="text-purple-500" size={18} />;
+            case "TRIP_REMINDER":
+                return <Bell className="text-blue-500" size={18} />;
             default:
                 return <Bell className="text-zinc-500" size={18} />;
         }

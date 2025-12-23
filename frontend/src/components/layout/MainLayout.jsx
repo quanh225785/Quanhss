@@ -126,8 +126,8 @@ const MainLayout = ({ children, onLogout }) => {
                                 <p className="text-xs text-slate-500 truncate">{user.email}</p>
                             </div>
                         )}
-                        {/* Notification Bell for AGENT and ADMIN */}
-                        {(userRole === 'AGENT' || userRole === 'ADMIN') && !isCollapsed && (
+                        {/* Notification Bell for all roles */}
+                        {!isCollapsed && (
                             <NotificationBell />
                         )}
 

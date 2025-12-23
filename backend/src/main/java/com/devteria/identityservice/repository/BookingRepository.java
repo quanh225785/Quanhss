@@ -61,4 +61,19 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     @Query("SELECT COALESCE(SUM(b.totalPrice), 0) FROM Booking b WHERE b.paymentStatus = :paymentStatus")
     Double sumTotalPriceByPaymentStatus(@Param("paymentStatus") com.devteria.identityservice.enums.PaymentStatus paymentStatus);
+
+    // Find bookings for trip reminder (trip starts between startTime and endTime, status = CONFIRMED, not yet reminded)
+    @Query("SELECT DISTINCT b FROM Booking b " +
+           "LEFT JOIN FETCH b.user " +
+           "LEFT JOIN FETCH b.tour " +
+           "LEFT JOIN FETCH b.trip " +
+           "WHERE b.status = :status " +
+           "AND b.trip.startDate >= :startTime " +
+           "AND b.trip.startDate < :endTime " +
+           "AND b.reminderSent = false")
+    List<Booking> findBookingsForTripReminder(
+        @Param("status") com.devteria.identityservice.enums.BookingStatus status,
+        @Param("startTime") LocalDateTime startTime,
+        @Param("endTime") LocalDateTime endTime
+    );
 }

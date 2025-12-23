@@ -63,6 +63,10 @@ public class Booking {
     String qrCodeUrl;  // URL to QR code image (S3)
 
     @Column(nullable = false)
+    @Builder.Default
+    Boolean reminderSent = false;  // Đã gửi nhắc nhở chuyến đi chưa
+
+    @Column(nullable = false)
     LocalDateTime createdAt;
 
     LocalDateTime updatedAt;
@@ -75,6 +79,9 @@ public class Booking {
         }
         if (paymentStatus == null) {
             paymentStatus = PaymentStatus.PENDING;
+        }
+        if (reminderSent == null) {
+            reminderSent = false;
         }
     }
 

@@ -15,6 +15,7 @@ import com.devteria.identityservice.entity.Booking;
 import com.devteria.identityservice.entity.Review;
 import com.devteria.identityservice.entity.User;
 import com.devteria.identityservice.enums.BookingStatus;
+import com.devteria.identityservice.enums.NotificationType;
 import com.devteria.identityservice.exception.AppException;
 import com.devteria.identityservice.exception.ErrorCode;
 import com.devteria.identityservice.repository.BookingRepository;
@@ -35,6 +36,7 @@ public class ReviewService {
     ReviewRepository reviewRepository;
     BookingRepository bookingRepository;
     UserRepository userRepository;
+    NotificationService notificationService;
     
     /**
      * Create a new review for a completed booking
@@ -145,6 +147,21 @@ public class ReviewService {
         
         review = reviewRepository.save(review);
         log.info("Agent {} replied to review {}", agent.getUsername(), reviewId);
+        
+        // Gửi thông báo cho khách hàng khi agent phản hồi đánh giá
+        try {
+            User customer = review.getUser();
+            notificationService.createNotification(
+                    customer,
+                    NotificationType.REVIEW_REPLIED,
+                    "Đã có phản hồi đánh giá!",
+                    String.format("Đại lý đã phản hồi đánh giá của bạn về tour %s", review.getTour().getName()),
+                    review.getTour().getId(),
+                    "TOUR"
+            );
+        } catch (Exception e) {
+            log.error("Failed to send review reply notification for review: {}", reviewId, e);
+        }
         
         return mapToResponse(review);
     }
