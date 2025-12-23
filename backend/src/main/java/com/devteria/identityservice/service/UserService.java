@@ -186,4 +186,13 @@ public class UserService {
         
         return userMapper.toUserResponse(user);
     }
+
+    /**
+     * Get public profile of an agent (accessible by all authenticated users)
+     */
+    @Transactional(readOnly = true)
+    public User getAgentById(String agentId) {
+        return userRepository.findById(agentId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+    }
 }

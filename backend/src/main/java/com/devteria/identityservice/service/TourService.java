@@ -588,6 +588,14 @@ public class TourService {
         return mapToResponse(tour);
     }
 
+    /**
+     * Public method to convert Tour to TourResponse
+     * Used by AgentController to map tours for public agent profiles
+     */
+    public TourResponse toTourResponse(Tour tour) {
+        return mapToResponse(tour);
+    }
+
     private TourResponse mapToResponse(Tour tour) {
         List<TourResponse.TourPointResponse> pointResponses = new ArrayList<>();
         if (tour.getTourPoints() != null) {

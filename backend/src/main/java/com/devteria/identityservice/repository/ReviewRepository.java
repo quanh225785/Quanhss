@@ -39,4 +39,12 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     // Get all booking IDs that have reviews - for batch checking
     @Query("SELECT r.booking.id FROM Review r WHERE r.booking.id IN :bookingIds")
     List<Long> findBookingIdsWithReviews(@Param("bookingIds") List<Long> bookingIds);
+
+    // Calculate average rating for all tours by an agent
+    @Query("SELECT AVG(r.rating) FROM Review r WHERE r.tour.createdBy.id = :agentId")
+    Double findAverageRatingByAgentId(@Param("agentId") String agentId);
+
+    // Count reviews for all tours by an agent
+    @Query("SELECT COUNT(r) FROM Review r WHERE r.tour.createdBy.id = :agentId")
+    Integer countByAgentId(@Param("agentId") String agentId);
 }

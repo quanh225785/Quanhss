@@ -291,16 +291,27 @@ const TourDetailPage = () => {
 
                         {/* Map Section */}
                         <div className="bg-white/60 backdrop-blur-md border border-white/60 shadow-sm rounded-[2rem] overflow-hidden">
+                            <div className="p-4 border-b border-white/40 flex justify-between items-center">
+                                <h3 className="text-lg font-display font-bold text-slate-900 flex items-center gap-2">
+                                    <Route className="text-primary" size={20} />
+                                    Bản đồ - Ngày {activeDay}
+                                </h3>
+                                <span className="text-xs font-medium text-slate-500 bg-slate-100 px-3 py-1 rounded-full">
+                                    {pointsByDay[activeDay]?.length || 0} địa điểm
+                                </span>
+                            </div>
                             <TourMap
-                                points={tour.points?.map((p) => ({
+                                points={pointsByDay[activeDay]?.map((p) => ({
                                     latitude: p.latitude,
                                     longitude: p.longitude,
                                     name: p.locationName || p.activity,
                                     orderIndex: p.orderIndex,
                                 })) || []}
-                                routePolyline={tour.routePolyline}
-                                totalDistance={tour.totalDistance}
-                                totalTime={tour.totalTime}
+                                // Hide route polyline in detail view when day-filtering
+                                // unless we have day-specific polylines (which we don't yet)
+                                routePolyline={null}
+                                totalDistance={null}
+                                totalTime={null}
                             />
                         </div>
 
@@ -638,11 +649,13 @@ const TourDetailPage = () => {
                                 </p>
                             )}
                         </div>
-                        {console.log(tour)}
                         {/* Agent Info */}
                         <div className="bg-white/60 backdrop-blur-md border border-white/60 shadow-sm rounded-[2rem] p-6">
                             <h3 className="text-lg font-display font-bold text-slate-900 mb-4">Thông tin đại lý</h3>
-                            <div className="flex items-center gap-4">
+                            <div
+                                className="flex items-center gap-4 cursor-pointer hover:bg-white/50 rounded-xl p-2 -m-2 transition-colors"
+                                onClick={() => navigate(`/agent/${tour.createdById}`)}
+                            >
                                 <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary to-secondary text-white flex items-center justify-center text-xl font-bold shadow-md overflow-hidden">
                                     {tour.createdByAvatar ? (
                                         <img
@@ -654,7 +667,7 @@ const TourDetailPage = () => {
                                         tour.createdByUsername?.charAt(0)?.toUpperCase() || 'A'
                                     )}
                                 </div>
-                                <div>
+                                <div className="flex-1">
                                     <p className="font-bold text-slate-900">
                                         {tour.createdByFirstName && tour.createdByLastName
                                             ? `${tour.createdByFirstName} ${tour.createdByLastName}`
@@ -662,7 +675,15 @@ const TourDetailPage = () => {
                                     </p>
                                     <p className="text-sm text-slate-500">Đại lý du lịch</p>
                                 </div>
+                                <ChevronRight size={20} className="text-slate-400" />
                             </div>
+                            <button
+                                onClick={() => navigate(`/agent/${tour.createdById}`)}
+                                className="w-full mt-4 py-3 border border-slate-200 text-slate-600 font-medium rounded-xl hover:bg-slate-50 transition-colors flex items-center justify-center gap-2"
+                            >
+                                <User size={18} />
+                                Xem trang đại lý
+                            </button>
                             <button
                                 onClick={async () => {
                                     try {
@@ -683,7 +704,7 @@ const TourDetailPage = () => {
                                     }
                                 }}
                                 disabled={contactingAgent}
-                                className="w-full mt-4 py-3 border border-primary text-primary font-medium rounded-xl hover:bg-primary/5 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                                className="w-full mt-2 py-3 border border-primary text-primary font-medium rounded-xl hover:bg-primary/5 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
                             >
                                 {contactingAgent ? (
                                     <Loader2 size={18} className="animate-spin" />

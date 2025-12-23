@@ -19,8 +19,13 @@ public interface ChatConversationRepository extends JpaRepository<ChatConversati
     @Query("SELECT c FROM ChatConversation c WHERE c.agent.id = :agentId ORDER BY c.lastMessageAt DESC")
     List<ChatConversation> findByAgentId(@Param("agentId") String agentId);
     
-    @Query("SELECT c FROM ChatConversation c WHERE c.user.id = :userId AND c.agent.id = :agentId")
-    Optional<ChatConversation> findByUserIdAndAgentId(@Param("userId") String userId, @Param("agentId") String agentId);
+    // Find conversation with no tour (general chat with agent)
+    @Query("SELECT c FROM ChatConversation c WHERE c.user.id = :userId AND c.agent.id = :agentId AND c.tour IS NULL")
+    Optional<ChatConversation> findByUserIdAndAgentIdWithNoTour(@Param("userId") String userId, @Param("agentId") String agentId);
+    
+    // Find all conversations between user and agent (for lookup)
+    @Query("SELECT c FROM ChatConversation c WHERE c.user.id = :userId AND c.agent.id = :agentId ORDER BY c.lastMessageAt DESC")
+    List<ChatConversation> findByUserIdAndAgentId(@Param("userId") String userId, @Param("agentId") String agentId);
     
     @Query("SELECT c FROM ChatConversation c WHERE c.user.id = :userId AND c.agent.id = :agentId AND c.tour.id = :tourId")
     Optional<ChatConversation> findByUserIdAndAgentIdAndTourId(

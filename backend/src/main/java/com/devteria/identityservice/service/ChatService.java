@@ -187,8 +187,11 @@ public class ChatService {
                     currentUser.getId(), agent.getId(), tour.getId())
                     .orElse(null);
         } else {
-            conversation = conversationRepository.findByUserIdAndAgentId(currentUser.getId(), agent.getId())
+            // Tìm conversation tổng quát (không có tour)
+            conversation = conversationRepository.findByUserIdAndAgentIdWithNoTour(currentUser.getId(), agent.getId())
                     .orElse(null);
+            
+            // Nếu không có conversation tổng quát, tạo mới (không lấy conversation có tour khác)
         }
 
         // Nếu chưa có, tạo mới
