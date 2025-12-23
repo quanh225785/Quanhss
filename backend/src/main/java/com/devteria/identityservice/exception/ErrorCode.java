@@ -45,6 +45,7 @@ public enum ErrorCode {
         REPORT_ALREADY_PROCESSED(1032, "Báo cáo đã được xử lý", HttpStatus.BAD_REQUEST),
         CANNOT_REPORT_SELF(1033, "Không thể tự báo cáo bản thân", HttpStatus.BAD_REQUEST),
         ALREADY_REPORTED(1034, "Bạn đã báo cáo đối tượng này trước đó", HttpStatus.BAD_REQUEST),
+        INVALID_PHONE_NUMBER(1035, "Số điện thoại không hợp lệ", HttpStatus.BAD_REQUEST),
         ;
 
         ErrorCode(int code, String message, HttpStatusCode statusCode) {

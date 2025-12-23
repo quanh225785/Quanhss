@@ -62,6 +62,15 @@ const BookingModal = ({ tour, onClose, onSuccess }) => {
             setError('Vui lòng nhập số điện thoại liên hệ');
             return false;
         }
+
+        // Vietnamese phone number regex: starts with 0 and has 10 digits
+        // More specific: /^(0[3|5|7|8|9])[0-9]{8}$/
+        const phoneRegex = /^(0[3|5|7|8|9])[0-9]{8}$/;
+        if (!phoneRegex.test(contactPhone.trim())) {
+            setError('Số điện thoại không hợp lệ (phải có 10 chữ số và bắt đầu bằng 03, 05, 07, 08 hoặc 09)');
+            return false;
+        }
+
         return true;
     };
 
@@ -234,7 +243,7 @@ const BookingModal = ({ tour, onClose, onSuccess }) => {
                                 <p className="text-sm text-slate-500 mb-1">Mã đặt tour</p>
                                 <p className="text-xl font-bold text-primary">{booking.bookingCode}</p>
                             </div>
-{/* 
+                            {/* 
                             <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl">
                                 <p className="text-amber-800 text-sm">
                                     Đây là thanh toán giả lập. Trong thực tế, bạn sẽ được chuyển đến cổng thanh toán.
