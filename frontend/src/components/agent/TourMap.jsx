@@ -129,7 +129,19 @@ const TourMap = ({
             }
 
             if (routePolyline) {
-                const coordinates = decodePolyline(routePolyline);
+                // Support both encoded polyline string and array of coordinates
+                let coordinates;
+                if (Array.isArray(routePolyline)) {
+                    // Already decoded - convert from [lat, lng] to [lng, lat] for GeoJSON
+                    coordinates = routePolyline.map(c =>
+                        Array.isArray(c) && c.length === 2
+                            ? [c[1], c[0]]  // Swap lat/lng to lng/lat for GeoJSON
+                            : c
+                    );
+                } else {
+                    // Encoded polyline string
+                    coordinates = decodePolyline(routePolyline);
+                }
 
                 if (coordinates.length > 0) {
                     mapInstance.addSource('route', {

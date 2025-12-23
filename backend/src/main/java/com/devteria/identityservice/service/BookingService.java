@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.devteria.identityservice.dto.request.BookingCreationRequest;
+import com.devteria.identityservice.dto.request.BookingEmailRequest;
 import com.devteria.identityservice.dto.response.BookingResponse;
 import com.devteria.identityservice.entity.Booking;
 import com.devteria.identityservice.entity.Participant;
@@ -334,9 +335,26 @@ public class BookingService {
 
         log.info("Payment confirmed for booking: {}", booking.getBookingCode());
 
-        // Gửi email thông báo đặt tour thành công
+        // Tạo DTO với dữ liệu đã load sẵn trước khi gọi async method
+        // Điều này tránh LazyInitializationException khi async thread truy cập entity sau khi session đóng
         try {
-            emailVerify.sendBookingSuccessEmail(booking);
+            User bookingUser = booking.getUser();
+            String fullName = (bookingUser.getFirstName() != null ? bookingUser.getFirstName() : "") + " " + 
+                             (bookingUser.getLastName() != null ? bookingUser.getLastName() : "");
+            if (fullName.trim().isEmpty()) fullName = bookingUser.getUsername();
+
+            BookingEmailRequest emailRequest = BookingEmailRequest.builder()
+                    .recipientEmail(bookingUser.getEmail())
+                    .recipientName(fullName)
+                    .bookingCode(booking.getBookingCode())
+                    .tourName(booking.getTour().getName())
+                    .totalPrice(booking.getTotalPrice())
+                    .startDate(booking.getTrip().getStartDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")))
+                    .numberOfParticipants(booking.getParticipants().size())
+                    .qrCodeUrl(booking.getQrCodeUrl())
+                    .build();
+
+            emailVerify.sendBookingSuccessEmail(emailRequest);
         } catch (Exception e) {
             log.error("Failed to send booking success email for booking: {}", booking.getBookingCode(), e);
         }

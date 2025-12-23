@@ -41,6 +41,8 @@ const TourDetailPage = () => {
     const [selectedTrip, setSelectedTrip] = useState(null);  // Selected trip for booking
     const [contactingAgent, setContactingAgent] = useState(false);
     const [fullscreenImage, setFullscreenImage] = useState(null);  // For tour point image fullscreen
+    const [dayRoute, setDayRoute] = useState(null);  // Route for currently selected day
+    const [isLoadingRoute, setIsLoadingRoute] = useState(false);
     const { showToast } = useToast();
 
     useEffect(() => {
@@ -180,6 +182,62 @@ const TourDetailPage = () => {
         return grouped;
     };
 
+    // Calculate route for the active day
+    const calculateDayRoute = async (dayPoints, vehicle) => {
+        if (!dayPoints || dayPoints.length < 2) {
+            setDayRoute(null);
+            return;
+        }
+
+        const validPoints = dayPoints.filter(p => p.latitude && p.longitude);
+        if (validPoints.length < 2) {
+            setDayRoute(null);
+            return;
+        }
+
+        setIsLoadingRoute(true);
+        try {
+            const sortedPoints = [...validPoints].sort((a, b) => {
+                if (a.startTime && b.startTime) {
+                    return a.startTime.localeCompare(b.startTime);
+                }
+                return (a.orderIndex || 0) - (b.orderIndex || 0);
+            });
+
+            // Format points as "lat,lng" strings for backend API
+            const points = sortedPoints.map(loc => `${loc.latitude},${loc.longitude}`);
+
+            const response = await api.post('/vietmap/route', {
+                points,
+                vehicle: vehicle || 'car',
+                roundtrip: false,
+            });
+
+            if (response.data.code === 1000 && response.data.result?.paths?.[0]) {
+                const path = response.data.result.paths[0];
+                setDayRoute({
+                    polyline: path.points,  // Encoded polyline string from backend
+                    distance: path.distance,
+                    time: path.time,
+                });
+            } else {
+                setDayRoute(null);
+            }
+        } catch (error) {
+            console.error('Error calculating day route:', error);
+            setDayRoute(null);
+        } finally {
+            setIsLoadingRoute(false);
+        }
+    };
+
+    // Effect to calculate route when day changes
+    useEffect(() => {
+        if (tour && pointsByDay[activeDay]) {
+            calculateDayRoute(pointsByDay[activeDay], tour.vehicle);
+        }
+    }, [activeDay, tour]);
+
     const getDayTabs = () => {
         const numberOfDays = tour?.numberOfDays || 1;
         return Array.from({ length: numberOfDays }, (_, i) => i + 1);
@@ -307,11 +365,10 @@ const TourDetailPage = () => {
                                     name: p.locationName || p.activity,
                                     orderIndex: p.orderIndex,
                                 })) || []}
-                                // Hide route polyline in detail view when day-filtering
-                                // unless we have day-specific polylines (which we don't yet)
-                                routePolyline={null}
-                                totalDistance={null}
-                                totalTime={null}
+                                routePolyline={dayRoute?.polyline || null}
+                                totalDistance={dayRoute?.distance || null}
+                                totalTime={dayRoute?.time || null}
+                                isLoading={isLoadingRoute}
                             />
                         </div>
 

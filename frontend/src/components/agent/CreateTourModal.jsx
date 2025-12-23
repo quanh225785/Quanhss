@@ -42,6 +42,55 @@ const CreateTourModal = ({ onClose, onSuccess }) => {
         fetchApprovedLocations();
     }, []);
 
+    // Auto-calculate route when activeDay or selectedLocations changes
+    useEffect(() => {
+        const dayLocations = getLocationsForDay(activeDay);
+        if (dayLocations.length >= 2) {
+            // Auto-preview route for the active day
+            autoCalculateRoute(dayLocations);
+        } else {
+            setRoutePreview(null);
+        }
+    }, [activeDay, selectedLocations]);
+
+    const autoCalculateRoute = async (dayLocations) => {
+        const locationPoints = dayLocations
+            .filter(loc => loc.latitude && loc.longitude)
+            .sort((a, b) => a.orderIndex - b.orderIndex);
+
+        if (locationPoints.length < 2) {
+            setRoutePreview(null);
+            return;
+        }
+
+        setIsLoadingRoute(true);
+        try {
+            const points = locationPoints.map(loc => `${loc.latitude},${loc.longitude}`);
+            const endpoint = formData.useOptimization ? '/vietmap/tsp' : '/vietmap/route';
+            const response = await api.post(endpoint, {
+                points,
+                vehicle: formData.vehicle,
+                roundtrip: formData.roundtrip,
+            });
+
+            if (response.data.code === 1000 && response.data.result?.paths?.[0]) {
+                const path = response.data.result.paths[0];
+                setRoutePreview({
+                    polyline: path.points,
+                    distance: path.distance,
+                    time: path.time,
+                });
+            } else {
+                setRoutePreview(null);
+            }
+        } catch (err) {
+            console.error('Error auto-calculating route:', err);
+            setRoutePreview(null);
+        } finally {
+            setIsLoadingRoute(false);
+        }
+    };
+
     const fetchApprovedLocations = async () => {
         setIsLoadingLocations(true);
         try {
