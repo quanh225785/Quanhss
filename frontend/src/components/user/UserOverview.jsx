@@ -7,6 +7,7 @@ import { formatDistance } from "../../utils/polylineUtils";
 const UserOverview = () => {
   const navigate = useNavigate();
   const [tours, setTours] = useState([]);
+  const [trendingTours, setTrendingTours] = useState([]);
   const [loading, setLoading] = useState(true);
   const [favorites, setFavorites] = useState(new Set());
   const trendingScrollRef = useRef(null);
@@ -16,6 +17,7 @@ const UserOverview = () => {
 
   useEffect(() => {
     fetchApprovedTours();
+    fetchTrendingTours();
     fetchMyFavorites();
   }, []);
 
@@ -28,6 +30,15 @@ const UserOverview = () => {
       console.error('Error fetching tours:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchTrendingTours = async () => {
+    try {
+      const response = await api.get('/tours/trending');
+      setTrendingTours(response.data.result || []);
+    } catch (error) {
+      console.error('Error fetching trending tours:', error);
     }
   };
 
@@ -105,11 +116,6 @@ const UserOverview = () => {
     if (tour.reviewCount > 5) return "Phổ biến";
     return "Nổi bật";
   };
-
-  // Trending tours (sorted by rating and reviews if available, or just take first 10)
-  const trendingTours = [...tours]
-    .sort((a, b) => (b.reviewCount || 0) - (a.reviewCount || 0) || (b.averageRating || 0) - (a.averageRating || 0))
-    .slice(0, 10);
 
   const handleScrollTrendingNext = () => {
     if (!trendingScrollRef.current) return;

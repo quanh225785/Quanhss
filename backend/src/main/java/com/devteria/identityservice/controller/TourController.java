@@ -80,6 +80,17 @@ public class TourController {
         }
 
         /**
+         * Get trending tours based on bookings, ratings, reviews, and favorites
+         * GET /tours/trending
+         */
+        @GetMapping("/trending")
+        ApiResponse<List<TourResponse>> getTrendingTours() {
+                return ApiResponse.<List<TourResponse>>builder()
+                                .result(tourService.getTrendingTours())
+                                .build();
+        }
+
+        /**
          * Search tours with filters (Public - for users)
          * GET
          * /tours/search?keyword=...&minPrice=...&maxPrice=...&numberOfDays=...&vehicle=...&cityName=...

@@ -15,17 +15,16 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 public class CacheConfiguration {
 
     /**
-     * Configure cache manager for Vietmap tiles
-     * - Cache tiles for 7 days (tiles rarely change)
-     * - Maximum 1000 tiles in memory (~50MB assuming 50KB per tile)
-     * - Evict based on LRU (Least Recently Used)
+     * Configure cache manager with multiple caches
+     * - vietmapTiles: Cache tiles for 7 days
+     * - trendingTours: Cache trending tours for 1 hour
      */
     @Bean
     public CacheManager cacheManager() {
-        CaffeineCacheManager cacheManager = new CaffeineCacheManager("vietmapTiles");
+        CaffeineCacheManager cacheManager = new CaffeineCacheManager("vietmapTiles", "trendingTours");
         cacheManager.setCaffeine(Caffeine.newBuilder()
-                .maximumSize(1000) // Maximum number of tiles to cache
-                .expireAfterWrite(7, TimeUnit.DAYS) // Cache for 7 days
+                .maximumSize(1000) // Maximum number of entries to cache
+                .expireAfterWrite(1, TimeUnit.HOURS) // Default: Cache for 1 hour
                 .recordStats()); // Enable cache statistics for monitoring
         return cacheManager;
     }

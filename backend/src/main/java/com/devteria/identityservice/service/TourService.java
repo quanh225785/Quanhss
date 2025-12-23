@@ -704,6 +704,7 @@ public class TourService {
     }
 
     @Transactional(readOnly = true)
+    @org.springframework.cache.annotation.Cacheable(value = "trendingTours", unless = "#result.isEmpty()")
     public List<TourResponse> getTrendingTours() {
         List<Tour> trendingTours = tourRepository.findTrendingTours();
 
