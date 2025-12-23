@@ -640,8 +640,8 @@ const DashboardOverview = () => {
 
             {/* Revenue Details Modal */}
             {showRevenueDetails && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 z-50 backdrop-blur-sm">
-                    <div className="w-full h-full bg-white overflow-hidden flex flex-col">
+                <div className="absolute inset-0 bg-black/40 z-40 backdrop-blur-sm">
+                    <div className="w-full h-full bg-white overflow-hidden flex flex-col shadow-2xl">
                         {/* Header */}
                         <div className="bg-gradient-to-r from-green-50 to-emerald-50 px-8 py-6 border-b border-green-100 shadow-sm">
                             <div className="flex justify-between items-start mb-4">
