@@ -323,7 +323,7 @@ const TripManagementPage = () => {
 
             {/* Trip Form */}
             {showForm && (
-                <div className="p-4 bg-white rounded-xl border border-zinc-200">
+                <div className="p-8 bg-white/70 backdrop-blur-xl border border-white/40 rounded-[2.5rem] shadow-xl shadow-black/5">
                     <h3 className="font-medium text-zinc-900 mb-4">
                         {editingTrip ? 'Sửa chuyến' : 'Thêm chuyến mới'}
                     </h3>
@@ -402,9 +402,9 @@ const TripManagementPage = () => {
                 </h3>
 
                 {trips.length === 0 ? (
-                    <div className="text-center py-12 text-zinc-500 bg-white rounded-xl border border-zinc-200">
-                        <Calendar size={48} className="mx-auto mb-3 opacity-50" />
-                        <p className="font-medium">Chưa có chuyến nào được tạo</p>
+                    <div className="text-center py-16 text-zinc-500 bg-white/70 backdrop-blur-xl border border-white/40 rounded-[2.5rem] shadow-xl shadow-black/5">
+                        <Calendar size={48} className="mx-auto mb-4 opacity-50" />
+                        <p className="font-medium text-lg">Chưa có chuyến nào được tạo</p>
                         <p className="text-sm">Nhấn "Thêm chuyến mới" để bắt đầu</p>
                     </div>
                 ) : (
@@ -412,7 +412,7 @@ const TripManagementPage = () => {
                         {trips.map((trip) => (
                             <div
                                 key={trip.id}
-                                className={`bg-white border rounded-xl overflow-hidden ${trip.isActive ? 'border-zinc-200' : 'border-zinc-300 bg-zinc-50'}`}
+                                className={`backdrop-blur-xl border rounded-[2rem] overflow-hidden shadow-lg transition-all ${trip.isActive ? 'bg-white/70 border-white/40 shadow-black/5' : 'bg-white/40 border-white/20 opacity-80'}`}
                             >
                                 {/* Trip Header */}
                                 <div

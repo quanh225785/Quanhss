@@ -249,62 +249,67 @@ const BookingPage = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white flex items-center justify-center">
-                <Loader2 className="animate-spin text-primary" size={40} />
+            <div className="min-h-screen flex items-center justify-center p-8">
+                <div className="bg-white/70 backdrop-blur-2xl rounded-[3rem] border border-white/40 shadow-2xl p-16 text-center max-w-lg">
+                    <Loader2 className="w-20 h-20 animate-spin text-primary mx-auto mb-8" />
+                    <p className="text-slate-900 font-black text-2xl tracking-tight">Đang tải thông tin đặt tour...</p>
+                </div>
             </div>
         );
     }
 
     if (error && !tour) {
         return (
-            <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white flex flex-col items-center justify-center gap-4">
-                <AlertCircle size={48} className="text-red-400" />
-                <p className="text-slate-600">{error}</p>
-                <button
-                    onClick={handleNavigateBack}
-                    className="text-primary hover:underline"
-                >
-                    Quay lại
-                </button>
+            <div className="min-h-screen flex flex-col items-center justify-center p-8">
+                <div className="bg-white/70 backdrop-blur-2xl rounded-[3rem] p-12 border border-white/40 shadow-2xl text-center max-w-md">
+                    <AlertCircle size={64} className="text-red-500 mx-auto mb-6" />
+                    <p className="text-slate-900 font-bold text-xl mb-8">{error}</p>
+                    <button
+                        onClick={handleNavigateBack}
+                        className="w-full py-4 bg-primary text-white font-black rounded-2xl hover:bg-primary/90 transition-all shadow-xl shadow-primary/20"
+                    >
+                        Quay lại
+                    </button>
+                </div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
-            {/* Header */}
-            <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-100">
-                <div className="max-w-4xl mx-auto px-4 py-4 flex items-center gap-4">
+        <div className="min-h-screen text-slate-900">
+            {/* Header - Glass */}
+            <header className="sticky top-0 z-50 bg-white/70 backdrop-blur-2xl border-b border-white/40 rounded-b-[2.5rem] shadow-2xl shadow-black/5">
+                <div className="max-w-7xl mx-auto px-6 py-6 flex items-center gap-6">
                     <button
                         onClick={handleNavigateBack}
-                        className="p-2 rounded-full hover:bg-slate-100 transition-colors"
+                        className="p-3.5 rounded-2xl bg-white/50 border border-white/40 hover:bg-white transition-all shadow-sm"
                     >
-                        <ArrowLeft size={20} />
+                        <ArrowLeft size={24} className="text-slate-700" />
                     </button>
                     <div>
-                        <h1 className="font-bold text-lg">
+                        <h1 className="font-black text-2xl tracking-tight text-slate-900">
                             {step === 1 && 'Đặt tour'}
                             {step === 2 && 'Thanh toán'}
                             {step === 3 && 'Hoàn tất'}
                         </h1>
-                        <p className="text-sm text-slate-500">{tour?.name}</p>
+                        <p className="text-sm font-bold text-slate-500 mt-0.5">{tour?.name}</p>
                     </div>
                 </div>
             </header>
 
             {/* Progress Steps */}
-            <div className="max-w-4xl mx-auto px-4 py-6">
-                <div className="flex items-center justify-center gap-2 mb-8">
+            <div className="max-w-7xl mx-auto px-4 py-6">
+                <div className="flex items-center justify-center gap-3 mb-10">
                     {[1, 2, 3].map((s) => (
                         <React.Fragment key={s}>
-                            <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all ${step >= s
-                                ? 'bg-primary text-white'
-                                : 'bg-slate-200 text-slate-500'
+                            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black text-lg transition-all shadow-lg ${step >= s
+                                ? 'bg-primary text-white shadow-primary/30 scale-110'
+                                : 'bg-white/70 text-slate-400 border border-white/40'
                                 }`}>
-                                {step > s ? <Check size={18} /> : s}
+                                {step > s ? <Check size={24} /> : s}
                             </div>
                             {s < 3 && (
-                                <div className={`w-16 h-1 rounded-full transition-all ${step > s ? 'bg-primary' : 'bg-slate-200'
+                                <div className={`w-20 h-2 rounded-full transition-all ${step > s ? 'bg-primary shadow-sm shadow-primary/20' : 'bg-white/50'
                                     }`} />
                             )}
                         </React.Fragment>
@@ -312,9 +317,11 @@ const BookingPage = () => {
                 </div>
 
                 {error && (
-                    <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-2xl text-red-700 flex items-center gap-3">
-                        <AlertCircle size={20} />
-                        {error}
+                    <div className="mb-8 p-5 bg-red-500/10 backdrop-blur-md border border-red-500/20 rounded-[2rem] text-red-700 flex items-center gap-4 animate-shake shadow-lg">
+                        <div className="w-10 h-10 bg-red-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                            <AlertCircle size={24} className="text-red-600" />
+                        </div>
+                        <p className="font-bold">{error}</p>
                     </div>
                 )}
 
@@ -323,8 +330,11 @@ const BookingPage = () => {
                     <div className="lg:col-span-2">
                         {/* Step 1: Booking Info */}
                         {step === 1 && (
-                            <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 space-y-6">
-                                <h2 className="text-xl font-bold">Thông tin đặt tour</h2>
+                            <div className="bg-white/70 backdrop-blur-xl border border-white/40 shadow-2xl shadow-black/5 rounded-[3rem] p-10 space-y-8">
+                                <h2 className="text-2xl font-display font-black text-slate-900 flex items-center gap-3">
+                                    <div className="w-2 h-8 bg-primary rounded-full"></div>
+                                    Thông tin đặt tour
+                                </h2>
 
                                 {/* Number of Participants */}
                                 <div>
@@ -335,7 +345,7 @@ const BookingPage = () => {
                                     <select
                                         value={numberOfParticipants}
                                         onChange={(e) => setNumberOfParticipants(parseInt(e.target.value))}
-                                        className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-lg"
+                                        className="w-full px-5 py-4 bg-white/50 border border-white/40 rounded-2xl focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all text-lg font-bold text-slate-900"
                                     >
                                         {Array.from({ length: Math.min(maxSpots, 10) }, (_, i) => i + 1).map(n => (
                                             <option key={n} value={n}>{n} người</option>
@@ -364,7 +374,7 @@ const BookingPage = () => {
                                                     placeholder={`Nhập họ tên người thứ ${index + 1}`}
                                                     value={name}
                                                     onChange={(e) => handleParticipantNameChange(index, e.target.value)}
-                                                    className="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                                                    className="w-full pl-12 pr-4 py-4 bg-white/50 border border-white/40 rounded-2xl focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all font-bold text-slate-900"
                                                 />
                                             </div>
                                         ))}
@@ -382,7 +392,7 @@ const BookingPage = () => {
                                         placeholder="0901234567"
                                         value={contactPhone}
                                         onChange={(e) => setContactPhone(e.target.value)}
-                                        className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                                        className="w-full px-5 py-4 bg-white/50 border border-white/40 rounded-2xl focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all font-bold text-slate-900"
                                     />
                                 </div>
 
@@ -397,7 +407,7 @@ const BookingPage = () => {
                                         value={note}
                                         onChange={(e) => setNote(e.target.value)}
                                         rows={3}
-                                        className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none"
+                                        className="w-full px-5 py-4 bg-white/50 border border-white/40 rounded-2xl focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all resize-none font-bold text-slate-900"
                                     />
                                 </div>
                             </div>
@@ -405,37 +415,40 @@ const BookingPage = () => {
 
                         {/* Step 2: Payment */}
                         {step === 2 && booking && (
-                            <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 space-y-6">
+                            <div className="bg-white/70 backdrop-blur-xl border border-white/40 shadow-2xl shadow-black/5 rounded-[3rem] p-10 space-y-8">
                                 <div className="flex items-center justify-between">
-                                    <h2 className="text-xl font-bold">Xác nhận thanh toán</h2>
+                                    <h2 className="text-2xl font-display font-black text-slate-900 flex items-center gap-3">
+                                        <div className="w-2 h-8 bg-secondary rounded-full"></div>
+                                        Xác nhận thanh toán
+                                    </h2>
                                     {/* Countdown Timer */}
-                                    <div className={`flex items-center gap-2 px-4 py-2 rounded-xl font-mono text-lg font-bold ${timeRemaining > 300
-                                        ? 'bg-green-50 text-green-700 border border-green-200'
+                                    <div className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl font-mono text-xl font-black ${timeRemaining > 300
+                                        ? 'bg-green-500/10 text-green-700 border border-green-500/20'
                                         : timeRemaining > 120
-                                            ? 'bg-amber-50 text-amber-700 border border-amber-200'
-                                            : 'bg-red-50 text-red-700 border border-red-200 animate-pulse'
+                                            ? 'bg-amber-500/10 text-amber-700 border border-amber-500/20'
+                                            : 'bg-red-500/10 text-red-700 border border-red-500/20 animate-pulse'
                                         }`}>
-                                        <Timer size={20} />
+                                        <Timer size={24} />
                                         <span>{formatTimeRemaining(timeRemaining)}</span>
                                     </div>
                                 </div>
 
                                 {/* Timeout Warning */}
-                                <div className={`p-4 rounded-2xl flex items-center gap-3 ${timeRemaining > 120
-                                    ? 'bg-blue-50 border border-blue-200 text-blue-800'
-                                    : 'bg-red-50 border border-red-200 text-red-800'
+                                <div className={`p-6 rounded-[2rem] flex items-center gap-4 ${timeRemaining > 120
+                                    ? 'bg-blue-500/10 border border-blue-500/20 text-blue-800'
+                                    : 'bg-red-500/10 border border-red-500/20 text-red-800'
                                     }`}>
-                                    <Timer size={20} className="flex-shrink-0" />
-                                    <p>
-                                        <strong>Lưu ý:</strong> Bạn có {PAYMENT_TIMEOUT_MINUTES} phút để hoàn tất thanh toán.
+                                    <Timer size={24} className="flex-shrink-0" />
+                                    <p className="font-medium">
+                                        <strong className="font-black">Lưu ý:</strong> Bạn có {PAYMENT_TIMEOUT_MINUTES} phút để hoàn tất thanh toán.
                                         {timeRemaining <= 120 && ' Thời gian sắp hết!'}
                                         {' '}Nếu không thanh toán kịp, đơn đặt tour sẽ tự động bị hủy.
                                     </p>
                                 </div>
 
-                                <div className="p-4 bg-slate-50 rounded-2xl">
-                                    <p className="text-sm text-slate-500 mb-1">Mã đặt tour</p>
-                                    <p className="text-2xl font-bold text-primary font-mono">{booking.bookingCode}</p>
+                                <div className="p-6 bg-white/50 border border-white/40 rounded-3xl shadow-sm">
+                                    <p className="text-sm font-black text-slate-500 uppercase tracking-widest mb-1">Mã đặt tour</p>
+                                    <p className="text-3xl font-black text-primary font-mono">{booking.bookingCode}</p>
                                 </div>
 
                                 {/* <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl">
@@ -445,40 +458,40 @@ const BookingPage = () => {
                                     </p>
                                 </div> */}
 
-                                <div className="space-y-3 p-4 bg-slate-50 rounded-2xl">
-                                    <div className="flex justify-between">
-                                        <span className="text-slate-600">Giá tour</span>
-                                        <span className="font-medium">{formatPrice(tour?.price)}</span>
+                                <div className="space-y-4 p-6 bg-white/50 border border-white/40 rounded-3xl shadow-sm">
+                                    <div className="flex justify-between font-bold">
+                                        <span className="text-slate-500">Giá tour</span>
+                                        <span className="text-slate-900">{formatPrice(tour?.price)}</span>
                                     </div>
-                                    <div className="flex justify-between">
-                                        <span className="text-slate-600">Số người tham gia</span>
-                                        <span className="font-medium">x {booking.numberOfParticipants}</span>
+                                    <div className="flex justify-between font-bold">
+                                        <span className="text-slate-500">Số người tham gia</span>
+                                        <span className="text-slate-900">x {booking.numberOfParticipants}</span>
                                     </div>
-                                    <div className="border-t border-slate-200 pt-3 flex justify-between items-center">
-                                        <span className="font-bold text-lg">Tổng cộng</span>
-                                        <span className="font-bold text-2xl text-primary">{formatPrice(booking.totalPrice)}</span>
+                                    <div className="border-t border-white/40 pt-4 flex justify-between items-center">
+                                        <span className="font-black text-xl text-slate-900">Tổng cộng</span>
+                                        <span className="font-black text-3xl text-primary drop-shadow-sm">{formatPrice(booking.totalPrice)}</span>
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-2 gap-6">
                                     <button
                                         onClick={handleGoBackToStep1}
                                         disabled={submitting}
-                                        className="py-3 border border-slate-300 text-slate-700 font-medium rounded-xl hover:bg-slate-50 transition-all disabled:opacity-50"
+                                        className="py-4 border border-slate-200 text-slate-700 font-black rounded-2xl hover:bg-white transition-all disabled:opacity-50"
                                     >
                                         Quay lại
                                     </button>
                                     <button
                                         onClick={handlePayment}
                                         disabled={submitting}
-                                        className="py-3 bg-primary text-white font-bold rounded-xl hover:bg-primary/90 hover:shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                                        className="py-4 bg-primary text-white font-black rounded-2xl hover:bg-primary/90 hover:shadow-2xl shadow-primary/20 transition-all disabled:opacity-50 flex items-center justify-center gap-2 text-lg"
                                     >
                                         {submitting ? (
-                                            <Loader2 size={20} className="animate-spin" />
+                                            <Loader2 size={24} className="animate-spin" />
                                         ) : (
-                                            <CreditCard size={20} />
+                                            <CreditCard size={24} />
                                         )}
-                                        Thanh toán
+                                        Thanh toán ngay
                                     </button>
                                 </div>
                             </div>
@@ -486,43 +499,42 @@ const BookingPage = () => {
 
                         {/* Step 3: Success */}
                         {step === 3 && booking && (
-                            <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8 text-center space-y-6">
-                                <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto">
-                                    <Check size={48} className="text-green-600" />
+                            <div className="bg-white/70 backdrop-blur-xl border border-white/40 shadow-2xl shadow-black/5 rounded-[3rem] p-12 text-center space-y-8">
+                                <div className="w-32 h-32 bg-green-500/10 rounded-full flex items-center justify-center mx-auto shadow-inner">
+                                    <Check size={64} className="text-green-600 drop-shadow-sm" />
                                 </div>
-
                                 <div>
-                                    <h2 className="text-2xl font-bold text-slate-900 mb-2">Đặt tour thành công!</h2>
-                                    <p className="text-slate-600">
-                                        Cảm ơn bạn đã đặt tour. Mã đặt tour của bạn là:
+                                    <h2 className="text-3xl font-display font-black text-slate-900 mb-3 tracking-tight">Đặt tour thành công!</h2>
+                                    <p className="text-slate-500 font-bold text-lg">
+                                        Cảm ơn bạn đã tin tưởng. Mã đặt tour của bạn là:
                                     </p>
-                                    <p className="text-3xl font-bold text-primary font-mono mt-2">{booking.bookingCode}</p>
+                                    <p className="text-4xl font-black text-primary font-mono mt-4 drop-shadow-sm">{booking.bookingCode}</p>
                                 </div>
 
                                 {booking.qrCodeUrl && (
-                                    <div className="p-6 bg-slate-50 rounded-2xl inline-block">
-                                        <p className="text-sm text-slate-500 mb-3">QR Code check-in</p>
+                                    <div className="p-8 bg-white/50 border border-white/40 rounded-[2.5rem] inline-block shadow-xl">
+                                        <p className="text-sm font-black text-slate-500 uppercase tracking-widest mb-4">QR Code check-in</p>
                                         <img
                                             src={booking.qrCodeUrl}
                                             alt="QR Code"
-                                            className="w-48 h-48 mx-auto rounded-xl shadow-lg"
+                                            className="w-56 h-56 mx-auto rounded-2xl shadow-2xl border-4 border-white"
                                         />
-                                        <p className="text-xs text-slate-400 mt-3">
-                                            Xuất trình mã này khi check-in
+                                        <p className="text-xs font-bold text-slate-500 mt-4">
+                                            Vui lòng lưu lại mã này để check-in tại điểm xuất phát
                                         </p>
                                     </div>
                                 )}
 
-                                <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
+                                <div className="flex flex-col sm:flex-row gap-4 justify-center pt-6">
                                     <Link
                                         to="/user/bookings"
-                                        className="px-6 py-3 bg-primary text-white font-bold rounded-xl hover:bg-primary/90 transition-all"
+                                        className="px-10 py-4 bg-primary text-white font-black rounded-2xl hover:bg-primary/90 transition-all shadow-xl shadow-primary/20 text-lg"
                                     >
                                         Xem đơn đặt tour
                                     </Link>
                                     <Link
                                         to="/tours"
-                                        className="px-6 py-3 border border-slate-300 text-slate-700 font-medium rounded-xl hover:bg-slate-50 transition-all"
+                                        className="px-10 py-4 bg-white/50 border border-white/40 text-slate-700 font-black rounded-2xl hover:bg-white transition-all shadow-sm text-lg"
                                     >
                                         Tiếp tục khám phá
                                     </Link>
@@ -533,60 +545,68 @@ const BookingPage = () => {
 
                     {/* Sidebar - Tour Summary */}
                     <div className="lg:col-span-1">
-                        <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 sticky top-24">
+                        <div className="bg-white/70 backdrop-blur-xl border border-white/40 shadow-2xl shadow-black/5 rounded-[3rem] p-8 sticky top-32">
                             {/* Tour Image */}
-                            <div className="w-full h-40 rounded-2xl overflow-hidden bg-slate-100 mb-4">
+                            <div className="w-full h-48 rounded-3xl overflow-hidden bg-slate-100 mb-6 shadow-inner relative group">
                                 {tour?.imageUrl ? (
                                     <img
                                         src={tour.imageUrl}
                                         alt={tour.name}
-                                        className="w-full h-full object-cover"
+                                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                                     />
                                 ) : (
                                     <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/20 to-secondary/20">
-                                        <MapPin className="text-primary/50" size={32} />
+                                        <MapPin className="text-primary/50" size={40} />
                                     </div>
                                 )}
                             </div>
 
-                            <h3 className="font-bold text-lg mb-2">{tour?.name}</h3>
+                            <h3 className="font-black text-xl mb-4 text-slate-900 leading-tight">{tour?.name}</h3>
 
-                            <div className="space-y-2 text-sm text-slate-600 mb-4">
+                            <div className="space-y-4 text-sm font-bold text-slate-600 mb-8 p-4 bg-white/50 rounded-[2rem] border border-white/40">
                                 {/* Trip Info */}
                                 {tripInfo && (
                                     <>
-                                        <div className="flex items-center gap-2">
-                                            <Calendar size={16} className="text-emerald-500" />
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 bg-emerald-500/10 rounded-xl flex items-center justify-center">
+                                                <Calendar size={18} className="text-emerald-600" />
+                                            </div>
                                             <span>Bắt đầu: {formatDate(tripInfo.startDate)}</span>
                                         </div>
-                                        <div className="flex items-center gap-2">
-                                            <CalendarX size={16} className="text-red-500" />
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 bg-red-500/10 rounded-xl flex items-center justify-center">
+                                                <CalendarX size={18} className="text-red-500" />
+                                            </div>
                                             <span>Kết thúc: {formatDate(tripInfo.endDate)}</span>
                                         </div>
                                     </>
                                 )}
-                                <div className="flex items-center gap-2">
-                                    <Clock size={16} className="text-secondary" />
+                                <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 bg-secondary/10 rounded-xl flex items-center justify-center">
+                                        <Clock size={18} className="text-secondary" />
+                                    </div>
                                     <span>{tour?.numberOfDays || 1} ngày</span>
                                 </div>
-                                <div className="flex items-center gap-2">
-                                    <MapPin size={16} className="text-blue-500" />
+                                <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 bg-blue-500/10 rounded-xl flex items-center justify-center">
+                                        <MapPin size={18} className="text-blue-500" />
+                                    </div>
                                     <span>{tour?.points?.length || 0} điểm tham quan</span>
                                 </div>
                             </div>
 
-                            <div className="border-t border-slate-100 pt-4">
-                                <div className="flex justify-between items-center mb-2">
-                                    <span className="text-slate-600">Giá/người</span>
-                                    <span className="font-bold">{formatPrice(tour?.price)}</span>
+                            <div className="border-t border-white/40 pt-6 space-y-3">
+                                <div className="flex justify-between items-center font-bold">
+                                    <span className="text-slate-500">Giá/người</span>
+                                    <span className="text-slate-900">{formatPrice(tour?.price)}</span>
                                 </div>
-                                <div className="flex justify-between items-center mb-2">
-                                    <span className="text-slate-600">Số người</span>
-                                    <span className="font-bold">{numberOfParticipants}</span>
+                                <div className="flex justify-between items-center font-bold">
+                                    <span className="text-slate-500">Số người</span>
+                                    <span className="text-slate-900">{numberOfParticipants}</span>
                                 </div>
-                                <div className="flex justify-between items-center pt-2 border-t border-slate-100">
-                                    <span className="font-bold">Tổng cộng</span>
-                                    <span className="text-xl font-bold text-primary">{formatPrice(totalPrice)}</span>
+                                <div className="flex justify-between items-center pt-4 border-t border-white/40">
+                                    <span className="font-black text-xl text-slate-900">Tổng cộng</span>
+                                    <span className="text-2xl font-black text-primary drop-shadow-sm">{formatPrice(totalPrice)}</span>
                                 </div>
                             </div>
 
@@ -594,17 +614,17 @@ const BookingPage = () => {
                                 <button
                                     onClick={handleCreateBooking}
                                     disabled={submitting}
-                                    className="w-full mt-4 py-3 bg-primary text-white font-bold rounded-xl hover:bg-primary/90 hover:shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                                    className="w-full mt-8 py-5 bg-primary text-white font-black rounded-2xl hover:bg-primary/90 hover:shadow-2xl shadow-primary/20 transition-all disabled:opacity-50 flex items-center justify-center gap-3 text-lg group"
                                 >
                                     {submitting ? (
                                         <>
-                                            <Loader2 size={20} className="animate-spin" />
+                                            <Loader2 size={24} className="animate-spin" />
                                             Đang xử lý...
                                         </>
                                     ) : (
                                         <>
                                             Tiếp tục
-                                            <ChevronRight size={20} />
+                                            <ChevronRight size={24} className="group-hover:translate-x-1 transition-transform" />
                                         </>
                                     )}
                                 </button>

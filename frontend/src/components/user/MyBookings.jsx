@@ -337,7 +337,7 @@ const MyBookings = () => {
     }
 
     return (
-      <div className="bg-white/60 backdrop-blur-md rounded-[2rem] border border-white/60 p-6 shadow-sm">
+      <div className="bg-white/70 backdrop-blur-xl rounded-[2.5rem] border border-white/40 p-8 shadow-xl shadow-black/5">
         <div className="flex items-center justify-between mb-6">
           <button
             onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1))}
@@ -397,7 +397,7 @@ const MyBookings = () => {
             onClick={() => setPopupBooking(null)}
           >
             <div
-              className="absolute bg-white rounded-2xl shadow-2xl border border-slate-200 p-4 w-80 animate-scale-in"
+              className="absolute bg-white/90 backdrop-blur-xl rounded-[2rem] shadow-2xl border border-white/40 p-6 w-80 animate-scale-in"
               style={{
                 left: Math.min(popupPosition.x - 160, window.innerWidth - 340),
                 top: Math.max(popupPosition.y - 220, 10),
@@ -508,7 +508,7 @@ const MyBookings = () => {
         </div>
 
         {/* View Toggle */}
-        <div className="flex gap-2 bg-white/60 backdrop-blur-md rounded-xl p-1 border border-white/60">
+        <div className="flex gap-2 bg-white/50 backdrop-blur-xl rounded-2xl p-1.5 border border-white/40 shadow-sm">
           <button
             onClick={() => setViewMode('list')}
             className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all flex items-center gap-1.5 sm:gap-2 ${viewMode === 'list'
@@ -540,7 +540,7 @@ const MyBookings = () => {
       )}
 
       {bookings.length === 0 ? (
-        <div className="text-center py-12 bg-white/60 backdrop-blur-md rounded-[2rem] border border-white/60">
+        <div className="text-center py-20 bg-white/70 backdrop-blur-xl rounded-[2.5rem] border border-white/40 shadow-xl shadow-black/5">
           <Calendar className="w-16 h-16 text-slate-300 mx-auto mb-4" />
           <h3 className="text-lg font-bold text-slate-900 mb-2">Chưa có đặt tour nào</h3>
           <p className="text-slate-500">Hãy khám phá và đặt tour đầu tiên của bạn!</p>
@@ -556,7 +556,7 @@ const MyBookings = () => {
               {bookings.map((booking) => (
                 <div
                   key={booking.id}
-                  className="group bg-white/60 backdrop-blur-md p-6 rounded-[2rem] border border-white/60 shadow-sm hover:shadow-lg transition-all duration-300 relative"
+                  className="group bg-white/70 backdrop-blur-xl p-8 rounded-[2.5rem] border border-white/40 shadow-xl shadow-black/5 hover:shadow-2xl hover:bg-white/80 transition-all duration-300 relative"
                 >
                   <div
                     className="flex flex-col md:flex-row gap-6 cursor-pointer"
@@ -708,7 +708,7 @@ const MyBookings = () => {
           onClick={() => setSelectedBooking(null)}
         >
           <div
-            className="bg-white rounded-[2rem] p-8 max-w-sm w-full text-center shadow-2xl transform scale-100 animate-scale-in"
+            className="bg-white/80 backdrop-blur-xl rounded-[2.5rem] p-10 max-w-sm w-full text-center shadow-2xl transform scale-100 animate-scale-in border border-white/40"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-between items-center mb-6">

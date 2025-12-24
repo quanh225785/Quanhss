@@ -155,13 +155,13 @@ const UserChat = () => {
 
             {/* Search */}
             <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" size={20} />
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400" size={20} />
                 <input
                     type="text"
                     placeholder="Tìm kiếm cuộc trò chuyện..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                    className="w-full pl-12 pr-4 py-4 bg-white/70 backdrop-blur-xl border border-white/40 rounded-2xl focus:outline-none focus:ring-4 focus:ring-primary/10 transition-all placeholder:text-zinc-400 font-medium"
                 />
             </div>
 
@@ -183,12 +183,12 @@ const UserChat = () => {
                     </p>
                 </div>
             ) : (
-                <div className="bg-white rounded-xl border border-zinc-200 divide-y divide-zinc-100 overflow-hidden">
+                <div className="bg-white/70 backdrop-blur-xl rounded-[2.5rem] border border-white/40 divide-y divide-white/20 overflow-hidden shadow-2xl shadow-black/5">
                     {filteredConversations.map((conv) => (
                         <button
                             key={conv.id}
                             onClick={() => selectConversation(conv)}
-                            className="w-full flex items-center gap-4 p-4 hover:bg-zinc-50 transition-colors text-left"
+                            className="w-full flex items-center gap-5 p-6 hover:bg-white/50 transition-all text-left group"
                         >
                             <div className="relative">
                                 <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold">

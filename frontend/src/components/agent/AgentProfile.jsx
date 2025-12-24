@@ -115,7 +115,7 @@ const AgentProfile = ({ user, onLogout }) => {
 
       <form
         onSubmit={handleSubmit}
-        className="bg-white border border-zinc-200 rounded-xl p-6 space-y-6"
+        className="bg-white/70 backdrop-blur-xl border border-white/40 rounded-[2.5rem] p-8 space-y-8 shadow-xl shadow-black/5"
       >
         <div className="flex items-center gap-6">
           <input
@@ -228,11 +228,11 @@ const AgentProfile = ({ user, onLogout }) => {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="bg-zinc-900 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-zinc-800 transition-colors disabled:opacity-50 flex items-center gap-2"
+            className="bg-primary text-white px-8 py-3 rounded-xl text-base font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 disabled:opacity-50 flex items-center gap-2"
           >
             {isSubmitting ? (
               <>
-                <Loader2 className="animate-spin" size={16} />
+                <Loader2 className="animate-spin" size={20} />
                 Đang lưu...
               </>
             ) : (
@@ -243,19 +243,23 @@ const AgentProfile = ({ user, onLogout }) => {
       </form>
 
       {/* Security Section */}
-      <div className="bg-white border border-zinc-200 rounded-xl p-6 mt-6">
-        <h3 className="text-lg font-semibold mb-4">Bảo mật</h3>
+      <div className="bg-white/70 backdrop-blur-xl border border-white/40 rounded-[2rem] p-8 mt-6 shadow-xl shadow-black/5">
+        <h3 className="text-lg font-bold mb-6">Bảo mật tài khoản</h3>
         <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm font-medium text-zinc-900">Mật khẩu</p>
-            <p className="text-xs text-zinc-500">Đổi mật khẩu của bạn</p>
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-amber-500/10 rounded-full flex items-center justify-center text-amber-600">
+              <Lock size={20} />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-zinc-900">Mật khẩu</p>
+              <p className="text-xs text-zinc-500 font-medium">Đổi mật khẩu để bảo mật tài khoản</p>
+            </div>
           </div>
           <button
             type="button"
             onClick={() => setShowPasswordModal(true)}
-            className="flex items-center gap-2 px-4 py-2 border border-zinc-300 rounded-md text-sm font-medium hover:bg-zinc-50"
+            className="flex items-center gap-2 px-6 py-2.5 bg-white border border-zinc-200 rounded-xl text-sm font-bold text-zinc-700 hover:bg-zinc-50 transition-all shadow-sm"
           >
-            <Lock size={16} />
             Đổi mật khẩu
           </button>
         </div>
@@ -268,12 +272,12 @@ const AgentProfile = ({ user, onLogout }) => {
       />
 
       {/* Logout Section */}
-      <div className="bg-white border border-zinc-200 rounded-xl p-6">
+      <div className="bg-white/70 backdrop-blur-xl border border-white/40 rounded-[2rem] p-8 mt-6 shadow-xl shadow-black/5">
         <button
           onClick={onLogout}
-          className="w-full flex items-center justify-center gap-2 px-4 py-3 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg font-medium transition-all duration-200 group"
+          className="w-full flex items-center justify-center gap-3 px-6 py-4 text-red-600 bg-red-500/10 hover:bg-red-500/20 rounded-2xl font-bold transition-all duration-300 group"
         >
-          <LogOut size={18} className="group-hover:-translate-x-1 transition-transform" />
+          <LogOut size={20} className="group-hover:-translate-x-1 transition-transform" />
           Đăng xuất tài khoản
         </button>
       </div>

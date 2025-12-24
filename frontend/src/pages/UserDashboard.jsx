@@ -21,7 +21,7 @@ const UserDashboard = ({ onLogout }) => {
   return (
     <MainLayout onLogout={onLogout}>
       <div className="p-4 md:p-8 h-full">
-        <div className="max-w-6xl mx-auto h-full rounded-[2.5rem] bg-white/40 backdrop-blur-sm border border-white/40 shadow-sm overflow-y-auto p-4 md:p-8 no-scrollbar">
+        <div className="max-w-6xl mx-auto h-full rounded-[2.5rem] bg-white/70 backdrop-blur-xl border border-white/40 shadow-xl shadow-black/5 overflow-y-auto p-4 md:p-8 no-scrollbar">
           <Routes>
             <Route path="/" element={<Navigate to="/user/dashboard" replace />} />
             <Route path="/dashboard" element={<UserOverview />} />

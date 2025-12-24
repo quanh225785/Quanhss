@@ -25,6 +25,7 @@ import { registerVietmapServiceWorker } from "./utils/serviceWorker";
 import { ToastProvider } from "./context/ToastContext";
 import { ChatProvider } from "./context/ChatContext";
 import AiChatbot from "./components/shared/AiChatbot";
+import SantaAnimation from "./components/shared/SantaAnimation";
 import "./App.css";
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(
@@ -50,6 +51,8 @@ function App() {
       return null;
     }
   });
+
+  const [showSanta, setShowSanta] = useState(false);
 
   useEffect(() => {
     // Check if user is logged in
@@ -77,6 +80,7 @@ function App() {
     setIsAuthenticated(true);
     const user = JSON.parse(localStorage.getItem("user") || "{}");
     setUserRole(getRoleFromUser(user));
+    setShowSanta(true);
   };
 
   const handleLogout = () => {
@@ -168,7 +172,9 @@ function App() {
               path="/booking/:tourId"
               element={
                 isAuthenticated ? (
-                  <BookingPage />
+                  <MainLayout onLogout={handleLogout}>
+                    <BookingPage />
+                  </MainLayout>
                 ) : (
                   <Navigate to="/login" replace />
                 )
@@ -239,6 +245,7 @@ function App() {
           </Routes>
         </Router>
         {isAuthenticated && <AiChatbot />}
+        {showSanta && <SantaAnimation onComplete={() => setShowSanta(false)} />}
       </ChatProvider>
     </ToastProvider>
   );

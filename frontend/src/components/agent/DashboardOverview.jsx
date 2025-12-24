@@ -529,28 +529,28 @@ const DashboardOverview = () => {
 
             {/* Tour Status Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="bg-white p-4 rounded-xl border border-zinc-200 shadow-sm">
+                <div className="bg-white/70 backdrop-blur-xl p-4 rounded-2xl border border-white/40 shadow-xl shadow-black/5">
                     <div className="flex items-center justify-between mb-2">
                         <span className="text-zinc-500 text-sm font-medium">Tour chờ duyệt</span>
                         <FileText className="text-amber-600" size={20} />
                     </div>
                     <div className="text-2xl font-bold text-zinc-900">{formatNumber(stats.pendingTours)}</div>
                 </div>
-                <div className="bg-white p-4 rounded-xl border border-zinc-200 shadow-sm">
+                <div className="bg-white/70 backdrop-blur-xl p-4 rounded-2xl border border-white/40 shadow-xl shadow-black/5">
                     <div className="flex items-center justify-between mb-2">
                         <span className="text-zinc-500 text-sm font-medium">Tour đã duyệt</span>
                         <CheckCircle className="text-emerald-600" size={20} />
                     </div>
                     <div className="text-2xl font-bold text-zinc-900">{formatNumber(stats.approvedTours)}</div>
                 </div>
-                <div className="bg-white p-4 rounded-xl border border-zinc-200 shadow-sm">
+                <div className="bg-white/70 backdrop-blur-xl p-4 rounded-2xl border border-white/40 shadow-xl shadow-black/5">
                     <div className="flex items-center justify-between mb-2">
                         <span className="text-zinc-500 text-sm font-medium">Tour đã từ chối</span>
                         <XCircle className="text-red-600" size={20} />
                     </div>
                     <div className="text-2xl font-bold text-zinc-900">{formatNumber(stats.rejectedTours)}</div>
                 </div>
-                <div className="bg-white p-4 rounded-xl border border-zinc-200 shadow-sm">
+                <div className="bg-white/70 backdrop-blur-xl p-4 rounded-2xl border border-white/40 shadow-xl shadow-black/5">
                     <div className="flex items-center justify-between mb-2">
                         <span className="text-zinc-500 text-sm font-medium">Tour đã ẩn</span>
                         <EyeOff className="text-gray-600" size={20} />
@@ -562,7 +562,7 @@ const DashboardOverview = () => {
             {/* Charts */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Tours by Month Chart */}
-                <div className="bg-white p-6 rounded-xl border border-zinc-200 shadow-sm">
+                <div className="bg-white/70 backdrop-blur-xl p-6 rounded-2xl border border-white/40 shadow-xl shadow-black/5">
                     <h3 className="text-lg font-semibold mb-4">Tour theo tháng (6 tháng gần nhất)</h3>
                     <div className="h-80">
                         <ResponsiveContainer width="100%" height="100%">
@@ -578,7 +578,7 @@ const DashboardOverview = () => {
                 </div>
 
                 {/* Bookings by Month Chart */}
-                <div className="bg-white p-6 rounded-xl border border-zinc-200 shadow-sm">
+                <div className="bg-white/70 backdrop-blur-xl p-6 rounded-2xl border border-white/40 shadow-xl shadow-black/5">
                     <h3 className="text-lg font-semibold mb-4">Đặt chỗ theo tháng (6 tháng gần nhất)</h3>
                     <div className="h-80">
                         <ResponsiveContainer width="100%" height="100%">
@@ -587,13 +587,13 @@ const DashboardOverview = () => {
                                 <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#71717a' }} dy={10} />
                                 <YAxis axisLine={false} tickLine={false} tick={{ fill: '#71717a' }} />
                                 <Tooltip
-                                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', background: 'rgba(255, 255, 255, 0.8)', backdropFilter: 'blur(8px)' }}
                                 />
                                 <Line
                                     type="monotone"
                                     dataKey="bookings"
                                     stroke="#10b981"
-                                    strokeWidth={2}
+                                    strokeWidth={3}
                                     dot={{ r: 4, fill: '#10b981', strokeWidth: 2, stroke: '#fff' }}
                                     activeDot={{ r: 6, fill: '#10b981' }}
                                     name="Số đặt chỗ"
@@ -605,12 +605,12 @@ const DashboardOverview = () => {
             </div>
 
             {/* Revenue Chart */}
-            <div className="bg-white p-6 rounded-xl border border-zinc-200 shadow-sm">
+            <div className="bg-white/70 backdrop-blur-xl p-6 rounded-2xl border border-white/40 shadow-xl shadow-black/5">
                 <div className="flex justify-between items-center mb-4">
                     <h3 className="text-lg font-semibold">Doanh thu theo tháng (6 tháng gần nhất)</h3>
                     <button
                         onClick={handleShowRevenueDetails}
-                        className="flex items-center gap-2 px-3 py-1.5 text-sm bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition-colors"
+                        className="flex items-center gap-2 px-3 py-1.5 text-sm bg-green-500/10 text-green-700 rounded-lg hover:bg-green-500/20 transition-colors"
                     >
                         <TrendingUp size={16} />
                         <span>Chi tiết theo tour</span>
@@ -630,7 +630,7 @@ const DashboardOverview = () => {
                             />
                             <Tooltip
                                 formatter={(value) => formatCurrency(value)}
-                                contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                                contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', background: 'rgba(255, 255, 255, 0.8)', backdropFilter: 'blur(8px)' }}
                             />
                             <Bar dataKey="revenue" fill="#10b981" name="Doanh thu" radius={[4, 4, 0, 0]} />
                         </BarChart>
@@ -641,7 +641,7 @@ const DashboardOverview = () => {
             {/* Revenue Details Modal */}
             {showRevenueDetails && (
                 <div className="absolute inset-0 bg-black/40 z-40 backdrop-blur-sm">
-                    <div className="w-full h-full bg-white overflow-hidden flex flex-col shadow-2xl">
+                    <div className="w-full h-full bg-white/90 backdrop-blur-xl overflow-hidden flex flex-col shadow-2xl">
                         {/* Header */}
                         <div className="bg-gradient-to-r from-green-50 to-emerald-50 px-8 py-6 border-b border-green-100 shadow-sm">
                             <div className="flex justify-between items-start mb-4">

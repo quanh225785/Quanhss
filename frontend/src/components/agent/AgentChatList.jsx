@@ -179,17 +179,17 @@ const AgentChatList = () => {
                 {/* Conversation List */}
                 <div className="col-span-1 overflow-hidden flex flex-col">
                     <div className="relative mb-4">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" size={20} />
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400" size={18} />
                         <input
                             type="text"
                             placeholder="Tìm kiếm..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm"
+                            className="w-full pl-11 pr-4 py-3 bg-white/50 backdrop-blur-md border border-white/40 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm transition-all"
                         />
                     </div>
 
-                    <div className="flex-1 overflow-y-auto bg-white rounded-xl border border-zinc-200">
+                    <div className="flex-1 overflow-y-auto bg-white/70 backdrop-blur-xl rounded-[2rem] border border-white/40 shadow-xl shadow-black/5">
                         {loading ? (
                             <div className="flex items-center justify-center py-12">
                                 <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -244,7 +244,7 @@ const AgentChatList = () => {
                 <div className="col-span-2 h-full overflow-hidden">
                     {selectedConversation ? (
                         loadingMessages ? (
-                            <div className="flex items-center justify-center h-full bg-white rounded-xl border border-zinc-200">
+                            <div className="flex items-center justify-center h-full bg-white/70 backdrop-blur-xl rounded-[2rem] border border-white/40 shadow-xl shadow-black/5">
                                 <Loader2 className="w-8 h-8 animate-spin text-primary" />
                             </div>
                         ) : (
@@ -260,10 +260,12 @@ const AgentChatList = () => {
                             </div>
                         )
                     ) : (
-                        <div className="flex flex-col items-center justify-center h-full bg-white rounded-xl border border-zinc-200 text-zinc-400">
-                            <MessageCircle className="w-16 h-16 mb-4" />
-                            <p className="text-lg font-medium">Chọn một cuộc trò chuyện</p>
-                            <p className="text-sm">để bắt đầu nhắn tin</p>
+                        <div className="flex flex-col items-center justify-center h-full bg-white/70 backdrop-blur-xl rounded-[2rem] border border-white/40 text-zinc-400 shadow-xl shadow-black/5">
+                            <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mb-6">
+                                <MessageCircle className="w-10 h-10 text-primary" />
+                            </div>
+                            <p className="text-xl font-bold text-zinc-900">Chọn một cuộc trò chuyện</p>
+                            <p className="text-sm text-zinc-500 mt-2">để bắt đầu nhắn tin với khách hàng</p>
                         </div>
                     )}
                 </div>
@@ -276,14 +278,14 @@ const AgentChatList = () => {
 const ConversationList = ({ conversations, loading, searchTerm, onSearchChange, onSelectConversation, formatTime }) => (
     <>
         {/* Search */}
-        <div className="relative mb-4">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" size={20} />
+        <div className="relative mb-6">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400" size={20} />
             <input
                 type="text"
                 placeholder="Tìm kiếm cuộc trò chuyện..."
                 value={searchTerm}
                 onChange={(e) => onSearchChange(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                className="w-full pl-12 pr-4 py-4 bg-white/70 backdrop-blur-xl border border-white/40 rounded-[2rem] focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary shadow-lg shadow-black/5"
             />
         </div>
 
@@ -303,7 +305,7 @@ const ConversationList = ({ conversations, loading, searchTerm, onSearchChange, 
                 </p>
             </div>
         ) : (
-            <div className="bg-white rounded-xl border border-zinc-200 divide-y divide-zinc-100 overflow-hidden">
+            <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] border border-white/40 divide-y divide-zinc-100 overflow-hidden shadow-xl shadow-black/5">
                 {conversations.map((conv) => (
                     <button
                         key={conv.id}

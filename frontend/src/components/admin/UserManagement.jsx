@@ -7,6 +7,9 @@ import {
   Unlock,
   Shield,
   X,
+  Loader2,
+  CheckCircle,
+  AlertCircle,
 } from "lucide-react";
 import { api } from "../../utils/api";
 import { useToast } from "../../context/ToastContext";
@@ -159,224 +162,243 @@ const UserManagement = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="bg-white/70 backdrop-blur-2xl border border-white/40 p-10 rounded-[3rem] shadow-2xl shadow-black/5 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">
-            Quản lý người dùng
-          </h2>
-          <p className="text-zinc-500">
-            Quản lý tài khoản khách hàng và đại lý.
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-2 h-8 bg-primary rounded-full"></div>
+            <h2 className="text-3xl font-black tracking-tight text-slate-900 leading-tight">
+              Quản lý người dùng
+            </h2>
+          </div>
+          <p className="text-slate-500 font-medium ml-5">
+            Quản lý tài khoản khách hàng và đại lý trên toàn hệ thống.
           </p>
         </div>
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
-          {error}
+        <div className="bg-red-50/50 backdrop-blur-md border border-red-100 text-red-700 px-6 py-4 rounded-2xl flex items-center gap-3">
+          <AlertCircle className="w-5 h-5" />
+          <span className="font-bold">{error}</span>
         </div>
       )}
 
       {/* Filters */}
-      <div className="flex gap-4 items-center bg-white p-4 rounded-lg border border-zinc-200">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 w-4 h-4" />
+      <div className="flex flex-col lg:flex-row gap-6 items-center bg-white/70 backdrop-blur-xl p-8 rounded-[2.5rem] border border-white/40 shadow-xl shadow-black/5">
+        <div className="relative flex-1 w-full">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
           <input
             type="text"
-            placeholder="Tìm kiếm theo tên, email..."
+            placeholder="Tìm kiếm theo tên, email, username..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-zinc-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900"
+            className="w-full pl-12 pr-6 py-4 bg-white/50 border border-white/40 rounded-2xl text-sm font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all placeholder:text-slate-400"
           />
         </div>
-        <div className="flex gap-2">
+        <div className="flex p-2 bg-slate-100/50 backdrop-blur-sm rounded-2xl border border-white/40 w-full lg:w-auto">
           <button
             onClick={() => setActiveTab("all")}
-            className={`px-4 py-2 text-sm font-medium rounded-md ${activeTab === "all"
-              ? "bg-zinc-100 text-zinc-900"
-              : "text-zinc-600 hover:bg-zinc-50"
+            className={`flex-1 lg:flex-none px-6 py-3 text-xs font-black uppercase tracking-widest rounded-xl transition-all ${activeTab === "all"
+              ? "bg-white text-primary shadow-sm"
+              : "text-slate-500 hover:text-slate-900"
               }`}
           >
             Tất cả ({users.length})
           </button>
           <button
             onClick={() => setActiveTab("agent")}
-            className={`px-4 py-2 text-sm font-medium rounded-md ${activeTab === "agent"
-              ? "bg-zinc-100 text-zinc-900"
-              : "text-zinc-600 hover:bg-zinc-50"
+            className={`flex-1 lg:flex-none px-6 py-3 text-xs font-black uppercase tracking-widest rounded-xl transition-all ${activeTab === "agent"
+              ? "bg-white text-primary shadow-sm"
+              : "text-slate-500 hover:text-slate-900"
               }`}
           >
             Agents ({users.filter(u => u.roles?.some(r => r.name === "AGENT")).length})
           </button>
           <button
             onClick={() => setActiveTab("customer")}
-            className={`px-4 py-2 text-sm font-medium rounded-md ${activeTab === "customer"
-              ? "bg-zinc-100 text-zinc-900"
-              : "text-zinc-600 hover:bg-zinc-50"
+            className={`flex-1 lg:flex-none px-6 py-3 text-xs font-black uppercase tracking-widest rounded-xl transition-all ${activeTab === "customer"
+              ? "bg-white text-primary shadow-sm"
+              : "text-slate-500 hover:text-slate-900"
               }`}
           >
-            Khách hàng ({users.filter(u => u.roles?.some(r => r.name === "USER")).length})
+            Guests ({users.filter(u => u.roles?.some(r => r.name === "USER")).length})
           </button>
         </div>
       </div>
 
       {/* Table */}
       {loading ? (
-        <div className="bg-white border border-zinc-200 rounded-xl p-8 text-center">
-          <p className="text-zinc-500">Đang tải...</p>
+        <div className="bg-white/70 backdrop-blur-2xl border border-white/40 rounded-[2.5rem] p-16 text-center shadow-2xl shadow-black/5">
+          <Loader2 className="w-12 h-12 animate-spin text-primary mx-auto mb-4" />
+          <p className="text-slate-900 font-black text-xl">Đang tải danh sách người dùng...</p>
         </div>
       ) : (
-        <div className="bg-white border border-zinc-200 rounded-xl overflow-hidden">
-          <table className="w-full text-sm text-left">
-            <thead className="bg-zinc-50 text-zinc-500 font-medium border-b border-zinc-200">
-              <tr>
-                <th className="px-6 py-4">Người dùng</th>
-                <th className="px-6 py-4">Vai trò</th>
-                <th className="px-6 py-4">Trạng thái</th>
-                <th className="px-6 py-4">Lý do khóa</th>
-                <th className="px-6 py-4 text-right">Hành động</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-100">
-              {filteredUsers.length === 0 ? (
-                <tr>
-                  <td colSpan="5" className="px-6 py-8 text-center text-zinc-500">
-                    Không tìm thấy người dùng nào
-                  </td>
+        <div className="bg-white/70 backdrop-blur-2xl border border-white/40 rounded-[2.5rem] overflow-hidden shadow-2xl shadow-black/5">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm text-left border-collapse">
+              <thead>
+                <tr className="bg-white/50 border-b border-white/40">
+                  <th className="px-8 py-6 text-xs font-black uppercase tracking-widest text-slate-500">Người dùng</th>
+                  <th className="px-8 py-6 text-xs font-black uppercase tracking-widest text-slate-500">Vai trò</th>
+                  <th className="px-8 py-6 text-xs font-black uppercase tracking-widest text-slate-500">Trạng thái</th>
+                  <th className="px-8 py-6 text-xs font-black uppercase tracking-widest text-slate-500">Lý do khóa</th>
+                  <th className="px-8 py-6 text-xs font-black uppercase tracking-widest text-slate-500 text-right">Hành động</th>
                 </tr>
-              ) : (
-                filteredUsers.map((user) => (
-                  <tr key={user.id} className="hover:bg-zinc-50">
-                    <td className="px-6 py-4">
-                      <div>
-                        <div className="font-medium text-zinc-900">
-                          {getFullName(user)}
-                        </div>
-                        <div className="text-zinc-500 text-xs">{user.email}</div>
-                        <div className="text-zinc-400 text-xs">@{user.username}</div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span
-                        className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium
-                          ${getUserRole(user) === "ADMIN"
-                            ? "bg-red-100 text-red-700"
-                            : getUserRole(user) === "AGENT"
-                              ? "bg-purple-100 text-purple-700"
-                              : "bg-blue-100 text-blue-700"
-                          }`}
-                      >
-                        {getUserRole(user) === "AGENT" && <Shield className="w-3 h-3" />}
-                        {getUserRole(user)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      {user.isLocked ? (
-                        <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700 inline-flex items-center gap-1">
-                          <Lock className="w-3 h-3" />
-                          LOCKED
-                        </span>
-                      ) : user.isVerified ? (
-                        <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700">
-                          ACTIVE
-                        </span>
-                      ) : (
-                        <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700">
-                          PENDING
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4">
-                      {user.isLocked && user.lockReason ? (
-                        <div className="text-xs text-zinc-600 max-w-xs truncate" title={user.lockReason}>
-                          {user.lockReason}
-                        </div>
-                      ) : (
-                        <span className="text-xs text-zinc-400">-</span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex justify-end gap-2">
-                        {user.isLocked ? (
-                          <button
-                            onClick={() => handleUnlockUser(user)}
-                            disabled={actionLoading}
-                            className="text-emerald-600 hover:text-emerald-700 p-2 hover:bg-emerald-50 rounded-md transition-colors disabled:opacity-50"
-                            title="Mở khóa tài khoản"
-                          >
-                            <Unlock className="w-4 h-4" />
-                          </button>
-                        ) : (
-                          <button
-                            onClick={() => handleLockUser(user)}
-                            disabled={actionLoading}
-                            className="text-red-600 hover:text-red-700 p-2 hover:bg-red-50 rounded-md transition-colors disabled:opacity-50"
-                            title="Khóa tài khoản"
-                          >
-                            <Lock className="w-4 h-4" />
-                          </button>
-                        )}
-                      </div>
+              </thead>
+              <tbody className="divide-y divide-zinc-100">
+                {filteredUsers.length === 0 ? (
+                  <tr>
+                    <td colSpan="5" className="px-6 py-8 text-center text-zinc-500">
+                      Không tìm thấy người dùng nào
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ) : (
+                  filteredUsers.map((user) => (
+                    <tr key={user.id} className="group hover:bg-white/80 transition-all border-b border-white/20 last:border-0">
+                      <td className="px-8 py-6">
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center text-primary font-black text-lg border border-primary/10 shadow-sm transition-transform group-hover:scale-110">
+                            {user.firstName?.charAt(0) || user.username?.charAt(0).toUpperCase()}
+                          </div>
+                          <div>
+                            <div className="font-black text-slate-900 text-base mb-0.5">
+                              {getFullName(user)}
+                            </div>
+                            <div className="text-slate-500 text-xs font-bold">{user.email}</div>
+                            <div className="text-primary text-[10px] font-black uppercase tracking-tight">@{user.username}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-8 py-6">
+                        <span
+                          className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider
+                          ${getUserRole(user) === "ADMIN"
+                              ? "bg-red-500/10 text-red-600 border border-red-100"
+                              : getUserRole(user) === "AGENT"
+                                ? "bg-purple-500/10 text-purple-600 border border-purple-100"
+                                : "bg-blue-500/10 text-blue-600 border border-blue-100"
+                            }`}
+                        >
+                          {getUserRole(user) === "AGENT" && <Shield className="w-3.5 h-3.5" />}
+                          {getUserRole(user)}
+                        </span>
+                      </td>
+                      <td className="px-8 py-6">
+                        {user.isLocked ? (
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-red-50 text-red-600 rounded-full text-[10px] font-black uppercase tracking-wider border border-red-100">
+                            <Lock className="w-3.5 h-3.5" />
+                            LOCKED
+                          </span>
+                        ) : user.isVerified ? (
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full text-[10px] font-black uppercase tracking-wider border border-emerald-100">
+                            <CheckCircle className="w-3.5 h-3.5" />
+                            ACTIVE
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-50 text-amber-600 rounded-full text-[10px] font-black uppercase tracking-wider border border-amber-100">
+                            <AlertCircle className="w-3.5 h-3.5" />
+                            PENDING
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-8 py-6">
+                        {user.isLocked && user.lockReason ? (
+                          <div className="text-xs font-bold text-slate-600 max-w-xs truncate bg-slate-100/50 px-3 py-2 rounded-xl border border-slate-200" title={user.lockReason}>
+                            {user.lockReason}
+                          </div>
+                        ) : (
+                          <span className="text-xs text-slate-400 font-bold ml-4">-</span>
+                        )}
+                      </td>
+                      <td className="px-8 py-6 text-right">
+                        <div className="flex justify-end gap-3">
+                          {user.isLocked ? (
+                            <button
+                              onClick={() => handleUnlockUser(user)}
+                              disabled={actionLoading}
+                              className="bg-emerald-50 text-emerald-600 hover:bg-emerald-100 p-3 rounded-2xl transition-all shadow-sm disabled:opacity-50"
+                              title="Mở khóa tài khoản"
+                            >
+                              <Unlock className="w-5 h-5" />
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => handleLockUser(user)}
+                              disabled={actionLoading}
+                              className="bg-red-50 text-red-600 hover:bg-red-100 p-3 rounded-2xl transition-all shadow-sm disabled:opacity-50"
+                              title="Khóa tài khoản"
+                            >
+                              <Lock className="w-5 h-5" />
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
       {/* Lock User Modal */}
       {showLockModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-            <div className="flex justify-between items-start mb-4">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-[9999] p-4 animate-in fade-in duration-300">
+          <div className="bg-white/80 backdrop-blur-2xl rounded-[3rem] border border-white/40 p-10 w-full max-w-lg shadow-2xl transform animate-in zoom-in-95 duration-300">
+            <div className="flex justify-between items-start mb-8">
               <div>
-                <h3 className="text-lg font-semibold text-zinc-900">
+                <h3 className="text-2xl font-black tracking-tight text-slate-900 leading-tight">
                   Khóa tài khoản
                 </h3>
-                <p className="text-sm text-zinc-500 mt-1">
-                  Người dùng: <span className="font-medium">{selectedUser?.username}</span>
+                <p className="text-sm font-bold text-slate-500 mt-1">
+                  Người dùng: <span className="text-primary uppercase tracking-tight">@{selectedUser?.username}</span>
                 </p>
               </div>
               <button
                 onClick={() => setShowLockModal(false)}
-                className="text-zinc-400 hover:text-zinc-600"
+                className="p-3 bg-white/50 border border-white/40 hover:bg-white rounded-2xl text-slate-500 transition-all shadow-sm"
               >
-                <X className="w-5 h-5" />
+                <X className="w-6 h-6" />
               </button>
             </div>
 
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-zinc-700 mb-2">
+            <div className="mb-8">
+              <label className="block text-xs font-black text-slate-700 uppercase tracking-widest mb-3">
                 Lý do khóa tài khoản <span className="text-red-500">*</span>
               </label>
               <textarea
                 value={lockReason}
                 onChange={(e) => setLockReason(e.target.value)}
-                placeholder="Nhập lý do khóa tài khoản..."
-                className="w-full px-3 py-2 border border-zinc-300 rounded-md focus:outline-none focus:ring-2 focus:ring-zinc-900 resize-none"
+                placeholder="Nhập lý do khóa tài khoản (VD: Vi phạm điều khoản, spam...)"
+                className="w-full px-5 py-4 bg-white/50 border border-white/40 rounded-[1.5rem] text-sm font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all placeholder:text-slate-400 resize-none"
                 rows="4"
                 disabled={actionLoading}
               />
-              <p className="text-xs text-zinc-500 mt-1">
-                Lý do này sẽ được hiển thị cho người dùng khi đăng nhập
+              <p className="text-[10px] uppercase font-black tracking-widest text-slate-400 mt-2">
+                Thông tin này sẽ hiển thị khi người dùng đăng nhập
               </p>
             </div>
 
-            <div className="flex gap-3 justify-end">
+            <div className="flex gap-4">
               <button
                 onClick={() => setShowLockModal(false)}
                 disabled={actionLoading}
-                className="px-4 py-2 text-sm font-medium text-zinc-700 bg-white border border-zinc-300 rounded-md hover:bg-zinc-50 disabled:opacity-50"
+                className="flex-1 py-4 text-sm font-black text-slate-700 bg-white/50 border border-white/40 hover:bg-white rounded-2xl transition-all shadow-sm shadow-black/5"
               >
-                Hủy
+                Hủy bỏ
               </button>
               <button
                 onClick={submitLockUser}
                 disabled={actionLoading || !lockReason.trim()}
-                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 py-4 text-sm font-black text-white bg-red-600 rounded-2xl hover:bg-red-700 transition-all shadow-xl shadow-red-900/10 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {actionLoading ? "Đang xử lý..." : "Khóa tài khoản"}
+                {actionLoading ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <Loader2 size={18} className="animate-spin" />
+                    <span>Đang xử lý</span>
+                  </div>
+                ) : "Khóa tài khoản"}
               </button>
             </div>
           </div>

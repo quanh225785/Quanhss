@@ -225,24 +225,29 @@ const AdminOverview = () => {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center py-24 space-y-4">
-        <Loader2 className="w-12 h-12 animate-spin text-blue-600" />
-        <p className="text-zinc-500 font-medium">Đang tổng hợp dữ liệu hệ thống...</p>
+      <div className="flex flex-col items-center justify-center py-32 space-y-6">
+        <div className="bg-white/70 backdrop-blur-2xl p-12 rounded-[3rem] border border-white/40 shadow-2xl text-center">
+          <Loader2 className="w-16 h-16 animate-spin text-primary mx-auto mb-6" />
+          <p className="text-slate-900 font-black text-2xl tracking-tight">Đang tổng hợp dữ liệu hệ thống...</p>
+          <p className="text-slate-500 font-medium">Vui lòng chờ trong giây lát</p>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center py-24 space-y-4">
-        <AlertCircle className="w-12 h-12 text-red-500" />
-        <p className="text-red-600 font-medium">{error}</p>
-        <button
-          onClick={fetchStats}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          Thử lại
-        </button>
+      <div className="flex flex-col items-center justify-center py-32 space-y-6">
+        <div className="bg-white/70 backdrop-blur-2xl p-12 rounded-[3rem] border border-white/40 shadow-2xl text-center max-w-md">
+          <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-6" />
+          <p className="text-red-600 font-black text-xl mb-6">{error}</p>
+          <button
+            onClick={fetchStats}
+            className="w-full py-4 bg-primary text-white font-black rounded-2xl hover:bg-primary/90 transition-all shadow-xl shadow-primary/20"
+          >
+            Thử lại
+          </button>
+        </div>
       </div>
     );
   }
@@ -252,19 +257,22 @@ const AdminOverview = () => {
   const userRoleData = getUserRoleData();
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="space-y-8">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-white/70 backdrop-blur-2xl border border-white/40 p-10 rounded-[3rem] shadow-2xl shadow-black/5">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight text-zinc-900">
-            Tổng quan hệ thống
-          </h2>
-          <p className="text-zinc-500">Thống kê chi tiết hoạt động trên toàn hệ thống.</p>
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-2 h-8 bg-primary rounded-full"></div>
+            <h2 className="text-3xl font-black tracking-tight text-slate-900 leading-tight">
+              Tổng quan hệ thống
+            </h2>
+          </div>
+          <p className="text-slate-500 font-medium ml-5">Thống kê chi tiết hoạt động trên toàn hệ thống.</p>
         </div>
         <button
           onClick={exportToPDF}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all shadow-md hover:shadow-lg active:scale-95"
+          className="flex items-center gap-3 px-8 py-4 bg-primary text-white font-black rounded-2xl hover:bg-primary/90 transition-all shadow-xl shadow-primary/20 active:scale-95 whitespace-nowrap"
         >
-          <Download size={18} />
+          <Download size={20} />
           <span>Xuất báo cáo PDF</span>
         </button>
       </div>
@@ -298,90 +306,106 @@ const AdminOverview = () => {
       </div>
 
       {/* Secondary Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-xl border border-zinc-200 shadow-sm flex items-center gap-4">
-          <div className="p-2 bg-blue-50 rounded-lg">
-            <Users size={20} className="text-blue-600" />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-white/70 backdrop-blur-xl p-6 rounded-[2rem] border border-white/40 shadow-xl shadow-black/5 flex items-center gap-5 hover:bg-white/80 transition-all">
+          <div className="p-3 bg-blue-50/50 border border-blue-100 rounded-2xl">
+            <Users size={24} className="text-blue-600" />
           </div>
           <div>
-            <p className="text-xs text-zinc-500 font-medium">Khách hàng</p>
-            <p className="text-lg font-bold">{formatNumber(stats.totalGuests)}</p>
+            <p className="text-xs text-slate-500 font-black uppercase tracking-widest">Khách hàng</p>
+            <p className="text-xl font-black text-slate-900">{formatNumber(stats.totalGuests)}</p>
           </div>
         </div>
-        <div className="bg-white p-4 rounded-xl border border-zinc-200 shadow-sm flex items-center gap-4">
-          <div className="p-2 bg-indigo-50 rounded-lg">
-            <Users size={20} className="text-indigo-600" />
+        <div className="bg-white/70 backdrop-blur-xl p-6 rounded-[2rem] border border-white/40 shadow-xl shadow-black/5 flex items-center gap-5 hover:bg-white/80 transition-all">
+          <div className="p-3 bg-indigo-50/50 border border-indigo-100 rounded-2xl">
+            <Users size={24} className="text-indigo-600" />
           </div>
           <div>
-            <p className="text-xs text-zinc-500 font-medium">Agents</p>
-            <p className="text-lg font-bold">{formatNumber(stats.totalAgents)}</p>
+            <p className="text-xs text-slate-500 font-black uppercase tracking-widest">Agents</p>
+            <p className="text-xl font-black text-slate-900">{formatNumber(stats.totalAgents)}</p>
           </div>
         </div>
-        <div className="bg-white p-4 rounded-xl border border-zinc-200 shadow-sm flex items-center gap-4">
-          <div className="p-2 bg-amber-50 rounded-lg">
-            <FileText size={20} className="text-amber-600" />
+        <div className="bg-white/70 backdrop-blur-xl p-6 rounded-[2rem] border border-white/40 shadow-xl shadow-black/5 flex items-center gap-5 hover:bg-white/80 transition-all">
+          <div className="p-3 bg-amber-50/50 border border-amber-100 rounded-2xl">
+            <FileText size={24} className="text-amber-600" />
           </div>
           <div>
-            <p className="text-xs text-zinc-500 font-medium">Tour chờ duyệt</p>
-            <p className="text-lg font-bold">{formatNumber(stats.pendingTours)}</p>
+            <p className="text-xs text-slate-500 font-black uppercase tracking-widest">Tour chờ duyệt</p>
+            <p className="text-xl font-black text-slate-900">{formatNumber(stats.pendingTours)}</p>
           </div>
         </div>
-        <div className="bg-white p-4 rounded-xl border border-zinc-200 shadow-sm flex items-center gap-4">
-          <div className="p-2 bg-emerald-50 rounded-lg">
-            <CheckCircle size={20} className="text-emerald-600" />
+        <div className="bg-white/70 backdrop-blur-xl p-6 rounded-[2rem] border border-white/40 shadow-xl shadow-black/5 flex items-center gap-5 hover:bg-white/80 transition-all">
+          <div className="p-3 bg-emerald-50/50 border border-emerald-100 rounded-2xl">
+            <CheckCircle size={24} className="text-emerald-600" />
           </div>
           <div>
-            <p className="text-xs text-zinc-500 font-medium">Tour đã duyệt</p>
-            <p className="text-lg font-bold">{formatNumber(stats.approvedTours)}</p>
+            <p className="text-xs text-slate-500 font-black uppercase tracking-widest">Tour đã duyệt</p>
+            <p className="text-xl font-black text-slate-900">{formatNumber(stats.approvedTours)}</p>
           </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Chart */}
-        <div className="lg:col-span-2 bg-white p-6 rounded-xl border border-zinc-200 shadow-sm">
-          <div className="flex justify-between items-center mb-6">
-            <h3 className="text-lg font-bold text-zinc-900 flex items-center gap-2">
-              <TrendingUp size={20} className="text-blue-600" />
-              Doanh thu & Đơn hàng theo tháng
+        <div className="lg:col-span-2 bg-white/70 backdrop-blur-2xl p-8 rounded-[3rem] border border-white/40 shadow-2xl shadow-black/5">
+          <div className="flex justify-between items-center mb-8">
+            <h3 className="text-xl font-black text-slate-900 flex items-center gap-3">
+              <div className="w-1.5 h-6 bg-blue-600 rounded-full"></div>
+              Doanh thu & Đơn hàng
             </h3>
           </div>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f4f4f5" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#71717a', fontSize: 12 }} dy={10} />
-                <YAxis yAxisId="left" orientation="left" axisLine={false} tickLine={false} tick={{ fill: '#71717a', fontSize: 12 }} />
-                <YAxis yAxisId="right" orientation="right" axisLine={false} tickLine={false} tick={{ fill: '#71717a', fontSize: 12 }} />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,0,0.05)" />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12, fontWeight: 700 }} dy={10} />
+                <YAxis yAxisId="left" orientation="left" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12, fontWeight: 700 }} />
+                <YAxis yAxisId="right" orientation="right" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12, fontWeight: 700 }} />
                 <Tooltip
-                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                  contentStyle={{
+                    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                    backdropFilter: 'blur(16px)',
+                    borderRadius: '24px',
+                    border: '1px solid rgba(255, 255, 255, 0.4)',
+                    boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)',
+                    padding: '16px'
+                  }}
+                  itemStyle={{ fontWeight: 800 }}
                   formatter={(value, name) => [name === 'revenue' ? formatCurrency(value) : formatNumber(value), name === 'revenue' ? 'Doanh thu' : 'Đơn hàng']}
                 />
-                <Bar yAxisId="left" dataKey="revenue" fill="#3b82f6" name="revenue" radius={[6, 6, 0, 0]} barSize={40} />
-                <Bar yAxisId="right" dataKey="bookings" fill="#10b981" name="bookings" radius={[6, 6, 0, 0]} barSize={40} />
+                <Bar yAxisId="left" dataKey="revenue" fill="#3b82f6" name="revenue" radius={[10, 10, 0, 0]} barSize={32} />
+                <Bar yAxisId="right" dataKey="bookings" fill="#10b981" name="bookings" radius={[10, 10, 0, 0]} barSize={32} />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </div>
 
         {/* User Trend */}
-        <div className="bg-white p-6 rounded-xl border border-zinc-200 shadow-sm">
-          <h3 className="text-lg font-bold text-zinc-900 mb-6 flex items-center gap-2">
-            <Users size={20} className="text-indigo-600" />
-            Người dùng & Tour mới
+        <div className="bg-white/70 backdrop-blur-2xl p-8 rounded-[3rem] border border-white/40 shadow-2xl shadow-black/5">
+          <h3 className="text-xl font-black text-slate-900 mb-8 flex items-center gap-3">
+            <div className="w-1.5 h-6 bg-indigo-600 rounded-full"></div>
+            Tăng trưởng
           </h3>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f4f4f5" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#71717a', fontSize: 12 }} dy={10} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#71717a', fontSize: 12 }} />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,0,0.05)" />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12, fontWeight: 700 }} dy={10} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12, fontWeight: 700 }} />
                 <Tooltip
-                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                  contentStyle={{
+                    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                    backdropFilter: 'blur(16px)',
+                    borderRadius: '24px',
+                    border: '1px solid rgba(255, 255, 255, 0.4)',
+                    boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)',
+                    padding: '16px'
+                  }}
+                  itemStyle={{ fontWeight: 800 }}
                 />
-                <Legend verticalAlign="top" height={36} />
-                <Line type="monotone" dataKey="users" name="Người dùng mới" stroke="#6366f1" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
-                <Line type="monotone" dataKey="tours" name="Tour mới" stroke="#f59e0b" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
+                <Legend verticalAlign="top" height={48} iconType="circle" />
+                <Line type="monotone" dataKey="users" name="Người dùng mới" stroke="#6366f1" strokeWidth={4} dot={{ r: 6, strokeWidth: 3, fill: '#fff' }} activeDot={{ r: 8, strokeWidth: 0 }} />
+                <Line type="monotone" dataKey="tours" name="Tour mới" stroke="#f59e0b" strokeWidth={4} dot={{ r: 6, strokeWidth: 3, fill: '#fff' }} activeDot={{ r: 8, strokeWidth: 0 }} />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -390,10 +414,10 @@ const AdminOverview = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Tour Status Breakdown */}
-        <div className="bg-white p-6 rounded-xl border border-zinc-200 shadow-sm">
-          <h3 className="text-lg font-bold text-zinc-900 mb-6 flex items-center gap-2">
-            <PieChartIcon size={20} className="text-blue-600" />
-            Phân bổ trạng thái Tour
+        <div className="bg-white/70 backdrop-blur-2xl p-8 rounded-[3rem] border border-white/40 shadow-2xl shadow-black/5">
+          <h3 className="text-xl font-black text-slate-900 mb-8 flex items-center gap-3">
+            <div className="w-1.5 h-6 bg-blue-600 rounded-full"></div>
+            Trạng thái Tour
           </h3>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
@@ -402,26 +426,35 @@ const AdminOverview = () => {
                   data={tourStatusData}
                   cx="50%"
                   cy="50%"
-                  innerRadius={60}
-                  outerRadius={80}
-                  paddingAngle={5}
+                  innerRadius={65}
+                  outerRadius={90}
+                  paddingAngle={8}
                   dataKey="value"
                 >
                   {tourStatusData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
-                <Tooltip />
-                <Legend verticalAlign="bottom" height={36} />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                    backdropFilter: 'blur(16px)',
+                    borderRadius: '24px',
+                    border: '1px solid rgba(255, 255, 255, 0.4)',
+                    boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)',
+                    padding: '12px'
+                  }}
+                />
+                <Legend verticalAlign="bottom" height={36} iconType="circle" />
               </PieChart>
             </ResponsiveContainer>
           </div>
         </div>
 
         {/* User Role Breakdown */}
-        <div className="bg-white p-6 rounded-xl border border-zinc-200 shadow-sm">
-          <h3 className="text-lg font-bold text-zinc-900 mb-6 flex items-center gap-2">
-            <Users size={20} className="text-indigo-600" />
+        <div className="bg-white/70 backdrop-blur-2xl p-8 rounded-[3rem] border border-white/40 shadow-2xl shadow-black/5">
+          <h3 className="text-xl font-black text-slate-900 mb-8 flex items-center gap-3">
+            <div className="w-1.5 h-6 bg-indigo-600 rounded-full"></div>
             Cơ cấu người dùng
           </h3>
           <div className="h-64">
@@ -431,17 +464,26 @@ const AdminOverview = () => {
                   data={userRoleData}
                   cx="50%"
                   cy="50%"
-                  innerRadius={60}
-                  outerRadius={80}
-                  paddingAngle={5}
+                  innerRadius={65}
+                  outerRadius={90}
+                  paddingAngle={8}
                   dataKey="value"
                 >
                   {userRoleData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[(index + 2) % COLORS.length]} />
                   ))}
                 </Pie>
-                <Tooltip />
-                <Legend verticalAlign="bottom" height={36} />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                    backdropFilter: 'blur(16px)',
+                    borderRadius: '24px',
+                    border: '1px solid rgba(255, 255, 255, 0.4)',
+                    boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)',
+                    padding: '12px'
+                  }}
+                />
+                <Legend verticalAlign="bottom" height={36} iconType="circle" />
               </PieChart>
             </ResponsiveContainer>
           </div>

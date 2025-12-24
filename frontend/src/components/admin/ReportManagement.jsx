@@ -160,132 +160,142 @@ const ReportManagement = () => {
     return (
         <div className="space-y-6">
             {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="bg-white/70 backdrop-blur-2xl border border-white/40 p-10 rounded-[3rem] shadow-2xl shadow-black/5 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                 <div>
-                    <h1 className="text-2xl font-display font-bold text-slate-900">
-                        Quản lý báo cáo
-                    </h1>
-                    <p className="text-slate-500 mt-1">
-                        Xem và xử lý các báo cáo vi phạm từ người dùng
+                    <div className="flex items-center gap-3 mb-2">
+                        <div className="w-2 h-8 bg-primary rounded-full"></div>
+                        <h1 className="text-3xl font-black tracking-tight text-slate-900 leading-tight">
+                            Quản lý báo cáo
+                        </h1>
+                    </div>
+                    <p className="text-slate-500 font-medium ml-5">
+                        Theo dõi và xử lý các khiếu nại, báo cáo vi phạm từ cộng đồng.
                     </p>
                 </div>
                 <div className="flex items-center gap-3">
                     <button
                         onClick={fetchReports}
-                        className="p-2 hover:bg-slate-100 rounded-xl transition-colors"
+                        className="p-4 bg-white/50 border border-white/40 hover:bg-white rounded-2xl transition-all shadow-sm active:scale-95 group"
                         title="Làm mới"
                     >
-                        <RefreshCw size={20} className="text-slate-600" />
+                        <RefreshCw size={20} className="text-slate-600 group-hover:rotate-180 transition-transform duration-500" />
                     </button>
                 </div>
             </div>
 
             {/* Filters */}
-            <div className="flex items-center gap-2 flex-wrap">
-                <Filter size={18} className="text-slate-500" />
-                {['ALL', 'PENDING', 'APPROVED', 'REJECTED'].map((status) => (
-                    <button
-                        key={status}
-                        onClick={() => setFilter(status)}
-                        className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${filter === status
-                                ? 'bg-primary text-white'
-                                : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
-                            }`}
-                    >
-                        {status === 'ALL' && 'Tất cả'}
-                        {status === 'PENDING' && `Chờ xử lý (${reports.filter(r => r.status === 'PENDING').length})`}
-                        {status === 'APPROVED' && 'Đã duyệt'}
-                        {status === 'REJECTED' && 'Đã từ chối'}
-                    </button>
-                ))}
+            <div className="flex items-center gap-4 bg-white/70 backdrop-blur-xl p-6 rounded-[2rem] border border-white/40 shadow-xl shadow-black/5">
+                <div className="p-3 bg-slate-100/50 rounded-xl mr-2">
+                    <Filter size={18} className="text-slate-500" />
+                </div>
+                <div className="flex flex-wrap gap-3">
+                    {['ALL', 'PENDING', 'APPROVED', 'REJECTED'].map((status) => (
+                        <button
+                            key={status}
+                            onClick={() => setFilter(status)}
+                            className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${filter === status
+                                ? 'bg-primary text-white shadow-lg shadow-primary/20'
+                                : 'bg-white/50 border border-white/40 text-slate-500 hover:text-slate-900 hover:bg-white'
+                                }`}
+                        >
+                            {status === 'ALL' && 'Tất cả'}
+                            {status === 'PENDING' && `Chờ xử lý (${reports.filter(r => r.status === 'PENDING').length})`}
+                            {status === 'APPROVED' && 'Đã duyệt'}
+                            {status === 'REJECTED' && 'Đã từ chối'}
+                        </button>
+                    ))}
+                </div>
             </div>
 
             {/* Reports List */}
             {filteredReports.length === 0 ? (
-                <div className="bg-white/60 backdrop-blur-md border border-white/60 rounded-2xl p-12 text-center">
-                    <Flag size={48} className="mx-auto text-slate-300 mb-4" />
-                    <p className="text-slate-500">Không có báo cáo nào</p>
+                <div className="bg-white/70 backdrop-blur-2xl border border-white/40 rounded-[2.5rem] p-24 text-center shadow-2xl shadow-black/5">
+                    <div className="bg-slate-50 w-24 h-24 rounded-[2rem] flex items-center justify-center mx-auto mb-6 border border-white/40 shadow-inner">
+                        <Flag size={48} className="text-slate-300" />
+                    </div>
+                    <p className="text-slate-900 font-black text-2xl tracking-tight mb-2">Không có báo cáo nào</p>
+                    <p className="text-slate-500 font-medium tracking-tight">Hệ thống hiện tại chưa ghi nhận khiếu nại nào ở mục này.</p>
                 </div>
             ) : (
-                <div className="bg-white/60 backdrop-blur-md border border-white/60 rounded-2xl overflow-hidden">
+                <div className="bg-white/70 backdrop-blur-2xl border border-white/40 rounded-[2.5rem] overflow-hidden shadow-2xl shadow-black/5">
                     <div className="overflow-x-auto">
-                        <table className="w-full">
-                            <thead className="bg-slate-50/50">
-                                <tr>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                        <table className="w-full text-sm text-left border-collapse">
+                            <thead>
+                                <tr className="bg-white/50 border-b border-white/40">
+                                    <th className="px-8 py-6 text-xs font-black uppercase tracking-widest text-slate-500">
                                         Người báo cáo
                                     </th>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                                    <th className="px-8 py-6 text-xs font-black uppercase tracking-widest text-slate-500">
                                         Đối tượng
                                     </th>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                                    <th className="px-8 py-6 text-xs font-black uppercase tracking-widest text-slate-500">
                                         Lý do
                                     </th>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                                    <th className="px-8 py-6 text-xs font-black uppercase tracking-widest text-slate-500">
                                         Thời gian
                                     </th>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                                    <th className="px-8 py-6 text-xs font-black uppercase tracking-widest text-slate-500">
                                         Trạng thái
                                     </th>
-                                    <th className="px-6 py-4 text-right text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                                    <th className="px-8 py-6 text-right text-xs font-black uppercase tracking-widest text-slate-500">
                                         Hành động
                                     </th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-100">
+                            <tbody className="divide-y divide-white/20">
                                 {filteredReports.map((report) => (
-                                    <tr key={report.id} className="hover:bg-slate-50/50 transition-colors">
-                                        <td className="px-6 py-4">
+                                    <tr key={report.id} className="group hover:bg-white/80 transition-all border-b border-white/20 last:border-0">
+                                        <td className="px-8 py-6">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-secondary text-white flex items-center justify-center text-sm font-bold">
-                                                    <User size={16} />
+                                                <div className="w-10 h-10 rounded-2xl bg-indigo-50/50 flex items-center justify-center text-indigo-600 font-black text-xs border border-indigo-100 group-hover:scale-110 transition-transform">
+                                                    {report.reporterName?.charAt(0).toUpperCase()}
                                                 </div>
                                                 <div>
-                                                    <p className="text-sm font-medium text-slate-900">
+                                                    <p className="text-sm font-black text-slate-900 tracking-tight">
                                                         {report.reporterName}
                                                     </p>
-                                                    <p className="text-xs text-slate-500">
+                                                    <p className="text-[10px] font-bold text-slate-500 uppercase">
                                                         {report.reporterEmail}
                                                     </p>
                                                 </div>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4">
+                                        <td className="px-8 py-6 uppercase">
                                             <div>
                                                 {getTargetTypeBadge(report.targetType)}
-                                                <p className="text-sm font-medium text-slate-900 mt-1">
+                                                <p className="text-xs font-black text-slate-700 mt-2 tracking-tight">
                                                     {report.targetName}
                                                 </p>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4">
-                                            <p className="text-sm text-slate-600 max-w-xs truncate" title={report.reason}>
+                                        <td className="px-8 py-6">
+                                            <p className="text-xs font-bold text-slate-600 max-w-xs truncate" title={report.reason}>
                                                 {report.reason}
                                             </p>
                                         </td>
-                                        <td className="px-6 py-4">
-                                            <p className="text-sm text-slate-600">
+                                        <td className="px-8 py-6">
+                                            <p className="text-xs font-black text-slate-400 font-sans uppercase">
                                                 {formatDate(report.createdAt)}
                                             </p>
                                         </td>
-                                        <td className="px-6 py-4">
+                                        <td className="px-8 py-6">
                                             {getStatusBadge(report.status)}
                                         </td>
-                                        <td className="px-6 py-4 text-right">
+                                        <td className="px-8 py-6 text-right">
                                             {report.status === 'PENDING' ? (
                                                 <button
                                                     onClick={() => openProcessModal(report)}
-                                                    className="px-3 py-1.5 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary/90 transition-colors"
+                                                    className="px-6 py-3 bg-primary text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-xl hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 active:scale-95"
                                                 >
                                                     Xử lý
                                                 </button>
                                             ) : (
                                                 <button
                                                     onClick={() => openProcessModal(report)}
-                                                    className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+                                                    className="p-4 bg-white/50 border border-white/40 text-slate-600 hover:text-primary hover:bg-white rounded-2xl transition-all shadow-sm active:scale-95"
                                                     title="Xem chi tiết"
                                                 >
-                                                    <Eye size={18} className="text-slate-500" />
+                                                    <Eye size={18} />
                                                 </button>
                                             )}
                                         </td>
@@ -299,78 +309,81 @@ const ReportManagement = () => {
 
             {/* Process Modal */}
             {showProcessModal && selectedReport && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl">
+                <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-md flex items-center justify-center z-[9999] p-4 animate-in fade-in duration-300">
+                    <div className="bg-white/80 backdrop-blur-2xl rounded-[3rem] border border-white/40 p-10 w-full max-w-2xl shadow-2xl transform animate-in zoom-in-95 duration-300">
                         {/* Header */}
-                        <div className="flex items-center justify-between p-6 border-b border-slate-100">
-                            <div className="flex items-center gap-3">
-                                <div className="p-2 bg-blue-100 rounded-xl">
-                                    <Flag className="text-blue-600" size={20} />
+                        <div className="flex items-center justify-between mb-10">
+                            <div className="flex items-center gap-4">
+                                <div className="p-4 bg-blue-500/10 rounded-2xl border border-blue-100">
+                                    <Flag className="text-blue-600" size={24} />
                                 </div>
-                                <h3 className="text-lg font-bold text-slate-900">
-                                    Chi tiết báo cáo
-                                </h3>
+                                <div>
+                                    <h3 className="text-2xl font-black text-slate-900 tracking-tight">
+                                        Chi tiết báo cáo
+                                    </h3>
+                                    <p className="text-sm font-bold text-slate-500 uppercase tracking-widest">Mã báo cáo: #{selectedReport.id}</p>
+                                </div>
                             </div>
                             <button
                                 onClick={() => {
                                     setShowProcessModal(false);
                                     setSelectedReport(null);
                                 }}
-                                className="p-2 hover:bg-slate-100 rounded-xl transition-colors"
+                                className="p-4 bg-slate-50 hover:bg-slate-100 rounded-2xl text-slate-400 hover:text-slate-900 transition-all active:scale-95"
                             >
-                                <X size={20} className="text-slate-500" />
+                                <X size={20} />
                             </button>
                         </div>
 
                         {/* Body */}
-                        <div className="p-6 space-y-4">
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <p className="text-sm text-slate-500">Người báo cáo</p>
-                                    <p className="font-medium text-slate-900">{selectedReport.reporterName}</p>
+                        <div className="space-y-8">
+                            <div className="grid grid-cols-2 gap-8">
+                                <div className="space-y-2">
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Người báo cáo</p>
+                                    <p className="text-base font-black text-slate-900 tracking-tight">{selectedReport.reporterName}</p>
                                 </div>
-                                <div>
-                                    <p className="text-sm text-slate-500">Đối tượng</p>
-                                    <div className="flex items-center gap-2">
+                                <div className="space-y-2 text-right">
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Đối tượng bị báo cáo</p>
+                                    <div className="flex flex-col items-end gap-1">
                                         {getTargetTypeBadge(selectedReport.targetType)}
-                                        <span className="font-medium text-slate-900">{selectedReport.targetName}</span>
+                                        <span className="text-base font-black text-slate-900 tracking-tight">{selectedReport.targetName}</span>
                                     </div>
                                 </div>
                             </div>
 
-                            <div>
-                                <p className="text-sm text-slate-500 mb-1">Lý do báo cáo</p>
-                                <p className="p-3 bg-slate-50 rounded-xl text-slate-700">{selectedReport.reason}</p>
+                            <div className="bg-white/50 p-8 rounded-[2rem] border border-white/40 shadow-inner">
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Lý do khiếu nại</p>
+                                <p className="text-base font-bold text-slate-700 leading-relaxed italic">"{selectedReport.reason}"</p>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <p className="text-sm text-slate-500">Thời gian</p>
-                                    <p className="font-medium text-slate-900">{formatDate(selectedReport.createdAt)}</p>
+                            <div className="grid grid-cols-2 gap-8 items-end">
+                                <div className="space-y-2">
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Thời gian gửi</p>
+                                    <p className="text-sm font-black text-slate-900 font-sans tracking-tight">{formatDate(selectedReport.createdAt)}</p>
                                 </div>
-                                <div>
-                                    <p className="text-sm text-slate-500">Trạng thái</p>
-                                    {getStatusBadge(selectedReport.status)}
+                                <div className="space-y-2 text-right">
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Trạng thái hiện tại</p>
+                                    <div className="flex justify-end">{getStatusBadge(selectedReport.status)}</div>
                                 </div>
                             </div>
 
                             {selectedReport.adminNote && (
-                                <div>
-                                    <p className="text-sm text-slate-500 mb-1">Ghi chú admin</p>
-                                    <p className="p-3 bg-blue-50 rounded-xl text-blue-700">{selectedReport.adminNote}</p>
+                                <div className="bg-indigo-50/50 p-6 rounded-2xl border border-indigo-100">
+                                    <p className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.2em] mb-2">Ghi chú quản trị</p>
+                                    <p className="text-sm font-bold text-indigo-900 leading-relaxed">{selectedReport.adminNote}</p>
                                 </div>
                             )}
 
                             {selectedReport.status === 'PENDING' && (
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-2">
-                                        Ghi chú xử lý (tùy chọn)
+                                <div className="space-y-3">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">
+                                        Ghi chú xử lý mới (Tùy chọn)
                                     </label>
                                     <textarea
                                         value={adminNote}
                                         onChange={(e) => setAdminNote(e.target.value)}
-                                        placeholder="Nhập ghi chú cho báo cáo này..."
-                                        className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none"
+                                        placeholder="Nhập ghi chú hoặc hướng xử lý cho báo cáo này..."
+                                        className="w-full px-6 py-4 bg-white border border-slate-200 rounded-2xl text-sm font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all resize-none shadow-inner"
                                         rows={3}
                                     />
                                 </div>
@@ -379,11 +392,11 @@ const ReportManagement = () => {
 
                         {/* Footer */}
                         {selectedReport.status === 'PENDING' && (
-                            <div className="p-6 border-t border-slate-100 flex gap-3">
+                            <div className="mt-10 pt-10 border-t border-slate-100 flex gap-4">
                                 <button
                                     onClick={() => handleProcess(false)}
                                     disabled={processing}
-                                    className="flex-1 px-4 py-3 border border-slate-200 text-slate-700 rounded-xl font-medium hover:bg-slate-50 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                                    className="flex-1 px-8 py-5 border border-slate-200 text-slate-700 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-slate-50 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                                 >
                                     <XCircle size={18} />
                                     Từ chối
@@ -391,14 +404,14 @@ const ReportManagement = () => {
                                 <button
                                     onClick={() => handleProcess(true)}
                                     disabled={processing}
-                                    className="flex-1 px-4 py-3 bg-green-600 text-white rounded-xl font-medium hover:bg-green-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                                    className="flex-3 px-8 py-5 bg-primary text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-primary/90 transition-all shadow-xl shadow-primary/20 disabled:opacity-50 flex items-center justify-center gap-2"
                                 >
                                     {processing ? (
-                                        <Loader2 size={18} className="animate-spin" />
+                                        <Loader2 size={20} className="animate-spin" />
                                     ) : (
-                                        <CheckCircle size={18} />
+                                        <CheckCircle size={20} />
                                     )}
-                                    Duyệt & Cảnh báo
+                                    Duyệt & Cảnh báo vi phạm
                                 </button>
                             </div>
                         )}

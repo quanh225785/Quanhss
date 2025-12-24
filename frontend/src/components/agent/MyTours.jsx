@@ -142,13 +142,13 @@ const MyTours = () => {
             )}
 
             {tours.length === 0 ? (
-                <div className="bg-white border border-zinc-200 rounded-xl p-12 text-center">
+                <div className="bg-white/70 backdrop-blur-xl border border-white/40 rounded-[2.5rem] p-12 text-center shadow-xl shadow-black/5">
                     <Route className="mx-auto text-zinc-300 mb-4" size={48} />
                     <h3 className="text-lg font-medium text-zinc-900 mb-2">Chưa có tour nào</h3>
                     <p className="text-zinc-500 mb-4">Bắt đầu bằng việc tạo tour đầu tiên của bạn</p>
                     <button
                         onClick={() => setShowCreateModal(true)}
-                        className="inline-flex items-center gap-2 bg-zinc-900 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-zinc-800 transition-colors"
+                        className="inline-flex items-center gap-2 bg-primary text-white px-6 py-2 rounded-xl text-sm font-medium hover:bg-primary/90 transition-all shadow-lg shadow-primary/20"
                     >
                         <Plus size={16} />
                         Tạo Tour mới
@@ -159,7 +159,7 @@ const MyTours = () => {
                     {tours.map((tour) => (
                         <div
                             key={tour.id}
-                            className="bg-white border border-zinc-200 rounded-xl p-6 hover:shadow-md transition-shadow"
+                            className="bg-white/70 backdrop-blur-xl border border-white/40 rounded-[2.5rem] p-8 hover:bg-white/80 transition-all duration-300 shadow-xl shadow-black/5 hover:-translate-y-1 hover:shadow-2xl"
                         >
                             <div className="flex items-start justify-between">
                                 <div className="flex-1">

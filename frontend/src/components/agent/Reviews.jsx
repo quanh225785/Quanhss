@@ -112,7 +112,7 @@ const Reviews = () => {
             )}
 
             {reviews.length === 0 ? (
-                <div className="text-center py-12 bg-white p-6 rounded-xl border border-zinc-200">
+                <div className="text-center py-16 bg-white/70 backdrop-blur-xl p-6 rounded-[2.5rem] border border-white/40 shadow-xl shadow-black/5">
                     <MessageCircle className="w-16 h-16 text-zinc-300 mx-auto mb-4" />
                     <h3 className="text-lg font-bold text-zinc-900 mb-2">Chưa có đánh giá nào</h3>
                     <p className="text-zinc-500">Các đánh giá từ khách hàng sẽ hiển thị ở đây.</p>
@@ -120,7 +120,7 @@ const Reviews = () => {
             ) : (
                 <div className="grid gap-4">
                     {reviews.map((review) => (
-                        <div key={review.id} className="bg-white p-6 rounded-xl border border-zinc-200">
+                        <div key={review.id} className="bg-white/70 backdrop-blur-xl p-8 rounded-[2.5rem] border border-white/40 shadow-xl shadow-black/5">
                             {/* Header */}
                             <div className="flex items-start justify-between mb-4">
                                 <div className="flex items-center gap-3">
@@ -141,21 +141,21 @@ const Reviews = () => {
                             </div>
 
                             {/* Tour Info */}
-                            <div className="flex items-center gap-3 mb-3 p-3 bg-zinc-50 rounded-lg">
+                            <div className="flex items-center gap-3 mb-4 p-4 bg-white/50 rounded-2xl border border-white/40">
                                 {review.tourImageUrl ? (
                                     <img
                                         src={review.tourImageUrl}
                                         alt={review.tourName}
-                                        className="w-12 h-12 rounded-lg object-cover"
+                                        className="w-14 h-14 rounded-xl object-cover shadow-sm"
                                     />
                                 ) : (
-                                    <div className="w-12 h-12 rounded-lg bg-zinc-200 flex items-center justify-center">
-                                        <Star size={16} className="text-zinc-400" />
+                                    <div className="w-14 h-14 rounded-xl bg-zinc-200 flex items-center justify-center">
+                                        <Star size={18} className="text-zinc-400" />
                                     </div>
                                 )}
                                 <div>
-                                    <p className="text-sm font-medium text-zinc-900">{review.tourName}</p>
-                                    <p className="text-xs text-zinc-500">Mã: {review.bookingCode}</p>
+                                    <p className="text-base font-bold text-zinc-900">{review.tourName}</p>
+                                    <p className="text-xs text-zinc-500 font-mono">Mã: {review.bookingCode}</p>
                                 </div>
                             </div>
 
@@ -165,12 +165,12 @@ const Reviews = () => {
                             {/* Agent Reply Section */}
                             {review.agentReply ? (
                                 // Show existing reply
-                                <div className="bg-zinc-50 p-4 rounded-lg border-l-4 border-zinc-900">
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <span className="text-xs font-medium text-zinc-900">Phản hồi của bạn</span>
-                                        <span className="text-xs text-zinc-400">• {formatDate(review.agentRepliedAt)}</span>
+                                <div className="bg-zinc-900/5 backdrop-blur-sm p-5 rounded-2xl border-l-4 border-zinc-900">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <span className="text-xs font-bold text-zinc-900 uppercase">Phản hồi của bạn</span>
+                                        <span className="text-xs text-zinc-500">• {formatDate(review.agentRepliedAt)}</span>
                                     </div>
-                                    <p className="text-sm text-zinc-600">{review.agentReply}</p>
+                                    <p className="text-sm text-zinc-700 leading-relaxed font-medium">{review.agentReply}</p>
                                 </div>
                             ) : replyingId === review.id ? (
                                 // Show reply form

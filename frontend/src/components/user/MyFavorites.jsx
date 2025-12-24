@@ -91,15 +91,15 @@ const MyFavorites = () => {
 
             {/* Favorites List */}
             {favorites.length === 0 ? (
-                <div className="text-center py-16 bg-white/50 rounded-[2rem] border border-white/50">
-                    <HeartOff className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-                    <h4 className="text-lg font-bold text-slate-700 mb-2">Chưa có tour yêu thích</h4>
-                    <p className="text-slate-500 mb-4">
+                <div className="text-center py-20 bg-white/70 backdrop-blur-xl rounded-[2.5rem] border border-white/40 shadow-xl shadow-black/5">
+                    <HeartOff className="w-20 h-20 text-slate-300 mx-auto mb-6" />
+                    <h4 className="text-xl font-bold text-slate-700 mb-2">Chưa có tour yêu thích</h4>
+                    <p className="text-slate-500 mb-8">
                         Khám phá và thêm các tour bạn thích vào danh sách này.
                     </p>
                     <button
                         onClick={() => navigate('/tours')}
-                        className="px-6 py-2 bg-primary text-white rounded-xl font-medium hover:bg-primary/90 transition-colors"
+                        className="px-8 py-3 bg-primary text-white rounded-xl font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20"
                     >
                         Khám phá Tour
                     </button>
@@ -109,12 +109,12 @@ const MyFavorites = () => {
                     <div className="text-sm text-slate-600">
                         Bạn có <span className="font-bold text-slate-900">{favorites.length}</span> tour yêu thích
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         {favorites.map((tour) => (
                             <div
                                 key={tour.id}
                                 onClick={() => navigate(`/tour/${tour.id}`)}
-                                className="group bg-white/60 backdrop-blur-md border-2 border-slate-200 rounded-[2rem] overflow-hidden cursor-pointer hover:bg-white hover:border-primary transition-colors"
+                                className="group bg-white/70 backdrop-blur-xl border border-white/40 rounded-[2.5rem] overflow-hidden cursor-pointer hover:bg-white/80 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 shadow-xl shadow-black/5"
                             >
                                 {/* Tour Image */}
                                 <div className="relative h-48 overflow-hidden">

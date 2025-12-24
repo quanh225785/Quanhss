@@ -88,7 +88,7 @@ const EditBookingContactModal = ({ booking, onClose, onSuccess }) => {
             onClick={onClose}
         >
             <div
-                className="bg-white rounded-[2rem] w-full max-w-lg shadow-2xl transform scale-100 animate-scale-in overflow-hidden"
+                className="bg-white rounded-[2rem] w-full max-w-2xl shadow-2xl transform scale-100 animate-scale-in overflow-hidden"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}

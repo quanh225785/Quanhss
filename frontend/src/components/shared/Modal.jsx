@@ -57,18 +57,17 @@ const Modal = ({
 
       {/* Modal Content */}
       <div
-        className={`relative bg-white rounded-xl shadow-2xl w-full ${sizeClasses[size]} mx-4 animate-in fade-in zoom-in duration-200`}
+        className={`relative bg-white/80 backdrop-blur-xl rounded-[2rem] border border-white/40 shadow-2xl w-full ${sizeClasses[size]} mx-4 animate-in fade-in zoom-in duration-300`}
       >
-        {/* Header */}
         {title && (
-          <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-200">
-            <h2 className="text-lg font-semibold text-zinc-900">{title}</h2>
+          <div className="flex items-center justify-between px-8 py-6 border-b border-white/20">
+            <h2 className="text-xl font-bold text-zinc-900">{title}</h2>
             <button
               onClick={onClose}
-              className="p-1 rounded-md hover:bg-zinc-100 transition-colors"
+              className="p-2 rounded-xl hover:bg-black/5 transition-colors"
               aria-label="Close modal"
             >
-              <X className="w-5 h-5 text-zinc-500" />
+              <X className="w-6 h-6 text-zinc-500" />
             </button>
           </div>
         )}
@@ -78,7 +77,7 @@ const Modal = ({
 
         {/* Footer */}
         {footer && (
-          <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-zinc-200 bg-zinc-50 rounded-b-xl">
+          <div className="flex items-center justify-end gap-3 px-8 py-6 border-t border-white/20 bg-black/5 rounded-b-[2rem]">
             {footer}
           </div>
         )}

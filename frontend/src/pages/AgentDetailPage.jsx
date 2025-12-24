@@ -134,7 +134,7 @@ const AgentDetailPage = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-surface flex items-center justify-center">
+            <div className="min-h-screen flex items-center justify-center">
                 <div className="text-center">
                     <Loader2 className="w-12 h-12 animate-spin text-primary mx-auto mb-4" />
                     <p className="text-slate-600">Đang tải thông tin đại lý...</p>
@@ -145,7 +145,7 @@ const AgentDetailPage = () => {
 
     if (error) {
         return (
-            <div className="min-h-screen bg-surface flex items-center justify-center">
+            <div className="min-h-screen flex items-center justify-center">
                 <div className="text-center bg-white/60 backdrop-blur-md rounded-3xl p-8 border border-white/60 shadow-lg max-w-md">
                     <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
                     <h2 className="text-xl font-bold text-slate-900 mb-2">Có lỗi xảy ra</h2>
@@ -163,7 +163,7 @@ const AgentDetailPage = () => {
 
     if (!agent) {
         return (
-            <div className="min-h-screen bg-surface flex items-center justify-center">
+            <div className="min-h-screen flex items-center justify-center">
                 <div className="text-center bg-white/60 backdrop-blur-md rounded-3xl p-8 border border-white/60 shadow-lg max-w-md">
                     <AlertCircle className="w-16 h-16 text-yellow-500 mx-auto mb-4" />
                     <h2 className="text-xl font-bold text-slate-900 mb-2">Không tìm thấy đại lý</h2>
@@ -180,7 +180,7 @@ const AgentDetailPage = () => {
     }
 
     return (
-        <div className="h-full bg-surface font-sans p-4 md:p-8">
+        <div className="h-full font-sans p-4 md:p-8">
             {/* Header */}
             <header className="sticky top-0 bg-white/70 backdrop-blur-xl border-b border-white/40 z-50 rounded-2xl mb-6">
                 <div className="px-4 md:px-8 py-4 flex items-center justify-between">

@@ -190,7 +190,7 @@ const UserProfile = ({ user, onLogout }) => {
         <p className="text-slate-500 mt-2">Quản lý thông tin cá nhân và cài đặt bảo mật.</p>
       </div>
 
-      <div className="bg-white/60 backdrop-blur-md p-8 rounded-[2.5rem] border border-white/60 shadow-xl">
+      <div className="bg-white/70 backdrop-blur-xl p-8 md:p-12 rounded-[2.5rem] border border-white/40 shadow-2xl shadow-black/5">
         <div className="flex flex-col items-center mb-10">
           <input
             ref={fileInputRef}
@@ -271,7 +271,7 @@ const UserProfile = ({ user, onLogout }) => {
                   value={formData.firstName}
                   onChange={handleChange}
                   placeholder="Nhập họ"
-                  className="w-full pl-12 pr-4 py-3.5 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-slate-900 font-medium"
+                  className="w-full pl-12 pr-4 py-3.5 bg-white/50 border border-white/40 backdrop-blur-sm rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-slate-900 font-bold"
                 />
               </div>
             </div>
@@ -287,7 +287,7 @@ const UserProfile = ({ user, onLogout }) => {
                   value={formData.lastName}
                   onChange={handleChange}
                   placeholder="Nhập tên"
-                  className="w-full pl-12 pr-4 py-3.5 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-slate-900 font-medium"
+                  className="w-full pl-12 pr-4 py-3.5 bg-white/50 border border-white/40 backdrop-blur-sm rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-slate-900 font-bold"
                 />
               </div>
             </div>
@@ -301,7 +301,7 @@ const UserProfile = ({ user, onLogout }) => {
               name="dob"
               value={formData.dob}
               onChange={handleChange}
-              className="w-full px-4 py-3.5 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-slate-900 font-medium"
+              className="w-full px-4 py-3.5 bg-white/50 border border-white/40 backdrop-blur-sm rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-slate-900 font-bold"
             />
           </div>
           <div className="space-y-2">
@@ -314,7 +314,7 @@ const UserProfile = ({ user, onLogout }) => {
                 type="email"
                 value={user.email}
                 disabled
-                className="w-full pl-12 pr-4 py-3.5 border border-slate-200 rounded-xl bg-slate-50 text-slate-500 font-medium cursor-not-allowed"
+                className="w-full pl-12 pr-4 py-3.5 border border-white/20 rounded-xl bg-black/5 text-slate-500 font-medium cursor-not-allowed"
               />
             </div>
             <p className="text-xs text-slate-400 ml-1 font-medium">
@@ -326,7 +326,7 @@ const UserProfile = ({ user, onLogout }) => {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="bg-slate-900 text-white px-8 py-3.5 rounded-xl font-bold hover:bg-primary transition-all shadow-lg hover:shadow-primary/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className="bg-primary hover:bg-primary/90 text-white px-10 py-4 rounded-xl font-bold transition-all shadow-xl shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               {isSubmitting ? (
                 <>
@@ -342,7 +342,7 @@ const UserProfile = ({ user, onLogout }) => {
       </div>
 
       {/* Security Section */}
-      <div className="bg-white/60 backdrop-blur-md p-6 rounded-[2rem] border border-white/60 shadow-sm">
+      <div className="bg-white/70 backdrop-blur-xl p-8 rounded-[2.5rem] border border-white/40 shadow-xl shadow-black/5">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-900">
@@ -403,7 +403,7 @@ const UserProfile = ({ user, onLogout }) => {
                   value={passwordData.currentPassword}
                   onChange={handlePasswordChange}
                   required
-                  className="w-full pl-12 pr-12 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-slate-900"
+                  className="w-full pl-12 pr-12 py-3.5 bg-white/50 border border-white/40 backdrop-blur-sm rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-slate-900 font-bold"
                 />
                 <button
                   type="button"
@@ -428,7 +428,7 @@ const UserProfile = ({ user, onLogout }) => {
                   onChange={handlePasswordChange}
                   required
                   minLength={6}
-                  className="w-full pl-12 pr-12 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-slate-900"
+                  className="w-full pl-12 pr-12 py-3.5 bg-white/50 border border-white/40 backdrop-blur-sm rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-slate-900 font-bold"
                 />
                 <button
                   type="button"
@@ -453,7 +453,7 @@ const UserProfile = ({ user, onLogout }) => {
                   value={passwordData.confirmPassword}
                   onChange={handlePasswordChange}
                   required
-                  className="w-full pl-12 pr-12 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-slate-900"
+                  className="w-full pl-12 pr-12 py-3.5 bg-white/50 border border-white/40 backdrop-blur-sm rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-slate-900 font-bold"
                 />
                 <button
                   type="button"
@@ -484,7 +484,7 @@ const UserProfile = ({ user, onLogout }) => {
               <button
                 type="submit"
                 disabled={isChangingPassword}
-                className="flex-1 bg-slate-900 text-white px-4 py-3 rounded-xl text-sm font-bold hover:bg-primary transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                className="flex-1 bg-primary text-white px-4 py-3.5 rounded-xl font-bold hover:bg-primary/90 transition-all shadow-xl shadow-primary/20 disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {isChangingPassword ? (
                   <>
@@ -499,7 +499,7 @@ const UserProfile = ({ user, onLogout }) => {
           </form>
         )}
       </div>
-      <div className="bg-white/60 backdrop-blur-md p-6 rounded-[2rem] border border-white/60 shadow-sm">
+      <div className="bg-white/70 backdrop-blur-xl p-6 rounded-[2.5rem] border border-white/40 shadow-xl shadow-black/5">
         <button
           onClick={onLogout}
           className="w-full flex items-center justify-center gap-2 px-4 py-4 text-red-600 bg-red-50 hover:bg-red-100 rounded-xl font-bold transition-all duration-200 group"

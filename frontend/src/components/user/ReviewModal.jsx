@@ -51,7 +51,7 @@ const ReviewModal = ({ booking, onClose, onSuccess }) => {
             onClick={onClose}
         >
             <div
-                className="bg-white rounded-[2rem] p-8 max-w-lg w-full shadow-2xl transform scale-100 animate-scale-in"
+                className="bg-white rounded-[2rem] p-8 max-w-2xl w-full shadow-2xl transform scale-100 animate-scale-in"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}
@@ -87,8 +87,8 @@ const ReviewModal = ({ booking, onClose, onSuccess }) => {
                                     <Star
                                         size={40}
                                         className={`transition-colors ${star <= (hoverRating || rating)
-                                                ? "text-amber-400 fill-amber-400"
-                                                : "text-slate-300"
+                                            ? "text-amber-400 fill-amber-400"
+                                            : "text-slate-300"
                                             }`}
                                     />
                                 </button>

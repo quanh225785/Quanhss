@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { api } from '../utils/api';
 import { formatDistance } from '../utils/polylineUtils';
+import ChristmasBackground from '../components/shared/ChristmasBackground';
 
 const ToursPage = () => {
   const navigate = useNavigate();
@@ -200,15 +201,11 @@ const ToursPage = () => {
   ].filter(Boolean).length;
 
   return (
-    <div className="min-h-screen bg-surface font-sans">
-      {/* Ambient Background */}
-      <div className="fixed top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none">
-        <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] rounded-full bg-primary/5 blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-[-10%] left-[-10%] w-[600px] h-[600px] rounded-full bg-secondary/5 blur-3xl animate-pulse delay-1000"></div>
-      </div>
+    <div className="min-h-screen font-sans relative">
+      <ChristmasBackground />
 
-      {/* Header - Search Bar và Filters ở trên cùng */}
-      <header className="sticky top-0 bg-white/70 backdrop-blur-xl border-b border-white/40 z-50 shadow-sm">
+      {/* Header - Glassmorphism Search Bar and Filters */}
+      <header className="sticky top-0 bg-white/70 backdrop-blur-2xl border-b border-white/40 z-50 rounded-b-[3rem] shadow-2xl shadow-black/5">
         <div className="max-w-7xl mx-auto px-4 md:px-8 py-4">
           {/* Row 1: Search Input và Buttons */}
           <div className="flex items-center gap-3 mb-4">
@@ -221,22 +218,22 @@ const ToursPage = () => {
                 value={keyword}
                 onChange={(e) => setKeyword(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                className="w-full pl-12 pr-4 py-3 bg-white/60 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary text-slate-900 placeholder:text-slate-400"
+                className="w-full pl-12 pr-4 py-4 bg-white/50 border border-white/40 backdrop-blur-md rounded-2xl focus:outline-none focus:ring-4 focus:ring-primary/10 transition-all text-slate-900 font-bold placeholder:text-slate-400"
               />
             </div>
 
             {/* Filter Toggle Button */}
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className={`flex items-center gap-2 px-4 py-3 rounded-xl border-2 transition-colors ${activeFiltersCount > 0
+              className={`flex items-center gap-2 px-6 py-4 rounded-2xl border transition-all ${activeFiltersCount > 0
                 ? 'bg-primary/10 border-primary text-primary hover:bg-primary/20'
-                : 'bg-white/60 border-slate-200 text-slate-700 hover:bg-white hover:border-primary'
+                : 'bg-white/50 border-white/40 text-slate-700 hover:bg-white hover:border-primary shadow-sm'
                 }`}
             >
               <SlidersHorizontal size={18} />
-              <span className="hidden md:inline">Bộ lọc</span>
+              <span className="hidden md:inline font-bold">Bộ lọc</span>
               {activeFiltersCount > 0 && (
-                <span className="bg-primary text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                <span className="bg-primary text-white text-xs font-black px-2 py-0.5 rounded-full">
                   {activeFiltersCount}
                 </span>
               )}
@@ -245,7 +242,7 @@ const ToursPage = () => {
             {/* Search Button */}
             <button
               onClick={handleSearch}
-              className="px-6 py-3 bg-primary text-white font-medium rounded-xl whitespace-nowrap hover:bg-primary/90 transition-colors"
+              className="px-8 py-4 bg-primary text-white font-black rounded-2xl whitespace-nowrap hover:bg-primary/90 transition-all shadow-xl shadow-primary/20"
             >
               Tìm kiếm
             </button>
@@ -262,7 +259,7 @@ const ToursPage = () => {
                   placeholder="Từ"
                   value={minPrice}
                   onChange={(e) => setMinPrice(e.target.value)}
-                  className="w-full px-3 py-2 text-sm bg-white/80 border-2 border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary text-slate-900"
+                  className="w-full px-4 py-2.5 text-sm bg-white/50 border border-white/40 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-900 font-bold"
                 />
               </div>
               <div className="col-span-2 md:col-span-1">
@@ -272,7 +269,7 @@ const ToursPage = () => {
                   placeholder="Đến"
                   value={maxPrice}
                   onChange={(e) => setMaxPrice(e.target.value)}
-                  className="w-full px-3 py-2 text-sm bg-white/80 border-2 border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary text-slate-900"
+                  className="w-full px-4 py-2.5 text-sm bg-white/50 border border-white/40 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-900 font-bold"
                 />
               </div>
 
@@ -282,7 +279,7 @@ const ToursPage = () => {
                 <select
                   value={numberOfDays}
                   onChange={(e) => setNumberOfDays(e.target.value)}
-                  className="w-full px-3 py-2 text-sm bg-white/80 border-2 border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary text-slate-900"
+                  className="w-full px-4 py-2.5 text-sm bg-white/50 border border-white/40 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-900 font-bold"
                 >
                   <option value="">Tất cả</option>
                   <option value="1">1 ngày</option>
@@ -299,9 +296,9 @@ const ToursPage = () => {
                 <div className="flex gap-2">
                   <button
                     onClick={() => setVehicle(vehicle === 'car' ? '' : 'car')}
-                    className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-sm rounded-lg border-2 transition-colors ${vehicle === 'car'
+                    className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-sm rounded-xl border transition-all font-bold ${vehicle === 'car'
                       ? 'bg-primary/10 border-primary text-primary'
-                      : 'bg-white/80 border-slate-200 text-slate-700 hover:border-primary hover:bg-primary/5'
+                      : 'bg-white/50 border-white/40 text-slate-700 hover:border-primary hover:bg-primary/5'
                       }`}
                   >
                     <Car size={16} />
@@ -309,9 +306,9 @@ const ToursPage = () => {
                   </button>
                   <button
                     onClick={() => setVehicle(vehicle === 'motorcycle' ? '' : 'motorcycle')}
-                    className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-sm rounded-lg border-2 transition-colors ${vehicle === 'motorcycle'
+                    className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-sm rounded-xl border transition-all font-bold ${vehicle === 'motorcycle'
                       ? 'bg-primary/10 border-primary text-primary'
-                      : 'bg-white/80 border-slate-200 text-slate-700 hover:border-primary hover:bg-primary/5'
+                      : 'bg-white/50 border-white/40 text-slate-700 hover:border-primary hover:bg-primary/5'
                       }`}
                   >
                     <Bike size={16} />
@@ -326,7 +323,7 @@ const ToursPage = () => {
                 <select
                   value={cityName}
                   onChange={(e) => setCityName(e.target.value)}
-                  className="w-full px-3 py-2 text-sm bg-white/80 border-2 border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary text-slate-900"
+                  className="w-full px-4 py-2.5 text-sm bg-white/50 border border-white/40 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-900 font-bold"
                 >
                   <option value="">Tất cả</option>
                   {cities.map((city) => (
@@ -342,7 +339,7 @@ const ToursPage = () => {
                 {activeFiltersCount > 0 && (
                   <button
                     onClick={handleResetFilters}
-                    className="w-full px-4 py-2 text-sm text-primary border-2 border-primary rounded-lg hover:bg-primary hover:text-white transition-colors"
+                    className="w-full px-4 py-2.5 text-sm text-primary border border-primary/40 bg-primary/5 rounded-xl hover:bg-primary hover:text-white transition-all font-bold"
                   >
                     Xóa bộ lọc
                   </button>
@@ -357,10 +354,10 @@ const ToursPage = () => {
         {/* Tours List */}
         <div>
           {loading ? (
-            <div className="flex items-center justify-center py-16">
+            <div className="flex items-center justify-center py-24 bg-white/70 backdrop-blur-xl rounded-[2.5rem] border border-white/40 shadow-2xl shadow-black/5">
               <div className="text-center">
-                <Loader2 className="w-10 h-10 animate-spin text-primary mx-auto mb-3" />
-                <p className="text-slate-500">Đang tải tour...</p>
+                <Loader2 className="w-12 h-12 animate-spin text-primary mx-auto mb-4" />
+                <p className="text-slate-800 font-black tracking-wide">Đang tải danh sách tour...</p>
               </div>
             </div>
           ) : tours.length === 0 ? (
@@ -371,7 +368,7 @@ const ToursPage = () => {
               {activeFiltersCount > 0 && (
                 <button
                   onClick={handleResetFilters}
-                  className="px-6 py-2 bg-primary text-white rounded-xl font-medium hover:bg-primary/90 transition-colors"
+                  className="px-8 py-3 bg-primary text-white rounded-xl font-bold hover:bg-primary/90 transition-all shadow-xl shadow-primary/20"
                 >
                   Xóa bộ lọc
                 </button>
@@ -387,7 +384,7 @@ const ToursPage = () => {
                   <div
                     key={tour.id}
                     onClick={() => navigate(`/tour/${tour.id}`)}
-                    className="group bg-white/60 backdrop-blur-md border-2 border-slate-200 rounded-[2rem] overflow-hidden cursor-pointer hover:bg-white hover:border-primary transition-colors"
+                    className="group bg-white/70 backdrop-blur-xl border border-white/40 rounded-[2.5rem] overflow-hidden cursor-pointer hover:bg-white/90 hover:-translate-y-3 transition-all duration-500 shadow-xl shadow-black/5 hover:shadow-2xl hover:shadow-primary/10"
                   >
                     {/* Tour Image */}
                     <div className="relative h-48 overflow-hidden">

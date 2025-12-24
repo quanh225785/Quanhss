@@ -222,160 +222,158 @@ const LocationManagement = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="bg-white/70 backdrop-blur-2xl border border-white/40 p-10 rounded-[3rem] shadow-2xl shadow-black/5 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">
-            Quản lý Địa điểm
-          </h2>
-          <p className="text-zinc-500">
-            Duyệt địa điểm đề xuất và quản lý danh sách địa điểm.
-          </p>
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-2 h-8 bg-primary rounded-full"></div>
+            <h2 className="text-3xl font-black tracking-tight text-slate-900 leading-tight">
+              Quản lý Địa điểm
+            </h2>
+          </div>
+          <p className="text-slate-500 font-medium ml-5">Kiểm duyệt đề xuất và quản lý danh mục địa điểm toàn hệ thống.</p>
         </div>
         <button
-          onClick={() => {
-
-            setShowAddLocationModal(true);
-          }}
-          className="flex items-center gap-2 px-4 py-2 bg-zinc-900 text-white rounded-lg font-medium hover:bg-zinc-800 transition-colors"
+          onClick={() => setShowAddLocationModal(true)}
+          className="flex items-center gap-3 px-8 py-4 bg-primary text-white font-black rounded-2xl hover:bg-primary/90 transition-all shadow-xl shadow-primary/20 active:scale-95 whitespace-nowrap"
         >
-          <Plus size={18} />
-          Thêm địa điểm
+          <Plus size={20} />
+          <span>Thêm địa điểm</span>
         </button>
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
-          <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-          <div className="flex-1">
-            <p className="text-sm font-medium text-red-900">Lỗi</p>
-            <p className="text-sm text-red-700 mt-1">{error}</p>
-          </div>
+        <div className="bg-red-50/50 backdrop-blur-md border border-red-100 text-red-700 px-6 py-4 rounded-2xl flex items-center gap-3">
+          <AlertCircle className="w-5 h-5" />
+          <span className="font-bold">{error}</span>
         </div>
       )}
 
-      {/* Tabs */}
-      <div className="border-b border-zinc-200">
-        <div className="flex gap-4">
-          <button
-            onClick={() => setActiveTab("suggestions")}
-            className={`pb-3 px-1 text-sm font-medium border-b-2 transition-colors ${activeTab === "suggestions"
-              ? "border-zinc-900 text-zinc-900"
-              : "border-transparent text-zinc-500 hover:text-zinc-700"
-              }`}
-          >
-            Địa điểm đề xuất ({suggestions.length})
-          </button>
-          <button
-            onClick={() => setActiveTab("locations")}
-            className={`pb-3 px-1 text-sm font-medium border-b-2 transition-colors ${activeTab === "locations"
-              ? "border-zinc-900 text-zinc-900"
-              : "border-transparent text-zinc-500 hover:text-zinc-700"
-              }`}
-          >
-            Địa điểm hiện có ({locations.length})
-          </button>
-        </div>
-      </div>
-
-      <div className="bg-white p-4 rounded-lg border border-zinc-200">
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 w-4 h-4" />
-            <input
-              type="text"
-              placeholder="Tìm kiếm địa điểm..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-zinc-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900"
-            />
+      {/* Navigation and Advanced Filters */}
+      <div className="flex flex-col gap-6 bg-white/70 backdrop-blur-xl p-8 rounded-[2.5rem] border border-white/40 shadow-xl shadow-black/5">
+        <div className="flex flex-col lg:flex-row gap-6 items-center">
+          <div className="flex p-2 bg-slate-100/50 backdrop-blur-sm rounded-2xl border border-white/40 w-full lg:w-auto">
+            <button
+              onClick={() => setActiveTab("suggestions")}
+              className={`flex-1 lg:flex-none px-6 py-3 text-xs font-black uppercase tracking-widest rounded-xl transition-all ${activeTab === "suggestions"
+                ? "bg-white text-primary shadow-sm"
+                : "text-slate-500 hover:text-slate-900"
+                }`}
+            >
+              Đề xuất ({suggestions.length})
+            </button>
+            <button
+              onClick={() => setActiveTab("locations")}
+              className={`flex-1 lg:flex-none px-6 py-3 text-xs font-black uppercase tracking-widest rounded-xl transition-all ${activeTab === "locations"
+                ? "bg-white text-primary shadow-sm"
+                : "text-slate-500 hover:text-slate-900"
+                }`}
+            >
+              Hiện có ({locations.length})
+            </button>
           </div>
 
-          {activeTab === "suggestions" && (
-            <div className="flex bg-zinc-100 p-1 rounded-lg self-start">
-              {[
-                { id: "ALL", label: "Tất cả" },
-                { id: "PENDING", label: "Chờ duyệt" },
-                { id: "APPROVED", label: "Đã duyệt" },
-                { id: "REJECTED", label: "Từ chối" },
-              ].map((filter) => (
-                <button
-                  key={filter.id}
-                  onClick={() => setStatusFilter(filter.id)}
-                  className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${statusFilter === filter.id
-                    ? "bg-white text-zinc-900 shadow-sm"
-                    : "text-zinc-500 hover:text-zinc-700"
-                    }`}
-                >
-                  {filter.label}
-                </button>
-              ))}
-            </div>
-          )}
+          <div className="relative flex-1 w-full">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+            <input
+              type="text"
+              placeholder="Tìm kiếm địa điểm, địa chỉ, người đề xuất..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-12 pr-6 py-4 bg-white/50 border border-white/40 rounded-2xl text-sm font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all placeholder:text-slate-400"
+            />
+          </div>
         </div>
+
+        {activeTab === "suggestions" && (
+          <div className="flex flex-wrap gap-3">
+            {[
+              { id: "ALL", label: "Tất cả" },
+              { id: "PENDING", label: "Chờ duyệt" },
+              { id: "APPROVED", label: "Đã duyệt" },
+              { id: "REJECTED", label: "Từ chối" },
+            ].map((filter) => (
+              <button
+                key={filter.id}
+                onClick={() => setStatusFilter(filter.id)}
+                className={`px-5 py-2.5 text-[10px] font-black uppercase tracking-wider rounded-xl transition-all border ${statusFilter === filter.id
+                  ? "bg-primary text-white border-primary shadow-lg shadow-primary/20"
+                  : "bg-white/50 text-slate-500 border-white/40 hover:bg-white hover:text-slate-900"
+                  }`}
+              >
+                {filter.label}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Suggestions Tab */}
       {activeTab === "suggestions" && (
         <>
           {filteredSuggestions.length === 0 ? (
-            <div className="bg-white rounded-lg border border-zinc-200 p-12 text-center">
-              <MapPin className="w-12 h-12 text-zinc-300 mx-auto mb-3" />
-              <p className="text-zinc-500">
+            <div className="bg-white/70 backdrop-blur-2xl border border-white/40 rounded-[2.5rem] p-24 text-center shadow-2xl shadow-black/5">
+              <div className="bg-slate-50 w-24 h-24 rounded-[2rem] flex items-center justify-center mx-auto mb-6 border border-white/40 shadow-inner">
+                <MapPin className="w-12 h-12 text-slate-300" />
+              </div>
+              <p className="text-slate-900 font-black text-2xl tracking-tight mb-2">
                 {searchQuery
                   ? "Không tìm thấy địa điểm đề xuất nào"
                   : "Chưa có địa điểm đề xuất nào"}
               </p>
+              <p className="text-slate-500 font-medium">Thử thay đổi bộ lọc hoặc tiêu chí tìm kiếm</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
               {filteredSuggestions.map((loc) => (
                 <div
                   key={loc.id}
-                  className="bg-white p-4 rounded-xl border border-zinc-200 shadow-sm flex flex-col gap-3"
+                  className="group bg-white/70 backdrop-blur-xl p-6 rounded-[2.5rem] border border-white/40 shadow-xl shadow-black/5 flex flex-col gap-5 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300"
                 >
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-2 flex-1 min-w-0">
-                      <div className="p-2 bg-zinc-100 rounded-lg flex-shrink-0">
-                        <MapPin className="w-5 h-5 text-zinc-600" />
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="p-3 bg-blue-50/50 border border-blue-100 rounded-2xl flex-shrink-0 group-hover:scale-110 transition-transform">
+                        <MapPin className="w-6 h-6 text-blue-600" />
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <h3 className="font-medium text-zinc-900 truncate">
+                      <div className="min-w-0">
+                        <h3 className="text-base font-black text-slate-900 truncate tracking-tight">
                           {loc.name}
                         </h3>
-                        <p className="text-xs text-zinc-500 truncate">
+                        <p className="text-[10px] font-bold text-slate-500 truncate uppercase tracking-tight">
                           {loc.address}
                         </p>
                       </div>
                     </div>
-                    {getStatusBadge(loc.status)}
+                    <div className="flex-shrink-0">
+                      {getStatusBadge(loc.status)}
+                    </div>
                   </div>
 
                   {loc.description && (
-                    <p className="text-sm text-zinc-600 line-clamp-2">
+                    <p className="text-sm font-medium text-slate-600 line-clamp-2 leading-relaxed bg-slate-50/50 p-4 rounded-2xl border border-slate-100/50">
                       {loc.description}
                     </p>
                   )}
 
-                  <div className="text-sm text-zinc-600">
-                    Đề xuất bởi:{" "}
-                    <span className="font-medium">
-                      {loc.suggestedByUsername || "N/A"}
-                    </span>
+                  <div className="flex items-center justify-between mt-auto">
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 font-black text-[10px]">
+                        {loc.suggestedByUsername?.charAt(0).toUpperCase()}
+                      </div>
+                      <p className="text-[10px] font-bold text-slate-500 tracking-tight">@{loc.suggestedByUsername || "N/A"}</p>
+                    </div>
+                    {loc.latitude && loc.longitude && (
+                      <div className="text-[10px] font-black text-slate-400 font-sans tracking-tight">
+                        {loc.latitude.toFixed(4)}, {loc.longitude.toFixed(4)}
+                      </div>
+                    )}
                   </div>
 
-                  {loc.latitude && loc.longitude && (
-                    <div className="text-xs text-zinc-500">
-                      Tọa độ: {loc.latitude.toFixed(6)},{" "}
-                      {loc.longitude.toFixed(6)}
-                    </div>
-                  )}
-
                   {loc.status === "PENDING" && (
-                    <div className="flex gap-2 mt-auto pt-2 border-t border-zinc-100">
+                    <div className="flex gap-3 pt-5 border-t border-white/40 mt-1">
                       <button
                         onClick={() => openApproveModal(loc)}
                         disabled={processingId === loc.id}
-                        className="flex-1 flex items-center justify-center gap-1 py-2 text-sm font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-md disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        className="flex-1 flex items-center justify-center gap-2 py-3 text-[11px] font-black uppercase tracking-widest text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-lg shadow-emerald-900/10 disabled:opacity-50 transition-all"
                       >
                         {processingId === loc.id ? (
                           <Loader2 className="w-4 h-4 animate-spin" />
@@ -387,7 +385,7 @@ const LocationManagement = () => {
                       <button
                         onClick={() => openRejectModal(loc)}
                         disabled={processingId === loc.id}
-                        className="flex-1 flex items-center justify-center gap-1 py-2 text-sm font-medium text-red-700 bg-red-50 hover:bg-red-100 rounded-md disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        className="flex-1 flex items-center justify-center gap-2 py-3 text-[11px] font-black uppercase tracking-widest text-white bg-red-600 hover:bg-red-700 rounded-xl shadow-lg shadow-red-900/10 disabled:opacity-50 transition-all"
                       >
                         {processingId === loc.id ? (
                           <Loader2 className="w-4 h-4 animate-spin" />
@@ -400,8 +398,11 @@ const LocationManagement = () => {
                   )}
 
                   {loc.status === "REJECTED" && loc.rejectionReason && (
-                    <div className="text-xs text-red-600 bg-red-50 p-2 rounded">
-                      Lý do: {loc.rejectionReason}
+                    <div className="mt-2 flex items-start gap-2 bg-red-50/50 p-4 rounded-xl border border-red-100">
+                      <AlertCircle className="w-3.5 h-3.5 text-red-600 flex-shrink-0 mt-0.5" />
+                      <p className="text-[10px] font-bold text-red-600 leading-relaxed uppercase tracking-tight">
+                        Lý do: {loc.rejectionReason}
+                      </p>
                     </div>
                   )}
                 </div>
@@ -415,61 +416,64 @@ const LocationManagement = () => {
       {activeTab === "locations" && (
         <>
           {filteredLocations.length === 0 ? (
-            <div className="bg-white rounded-lg border border-zinc-200 p-12 text-center">
-              <MapPin className="w-12 h-12 text-zinc-300 mx-auto mb-3" />
-              <p className="text-zinc-500">
+            <div className="bg-white/70 backdrop-blur-2xl border border-white/40 rounded-[2.5rem] p-24 text-center shadow-2xl shadow-black/5">
+              <div className="bg-slate-50 w-24 h-24 rounded-[2rem] flex items-center justify-center mx-auto mb-6 border border-white/40 shadow-inner">
+                <MapPin className="w-12 h-12 text-slate-300" />
+              </div>
+              <p className="text-slate-900 font-black text-2xl tracking-tight mb-2">
                 {searchQuery
                   ? "Không tìm thấy địa điểm nào"
                   : "Chưa có địa điểm nào"}
               </p>
+              <p className="text-slate-500 font-medium">Bạn có thể thêm địa điểm mới bằng nút phía trên</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
               {filteredLocations.map((loc) => (
                 <div
                   key={loc.id}
-                  className="bg-white p-4 rounded-xl border border-zinc-200 shadow-sm flex flex-col gap-3"
+                  className="group bg-white/70 backdrop-blur-xl p-6 rounded-[2.5rem] border border-white/40 shadow-xl shadow-black/5 flex flex-col gap-5 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300"
                 >
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-2 flex-1 min-w-0">
-                      <div className="p-2 bg-emerald-100 rounded-lg flex-shrink-0">
-                        <MapPin className="w-5 h-5 text-emerald-600" />
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="p-3 bg-emerald-50/50 border border-emerald-100 rounded-2xl flex-shrink-0 group-hover:scale-110 transition-transform">
+                        <MapPin className="w-6 h-6 text-emerald-600" />
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <h3 className="font-medium text-zinc-900 truncate">
+                      <div className="min-w-0">
+                        <h3 className="text-base font-black text-slate-900 truncate tracking-tight">
                           {loc.name}
                         </h3>
-                        <p className="text-xs text-zinc-500 truncate">
+                        <p className="text-[10px] font-bold text-slate-500 truncate uppercase tracking-tight">
                           {loc.address}
                         </p>
                       </div>
                     </div>
-                    <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700">
-                      Đã duyệt
-                    </span>
+                    <div className="flex-shrink-0">
+                      <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500/10 text-emerald-600 border border-emerald-100">
+                        Đã duyệt
+                      </span>
+                    </div>
                   </div>
 
                   {loc.description && (
-                    <p className="text-sm text-zinc-600 line-clamp-2">
+                    <p className="text-sm font-medium text-slate-600 line-clamp-2 leading-relaxed bg-slate-50/50 p-4 rounded-2xl border border-slate-100/50">
                       {loc.description}
                     </p>
                   )}
 
-                  {loc.createdByUsername && (
-                    <div className="text-sm text-zinc-600">
-                      Tạo bởi:{" "}
-                      <span className="font-medium">
-                        {loc.createdByUsername}
-                      </span>
+                  <div className="flex items-center justify-between mt-auto">
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 font-black text-[10px]">
+                        {loc.createdByUsername?.charAt(0).toUpperCase()}
+                      </div>
+                      <p className="text-[10px] font-bold text-slate-500 tracking-tight">@{loc.createdByUsername || "ADMIN"}</p>
                     </div>
-                  )}
-
-                  {loc.latitude && loc.longitude && (
-                    <div className="text-xs text-zinc-500">
-                      Tọa độ: {loc.latitude.toFixed(6)},{" "}
-                      {loc.longitude.toFixed(6)}
-                    </div>
-                  )}
+                    {loc.latitude && loc.longitude && (
+                      <div className="text-[10px] font-black text-slate-400 font-sans tracking-tight">
+                        {loc.latitude.toFixed(4)}, {loc.longitude.toFixed(4)}
+                      </div>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>

@@ -110,150 +110,162 @@ const AdminProfile = ({ user, onLogout }) => {
   };
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold tracking-tight">Hồ sơ Admin</h2>
-        <p className="text-zinc-500">
-          Quản lý thông tin tài khoản quản trị viên
-        </p>
+    <div className="max-w-3xl mx-auto space-y-10">
+      <div className="bg-white/70 backdrop-blur-2xl border border-white/40 p-10 rounded-[3rem] shadow-2xl shadow-black/5 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+        <div>
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-2 h-8 bg-primary rounded-full"></div>
+            <h2 className="text-3xl font-black tracking-tight text-slate-900 leading-tight">
+              Hồ sơ Admin
+            </h2>
+          </div>
+          <p className="text-slate-500 font-medium ml-5">Quản lý thông tin tài khoản và bảo mật hệ thống.</p>
+        </div>
       </div>
 
       <form
         onSubmit={handleSubmit}
-        className="bg-white border border-zinc-200 rounded-xl p-6 space-y-6"
+        className="bg-white/70 backdrop-blur-xl border border-white/40 rounded-[2.5rem] p-10 space-y-10 shadow-xl shadow-black/5"
       >
-        <div className="flex items-center gap-6">
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            onChange={handleAvatarUpload}
-            className="hidden"
-          />
+        <div className="flex flex-col md:flex-row items-center gap-10 bg-white/50 p-8 rounded-[2rem] border border-white/40">
           <div className="relative group">
-            {formData.avatar ? (
-              <img
-                src={formData.avatar}
-                alt="Avatar"
-                className="w-20 h-20 rounded-full object-cover border-2 border-zinc-900"
-              />
-            ) : (
-              <div className="w-20 h-20 bg-zinc-900 rounded-full flex items-center justify-center text-2xl font-bold text-white">
-                <Shield size={32} />
-              </div>
-            )}
-            {isUploadingAvatar && (
-              <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center">
-                <Loader2 className="animate-spin text-white" size={24} />
-              </div>
-            )}
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={isUploadingAvatar}
-              className="absolute bottom-0 right-0 p-1.5 bg-zinc-900 text-white rounded-full hover:bg-zinc-800 transition-colors disabled:opacity-50"
-            >
-              <Upload size={12} />
-            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleAvatarUpload}
+              className="hidden"
+            />
+            <div className="relative">
+              {formData.avatar ? (
+                <img
+                  src={formData.avatar}
+                  alt="Avatar"
+                  className="w-32 h-32 rounded-[2rem] object-cover border-4 border-white shadow-xl group-hover:scale-105 transition-transform duration-300"
+                />
+              ) : (
+                <div className="w-32 h-32 bg-slate-200 rounded-[2rem] flex items-center justify-center text-4xl font-black text-slate-400 border-4 border-white shadow-xl">
+                  {user.username?.charAt(0).toUpperCase()}
+                </div>
+              )}
+              {isUploadingAvatar && (
+                <div className="absolute inset-0 bg-black/40 backdrop-blur-sm rounded-[2rem] flex items-center justify-center">
+                  <Loader2 className="animate-spin text-white" size={32} />
+                </div>
+              )}
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploadingAvatar}
+                className="absolute -bottom-2 -right-2 p-3 bg-primary text-white rounded-2xl hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 active:scale-95 disabled:opacity-50"
+              >
+                <Upload size={16} />
+              </button>
+            </div>
           </div>
-          <div>
-            <h3 className="text-lg font-medium">{user.name || "Admin"}</h3>
-            <p className="text-zinc-500 text-sm">{user.email}</p>
-            <div className="mt-1 px-2 py-0.5 bg-zinc-900 text-white text-xs font-medium rounded inline-block">
-              ADMIN
+          <div className="text-center md:text-left">
+            <h3 className="text-2xl font-black text-slate-900 tracking-tight leading-tight mb-1">
+              {user.firstName ? `${user.firstName} ${user.lastName}` : user.username}
+            </h3>
+            <p className="text-slate-500 font-bold mb-4">@{user.username}</p>
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-primary/10 text-primary rounded-full text-[10px] font-black uppercase tracking-widest border border-primary/10">
+              <Shield size={12} />
+              Hệ thống Admin
             </div>
           </div>
         </div>
 
         {success && (
-          <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 flex items-center gap-2">
-            <Check className="text-emerald-600" size={18} />
-            <p className="text-sm text-emerald-800">
+          <div className="bg-emerald-50/50 backdrop-blur-md border border-emerald-100 rounded-[1.5rem] p-5 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-600">
+              <Check size={20} />
+            </div>
+            <p className="text-sm font-black text-emerald-800 uppercase tracking-tight">
               Cập nhật thông tin thành công!
             </p>
           </div>
         )}
 
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-center gap-2">
-            <AlertCircle className="text-red-600" size={18} />
-            <p className="text-sm text-red-800">{error}</p>
+          <div className="bg-red-50/50 backdrop-blur-md border border-red-100 rounded-[1.5rem] p-5 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center text-red-600">
+              <AlertCircle size={20} />
+            </div>
+            <p className="text-sm font-black text-red-800 uppercase tracking-tight">
+              {error}
+            </p>
           </div>
         )}
 
-        <div className="grid gap-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="grid gap-2">
-              <label className="text-sm font-medium text-zinc-700">Họ</label>
+        <div className="grid gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="space-y-3">
+              <label className="text-xs font-black text-slate-700 uppercase tracking-widest ml-1">Họ</label>
               <input
                 type="text"
                 name="firstName"
                 value={formData.firstName}
                 onChange={handleChange}
-                placeholder="Nhập họ"
-                className="w-full px-3 py-2 border border-zinc-300 rounded-md focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent"
+                placeholder="Nhập họ của bạn"
+                className="w-full px-6 py-4 bg-white/50 border border-white/40 rounded-2xl text-sm font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all placeholder:text-slate-400"
               />
             </div>
-            <div className="grid gap-2">
-              <label className="text-sm font-medium text-zinc-700">Tên</label>
+            <div className="space-y-3">
+              <label className="text-xs font-black text-slate-700 uppercase tracking-widest ml-1">Tên</label>
               <input
                 type="text"
                 name="lastName"
                 value={formData.lastName}
                 onChange={handleChange}
-                placeholder="Nhập tên"
-                className="w-full px-3 py-2 border border-zinc-300 rounded-md focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent"
+                placeholder="Nhập tên của bạn"
+                className="w-full px-6 py-4 bg-white/50 border border-white/40 rounded-2xl text-sm font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all placeholder:text-slate-400"
               />
             </div>
           </div>
 
-          <div className="grid gap-2">
-            <label className="text-sm font-medium text-zinc-700">
-              Ngày sinh
-            </label>
+          <div className="space-y-3">
+            <label className="text-xs font-black text-slate-700 uppercase tracking-widest ml-1">Ngày sinh</label>
             <input
               type="date"
               name="dob"
               value={formData.dob}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-zinc-300 rounded-md focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent"
+              className="w-full px-6 py-4 bg-white/50 border border-white/40 rounded-2xl text-sm font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all"
             />
           </div>
 
-          <div className="grid gap-2">
-            <label className="text-sm font-medium text-zinc-700">Email</label>
-            <input
-              type="email"
-              value={user.email}
-              disabled
-              className="w-full px-3 py-2 border border-zinc-300 rounded-md bg-zinc-50 text-zinc-500"
-            />
-            <p className="text-xs text-zinc-500">Email không thể thay đổi</p>
-          </div>
-
-          <div className="grid gap-2">
-            <label className="text-sm font-medium text-zinc-700">
-              Username
-            </label>
-            <input
-              type="text"
-              value={user.username}
-              disabled
-              className="w-full px-3 py-2 border border-zinc-300 rounded-md bg-zinc-50 text-zinc-500"
-            />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="space-y-3">
+              <label className="text-xs font-black text-slate-700 uppercase tracking-widest ml-1">Email <span className="text-[10px] text-slate-400 font-medium">(Bắt buộc)</span></label>
+              <input
+                type="email"
+                value={user.email}
+                disabled
+                className="w-full px-6 py-4 bg-white/30 border border-white/40 rounded-2xl text-sm font-bold text-slate-500 cursor-not-allowed"
+              />
+            </div>
+            <div className="space-y-3">
+              <label className="text-xs font-black text-slate-700 uppercase tracking-widest ml-1">Username</label>
+              <input
+                type="text"
+                value={user.username}
+                disabled
+                className="w-full px-6 py-4 bg-white/30 border border-white/40 rounded-2xl text-sm font-bold text-slate-500 cursor-not-allowed"
+              />
+            </div>
           </div>
         </div>
 
-        <div className="pt-4 flex justify-end">
+        <div className="pt-6 border-t border-white/40 flex justify-end">
           <button
             type="submit"
             disabled={isSubmitting}
-            className="bg-zinc-900 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-zinc-800 transition-colors disabled:opacity-50 flex items-center gap-2"
+            className="px-10 py-4 bg-primary text-white font-black rounded-2xl hover:bg-primary/90 transition-all shadow-xl shadow-primary/20 active:scale-95 disabled:opacity-50 flex items-center gap-2"
           >
             {isSubmitting ? (
               <>
-                <Loader2 className="animate-spin" size={16} />
-                Đang lưu...
+                <Loader2 className="animate-spin" size={18} />
+                <span>Đang lưu...</span>
               </>
             ) : (
               "Lưu thay đổi"
@@ -263,19 +275,27 @@ const AdminProfile = ({ user, onLogout }) => {
       </form>
 
       {/* Security Section */}
-      <div className="bg-white border border-zinc-200 rounded-xl p-6">
-        <h3 className="text-lg font-semibold mb-4">Bảo mật</h3>
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm font-medium text-zinc-900">Mật khẩu</p>
-            <p className="text-xs text-zinc-500">Đổi mật khẩu của bạn</p>
+      <div className="bg-white/70 backdrop-blur-xl border border-white/40 rounded-[2.5rem] p-10 shadow-xl shadow-black/5">
+        <div className="flex items-center gap-3 mb-8">
+          <div className="w-1.5 h-6 bg-primary rounded-full"></div>
+          <h3 className="text-xl font-black text-slate-900 tracking-tight">Cài đặt bảo mật</h3>
+        </div>
+        <div className="flex flex-col md:flex-row items-center justify-between gap-6 bg-white/50 p-8 rounded-2xl border border-white/40">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-600 border border-amber-100">
+              <Lock size={24} />
+            </div>
+            <div>
+              <p className="text-base font-black text-slate-900 tracking-tight">Khóa bảo mật</p>
+              <p className="text-sm font-medium text-slate-500">Thường xuyên thay đổi mật khẩu để bảo vệ tài khoản</p>
+            </div>
           </div>
           <button
             type="button"
             onClick={() => setShowPasswordModal(true)}
-            className="flex items-center gap-2 px-4 py-2 border border-zinc-300 rounded-md text-sm font-medium hover:bg-zinc-50"
+            className="w-full md:w-auto px-8 py-4 bg-white/50 border border-white/40 hover:bg-white text-slate-900 font-black rounded-2xl transition-all shadow-sm active:scale-95 flex items-center justify-center gap-2"
           >
-            <Lock size={16} />
+            <Lock size={18} />
             Đổi mật khẩu
           </button>
         </div>
@@ -288,14 +308,16 @@ const AdminProfile = ({ user, onLogout }) => {
       />
 
       {/* Logout Section */}
-      <div className="bg-white border border-zinc-200 rounded-xl p-6">
-        <button
-          onClick={onLogout}
-          className="w-full flex items-center justify-center gap-2 px-4 py-3 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg font-medium transition-all duration-200 group"
-        >
-          <LogOut size={18} className="group-hover:-translate-x-1 transition-transform" />
-          Đăng xuất tài khoản
-        </button>
+      <div className="bg-white/70 backdrop-blur-xl border border-white/40 rounded-[2.5rem] p-10 shadow-xl shadow-red-900/5">
+        <div className="bg-red-50/50 p-2 rounded-[2rem] border border-red-100/50">
+          <button
+            onClick={onLogout}
+            className="w-full flex items-center justify-center gap-3 px-8 py-5 text-red-600 hover:text-white bg-transparent hover:bg-red-600 rounded-[1.5rem] font-black uppercase tracking-[0.2em] text-xs transition-all duration-300 group"
+          >
+            <LogOut size={20} className="group-hover:-translate-x-1 transition-transform" />
+            <span>Đăng xuất hệ thống</span>
+          </button>
+        </div>
       </div>
     </div>
   );

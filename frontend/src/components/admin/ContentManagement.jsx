@@ -21,49 +21,59 @@ const ContentManagement = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="bg-white/70 backdrop-blur-2xl border border-white/40 p-10 rounded-[3rem] shadow-2xl shadow-black/5 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">
-            Quản lý Nội dung
-          </h2>
-          <p className="text-zinc-500">Quản lý bài viết và tin tức.</p>
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-2 h-8 bg-primary rounded-full"></div>
+            <h2 className="text-3xl font-black tracking-tight text-slate-900 leading-tight">
+              Quản lý Nội dung
+            </h2>
+          </div>
+          <p className="text-slate-500 font-medium ml-5">Quản lý các bài viết, tin tức và truyền thông trên toàn hệ thống.</p>
         </div>
-        <button className="bg-zinc-900 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-zinc-800 flex items-center gap-2">
-          <Plus className="w-4 h-4" /> Viết bài mới
+        <button className="flex items-center gap-3 px-8 py-4 bg-primary text-white font-black rounded-2xl hover:bg-primary/90 transition-all shadow-xl shadow-primary/20 active:scale-95 whitespace-nowrap">
+          <Plus size={20} />
+          <span>Viết bài mới</span>
         </button>
       </div>
 
-      <div className="grid grid-cols-1 gap-4">
+      <div className="grid grid-cols-1 gap-6">
         {posts.map((post) => (
           <div
             key={post.id}
-            className="bg-white p-4 rounded-xl border border-zinc-200 shadow-sm flex items-center justify-between"
+            className="group bg-white/70 backdrop-blur-xl p-8 rounded-[2.5rem] border border-white/40 shadow-xl shadow-black/5 flex flex-col md:flex-row items-center justify-between gap-6 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300"
           >
-            <div>
-              <h3 className="font-medium text-zinc-900 text-lg">
+            <div className="flex-1">
+              <h3 className="text-xl font-black text-slate-900 tracking-tight mb-3 group-hover:text-primary transition-colors">
                 {post.title}
               </h3>
-              <div className="flex gap-4 text-sm text-zinc-500 mt-1">
-                <span>Tác giả: {post.author}</span>
-                <span>Ngày: {post.date}</span>
+              <div className="flex flex-wrap gap-6 items-center">
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-black text-[10px]">
+                    {post.author.charAt(0).toUpperCase()}
+                  </div>
+                  <span className="text-xs font-bold text-slate-500">@{post.author}</span>
+                </div>
+                <div className="text-xs font-bold text-slate-400">
+                  {post.date}
+                </div>
                 <span
-                  className={`px-2 py-0.5 rounded-full text-xs font-medium
-                                    ${
-                                      post.status === "PUBLISHED"
-                                        ? "bg-emerald-100 text-emerald-700"
-                                        : "bg-zinc-100 text-zinc-700"
-                                    }`}
+                  className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest
+                    ${post.status === "PUBLISHED"
+                      ? "bg-emerald-500/10 text-emerald-600 border border-emerald-100"
+                      : "bg-slate-500/10 text-slate-500 border border-slate-100"
+                    }`}
                 >
                   {post.status}
                 </span>
               </div>
             </div>
-            <div className="flex gap-2">
-              <button className="p-2 text-zinc-500 hover:bg-zinc-100 rounded-md hover:text-zinc-900">
-                <Edit className="w-4 h-4" />
+            <div className="flex gap-3">
+              <button className="p-4 bg-white/50 border border-white/40 text-slate-600 hover:text-primary hover:bg-white rounded-2xl transition-all shadow-sm active:scale-95">
+                <Edit size={20} />
               </button>
-              <button className="p-2 text-zinc-500 hover:bg-red-50 rounded-md hover:text-red-600">
-                <Trash2 className="w-4 h-4" />
+              <button className="p-4 bg-white/50 border border-white/40 text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-2xl transition-all shadow-sm active:scale-95">
+                <Trash2 size={20} />
               </button>
             </div>
           </div>

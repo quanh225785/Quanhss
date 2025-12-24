@@ -131,10 +131,10 @@ const LocationProposals = () => {
 
             {/* Empty State */}
             {!loading && !error && filteredSuggestions.length === 0 && (
-                <div className="bg-zinc-50 border border-zinc-200 rounded-lg p-8 text-center">
-                    <MapPin className="mx-auto text-zinc-400 mb-4" size={48} />
+                <div className="bg-white/70 backdrop-blur-xl border border-white/40 rounded-[2.5rem] p-12 text-center shadow-xl shadow-black/5">
+                    <MapPin className="mx-auto text-zinc-300 mb-4" size={48} />
                     <h3 className="text-lg font-medium text-zinc-900 mb-2">Chưa có đề xuất nào</h3>
-                    <p className="text-sm text-zinc-500 mb-4">
+                    <p className="text-sm text-zinc-500 mb-6">
                         {filter === 'all'
                             ? 'Bạn chưa gửi đề xuất địa điểm nào. Hãy bắt đầu bằng cách nhấn nút "Đề xuất địa điểm".'
                             : `Không có đề xuất nào ở trạng thái "${filter === 'pending' ? 'Chờ duyệt' : filter === 'approved' ? 'Đã duyệt' : 'Từ chối'
@@ -143,7 +143,7 @@ const LocationProposals = () => {
                     {filter === 'all' && (
                         <button
                             onClick={() => setIsModalOpen(true)}
-                            className="inline-flex items-center gap-2 bg-zinc-900 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-zinc-800 transition-colors"
+                            className="inline-flex items-center gap-2 bg-primary text-white px-6 py-2 rounded-xl text-sm font-medium hover:bg-primary/90 transition-all shadow-lg shadow-primary/20"
                         >
                             <Plus size={16} />
                             Đề xuất địa điểm đầu tiên
@@ -158,7 +158,7 @@ const LocationProposals = () => {
                     {filteredSuggestions.map((suggestion) => (
                         <div
                             key={suggestion.id}
-                            className="bg-white p-4 rounded-lg border border-zinc-200 hover:border-zinc-300 transition-colors"
+                            className="bg-white/70 backdrop-blur-xl p-6 rounded-[2rem] border border-white/40 hover:bg-white/80 transition-all shadow-xl shadow-black/5"
                         >
                             <div className="flex items-start justify-between gap-4">
                                 <div className="flex items-start gap-4 flex-1 min-w-0">

@@ -25,78 +25,83 @@ const BookingManagement = () => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold tracking-tight">
-          Quản lý Đơn đặt tour
-        </h2>
-        <p className="text-zinc-500">Theo dõi và xử lý các đơn đặt tour.</p>
+      <div className="bg-white/70 backdrop-blur-2xl border border-white/40 p-10 rounded-[3rem] shadow-2xl shadow-black/5 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+        <div>
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-2 h-8 bg-primary rounded-full"></div>
+            <h2 className="text-3xl font-black tracking-tight text-slate-900 leading-tight">
+              Quản lý Đơn đặt tour
+            </h2>
+          </div>
+          <p className="text-slate-500 font-medium ml-5">Theo dõi và quản lý mọi giao dịch đặt tour trên hệ thống.</p>
+        </div>
       </div>
 
-      <div className="flex gap-4 items-center bg-white p-4 rounded-lg border border-zinc-200">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 w-4 h-4" />
+      <div className="flex flex-col lg:flex-row gap-6 items-center bg-white/70 backdrop-blur-xl p-8 rounded-[2.5rem] border border-white/40 shadow-xl shadow-black/5">
+        <div className="relative flex-1 w-full">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
           <input
             type="text"
-            placeholder="Tìm kiếm mã đơn, khách hàng..."
-            className="w-full pl-10 pr-4 py-2 border border-zinc-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900"
+            placeholder="Tìm kiếm mã đơn, khách hàng, tour..."
+            className="w-full pl-12 pr-6 py-4 bg-white/50 border border-white/40 rounded-2xl text-sm font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all placeholder:text-slate-400"
           />
         </div>
-        <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-zinc-600 bg-zinc-50 hover:bg-zinc-100 rounded-md border border-zinc-200">
+        <button className="flex items-center gap-3 px-8 py-4 text-xs font-black uppercase tracking-widest text-slate-700 bg-white/50 border border-white/40 hover:bg-white rounded-2xl transition-all shadow-sm">
           <Filter className="w-4 h-4" /> Bộ lọc
         </button>
       </div>
 
-      <div className="bg-white border border-zinc-200 rounded-xl overflow-hidden">
-        <table className="w-full text-sm text-left">
-          <thead className="bg-zinc-50 text-zinc-500 font-medium border-b border-zinc-200">
-            <tr>
-              <th className="px-6 py-4">Mã đơn</th>
-              <th className="px-6 py-4">Khách hàng</th>
-              <th className="px-6 py-4">Tour</th>
-              <th className="px-6 py-4">Ngày đi</th>
-              <th className="px-6 py-4">Tổng tiền</th>
-              <th className="px-6 py-4">Trạng thái</th>
-              <th className="px-6 py-4">Thanh toán</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-zinc-100">
-            {bookings.map((booking) => (
-              <tr key={booking.id} className="hover:bg-zinc-50">
-                <td className="px-6 py-4 font-medium text-zinc-900">
-                  {booking.id}
-                </td>
-                <td className="px-6 py-4">{booking.user}</td>
-                <td className="px-6 py-4">{booking.tour}</td>
-                <td className="px-6 py-4">{booking.date}</td>
-                <td className="px-6 py-4 font-medium">{booking.amount}</td>
-                <td className="px-6 py-4">
-                  <span
-                    className={`px-2.5 py-0.5 rounded-full text-xs font-medium
-                                        ${
-                                          booking.status === "CONFIRMED"
-                                            ? "bg-emerald-100 text-emerald-700"
-                                            : "bg-amber-100 text-amber-700"
-                                        }`}
-                  >
-                    {booking.status}
-                  </span>
-                </td>
-                <td className="px-6 py-4">
-                  <span
-                    className={`px-2.5 py-0.5 rounded-full text-xs font-medium
-                                        ${
-                                          booking.payment === "PAID"
-                                            ? "bg-blue-100 text-blue-700"
-                                            : "bg-zinc-100 text-zinc-700"
-                                        }`}
-                  >
-                    {booking.payment}
-                  </span>
-                </td>
+      <div className="bg-white/70 backdrop-blur-2xl border border-white/40 rounded-[2.5rem] overflow-hidden shadow-2xl shadow-black/5">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm text-left border-collapse">
+            <thead>
+              <tr className="bg-white/50 border-b border-white/40">
+                <th className="px-8 py-6 text-xs font-black uppercase tracking-widest text-slate-500">Mã đơn</th>
+                <th className="px-8 py-6 text-xs font-black uppercase tracking-widest text-slate-500">Khách hàng</th>
+                <th className="px-8 py-6 text-xs font-black uppercase tracking-widest text-slate-500">Tour</th>
+                <th className="px-8 py-6 text-xs font-black uppercase tracking-widest text-slate-500">Ngày đi</th>
+                <th className="px-8 py-6 text-xs font-black uppercase tracking-widest text-slate-500">Tổng tiền</th>
+                <th className="px-8 py-6 text-xs font-black uppercase tracking-widest text-slate-500">Trạng thái</th>
+                <th className="px-8 py-6 text-xs font-black uppercase tracking-widest text-slate-500 text-right">Thanh toán</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-zinc-100">
+              {bookings.map((booking) => (
+                <tr key={booking.id} className="group hover:bg-white/80 transition-all border-b border-white/20 last:border-0">
+                  <td className="px-8 py-6 font-black text-slate-900">
+                    {booking.id}
+                  </td>
+                  <td className="px-8 py-6 font-bold text-slate-700">{booking.user}</td>
+                  <td className="px-8 py-6 font-bold text-slate-700">{booking.tour}</td>
+                  <td className="px-8 py-6 font-bold text-slate-500">{booking.date}</td>
+                  <td className="px-8 py-6 font-black text-primary text-base">{booking.amount} VNĐ</td>
+                  <td className="px-8 py-6">
+                    <span
+                      className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider
+                                        ${booking.status === "CONFIRMED"
+                          ? "bg-emerald-500/10 text-emerald-600 border border-emerald-100"
+                          : "bg-amber-500/10 text-amber-600 border border-amber-100"
+                        }`}
+                    >
+                      {booking.status}
+                    </span>
+                  </td>
+                  <td className="px-8 py-6 text-right">
+                    <span
+                      className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider
+                                        ${booking.payment === "PAID"
+                          ? "bg-blue-500/10 text-blue-600 border border-blue-100"
+                          : "bg-slate-500/10 text-slate-500 border border-slate-100"
+                        }`}
+                    >
+                      {booking.payment}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

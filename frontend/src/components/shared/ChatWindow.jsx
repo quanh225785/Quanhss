@@ -226,9 +226,9 @@ const ChatWindow = ({
     }, {});
 
     return (
-        <div className="flex flex-col h-full max-h-full bg-white rounded-lg shadow-sm border border-zinc-200 overflow-hidden">
+        <div className="flex flex-col h-full max-h-full bg-white/40 backdrop-blur-xl rounded-[2.5rem] shadow-2xl shadow-black/5 border border-white/40 overflow-hidden">
             {/* Header */}
-            <div className="flex items-center justify-between px-4 py-3 bg-zinc-50 border-b border-zinc-200 flex-shrink-0">
+            <div className="flex items-center justify-between px-6 py-4 bg-white/40 border-b border-white/20 flex-shrink-0">
                 <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold">
                         {partnerInitial}
@@ -286,8 +286,8 @@ const ChatWindow = ({
                                         )}
                                         <div
                                             className={`rounded-2xl px-4 py-2 ${msg.isCurrentUser
-                                                ? 'bg-primary text-white rounded-br-md'
-                                                : 'bg-zinc-100 text-zinc-900 rounded-bl-md'
+                                                ? 'bg-primary text-white rounded-br-md shadow-lg shadow-primary/20'
+                                                : 'bg-white/60 backdrop-blur-md text-zinc-900 rounded-bl-md border border-white/40'
                                                 }`}
                                         >
                                             {msg.imageUrl && (
@@ -337,7 +337,7 @@ const ChatWindow = ({
             )}
 
             {/* Input */}
-            <div className="p-4 border-t border-zinc-200 bg-zinc-50 flex-shrink-0">
+            <div className="p-4 bg-white/40 border-t border-white/20 flex-shrink-0">
                 <div className="flex items-end gap-2">
                     <input
                         type="file"

@@ -248,10 +248,11 @@ const TourDetailPage = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-surface flex items-center justify-center">
-                <div className="text-center">
-                    <Loader2 className="w-12 h-12 animate-spin text-primary mx-auto mb-4" />
-                    <p className="text-slate-600">Đang tải thông tin tour...</p>
+            <div className="min-h-screen flex items-center justify-center p-8">
+                <div className="bg-white/70 backdrop-blur-2xl rounded-[3rem] border border-white/40 shadow-2xl p-16 text-center max-w-lg">
+                    <Loader2 className="w-20 h-20 animate-spin text-primary mx-auto mb-8" />
+                    <p className="text-slate-900 font-black text-2xl tracking-tight">Đang chuẩn bị chuyến đi...</p>
+                    <p className="text-slate-500 mt-3 font-medium">Chúng tôi đang sắp xếp hành trình tuyệt vời nhất cho bạn</p>
                 </div>
             </div>
         );
@@ -294,9 +295,9 @@ const TourDetailPage = () => {
     }
 
     return (
-        <div className="min-h-screen bg-surface font-sans p-4 md:p-8 pb-32 md:pb-12">
-            {/* Header */}
-            <header className="sticky top-0 bg-white/70 backdrop-blur-xl border-b border-white/40 z-50 rounded-2xl mb-6">
+        <div className="min-h-screen font-sans p-4 md:p-8 pb-32 md:pb-12 text-slate-900">
+            {/* Header - Glassmorphism */}
+            <header className="sticky top-0 bg-white/70 backdrop-blur-2xl border-b border-white/40 z-50 rounded-b-[2.5rem] mb-8 shadow-2xl shadow-black/5">
                 <div className="px-4 md:px-8 py-4 flex items-center justify-between">
                     <div className="flex items-center gap-4">
                         <button
@@ -319,13 +320,13 @@ const TourDetailPage = () => {
                         <button
                             onClick={toggleFavorite}
                             className={`p-3 rounded-xl border transition-all ${isFavorite
-                                ? 'bg-red-50 border-red-200 text-red-500'
-                                : 'bg-white/60 border-white/60 text-slate-600 hover:text-red-500'
+                                ? 'bg-red-500 border-red-500 text-white shadow-lg shadow-red-200'
+                                : 'bg-white/50 border-white/40 text-slate-600 hover:text-red-500'
                                 }`}
                         >
                             <Heart size={20} className={isFavorite ? 'fill-current' : ''} />
                         </button>
-                        <button className="p-3 rounded-xl bg-white/60 border border-white/60 text-slate-600 hover:bg-white/80 transition-colors">
+                        <button className="p-3 rounded-xl bg-white/50 border border-white/40 text-slate-600 hover:bg-white/80 transition-all">
                             <Share2 size={20} />
                         </button>
                     </div>
@@ -336,9 +337,9 @@ const TourDetailPage = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Main Content */}
                     <div className="lg:col-span-2 space-y-6">
-                        {/* Tour Images Carousel */}
+                        {/* Tour Images Carousel - Frame */}
                         {(tour.imageUrls?.length > 0 || tour.imageUrl) && (
-                            <div className="bg-white/60 backdrop-blur-md border border-white/60 shadow-sm rounded-[2rem] overflow-hidden p-4">
+                            <div className="bg-white/70 backdrop-blur-xl border border-white/40 shadow-2xl shadow-black/5 rounded-[3rem] overflow-hidden p-4">
                                 <ImageCarousel
                                     images={tour.imageUrls?.length > 0 ? tour.imageUrls : [tour.imageUrl]}
                                     alt={tour.name}
@@ -349,56 +350,59 @@ const TourDetailPage = () => {
 
                         {/* Tour Info Cards */}
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <div className="bg-white/60 backdrop-blur-md border border-white/60 rounded-2xl p-4 text-center">
-                                <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mx-auto mb-3">
-                                    <Calendar className="text-primary" size={24} />
+                            <div className="bg-white/70 backdrop-blur-xl border border-white/40 rounded-[2.5rem] p-6 text-center shadow-xl shadow-black/5 hover:-translate-y-2 transition-all duration-300">
+                                <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                                    <Calendar className="text-primary" size={28} />
                                 </div>
-                                <p className="text-2xl font-bold text-slate-900">{tour.numberOfDays || 1}</p>
-                                <p className="text-sm text-slate-500">Ngày</p>
+                                <p className="text-2xl font-black text-slate-900">{tour.numberOfDays || 1}</p>
+                                <p className="text-sm font-bold text-slate-500 uppercase tracking-wider">Ngày</p>
                             </div>
-                            <div className="bg-white/60 backdrop-blur-md border border-white/60 rounded-2xl p-4 text-center">
-                                <div className="w-12 h-12 bg-secondary/10 rounded-xl flex items-center justify-center mx-auto mb-3">
-                                    <MapPin className="text-secondary" size={24} />
+                            <div className="bg-white/70 backdrop-blur-xl border border-white/40 rounded-[2.5rem] p-6 text-center shadow-xl shadow-black/5 hover:-translate-y-2 transition-all duration-300">
+                                <div className="w-14 h-14 bg-secondary/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                                    <MapPin className="text-secondary" size={28} />
                                 </div>
-                                <p className="text-2xl font-bold text-slate-900">{tour.points?.length || 0}</p>
-                                <p className="text-sm text-slate-500">Điểm đến</p>
+                                <p className="text-2xl font-black text-slate-900">{tour.points?.length || 0}</p>
+                                <p className="text-sm font-bold text-slate-500 uppercase tracking-wider">Điểm đến</p>
                             </div>
-                            <div className="bg-white/60 backdrop-blur-md border border-white/60 rounded-2xl p-4 text-center">
-                                <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center mx-auto mb-3">
-                                    <Route className="text-green-600" size={24} />
+                            <div className="bg-white/70 backdrop-blur-xl border border-white/40 rounded-[2.5rem] p-6 text-center shadow-xl shadow-black/5 hover:-translate-y-2 transition-all duration-300">
+                                <div className="w-14 h-14 bg-green-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                                    <Route className="text-green-600" size={28} />
                                 </div>
-                                <p className="text-2xl font-bold text-slate-900">
+                                <p className="text-2xl font-black text-slate-900">
                                     {tour.totalDistance ? formatDistance(tour.totalDistance) : '--'}
                                 </p>
-                                <p className="text-sm text-slate-500">Khoảng cách</p>
+                                <p className="text-sm font-bold text-slate-500 uppercase tracking-wider">Khoảng cách</p>
                             </div>
-                            <div className="bg-white/60 backdrop-blur-md border border-white/60 rounded-2xl p-4 text-center">
-                                <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center mx-auto mb-3">
-                                    <Car className="text-purple-600" size={24} />
+                            <div className="bg-white/70 backdrop-blur-xl border border-white/40 rounded-[2.5rem] p-6 text-center shadow-xl shadow-black/5 hover:-translate-y-2 transition-all duration-300">
+                                <div className="w-14 h-14 bg-purple-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                                    <Car className="text-purple-600" size={28} />
                                 </div>
-                                <p className="text-2xl font-bold text-slate-900 capitalize">{tour.vehicle || 'N/A'}</p>
-                                <p className="text-sm text-slate-500">Phương tiện</p>
+                                <p className="text-2xl font-black text-slate-900 capitalize">{tour.vehicle || 'N/A'}</p>
+                                <p className="text-sm font-bold text-slate-500 uppercase tracking-wider">Phương tiện</p>
                             </div>
                         </div>
 
                         {/* Description */}
                         {tour.description && (
-                            <div className="bg-white/60 backdrop-blur-md border border-white/60 shadow-sm rounded-[2rem] p-6">
-                                <h3 className="text-lg font-display font-bold text-slate-900 mb-4">Mô tả tour</h3>
-                                <p className="text-slate-600 leading-relaxed whitespace-pre-line">
+                            <div className="bg-white/70 backdrop-blur-xl border border-white/40 shadow-2xl shadow-black/5 rounded-[2.5rem] p-8">
+                                <h3 className="text-xl font-display font-black text-slate-900 mb-6 flex items-center gap-3">
+                                    <div className="w-2 h-8 bg-primary rounded-full"></div>
+                                    Mô tả tour
+                                </h3>
+                                <p className="text-slate-600 leading-relaxed whitespace-pre-line font-medium text-lg">
                                     {tour.description}
                                 </p>
                             </div>
                         )}
 
                         {/* Map Section */}
-                        <div className="bg-white/60 backdrop-blur-md border border-white/60 shadow-sm rounded-[2rem] overflow-hidden">
-                            <div className="p-4 border-b border-white/40 flex justify-between items-center">
-                                <h3 className="text-lg font-display font-bold text-slate-900 flex items-center gap-2">
-                                    <Route className="text-primary" size={20} />
+                        <div className="bg-white/70 backdrop-blur-xl border border-white/40 shadow-2xl shadow-black/5 rounded-[3rem] overflow-hidden">
+                            <div className="p-6 border-b border-white/40 flex justify-between items-center">
+                                <h3 className="text-xl font-display font-black text-slate-900 flex items-center gap-3">
+                                    <Route className="text-primary" size={24} />
                                     Bản đồ - Ngày {activeDay}
                                 </h3>
-                                <span className="text-xs font-medium text-slate-500 bg-slate-100 px-3 py-1 rounded-full">
+                                <span className="text-xs font-black text-primary bg-primary/10 px-4 py-1.5 rounded-full tracking-widest uppercase">
                                     {pointsByDay[activeDay]?.length || 0} địa điểm
                                 </span>
                             </div>
@@ -417,8 +421,11 @@ const TourDetailPage = () => {
                         </div>
 
                         {/* Itinerary */}
-                        <div className="bg-white/60 backdrop-blur-md border border-white/60 shadow-sm rounded-[2rem] p-6">
-                            <h3 className="text-lg font-display font-bold text-slate-900 mb-4">Lịch trình chi tiết</h3>
+                        <div className="bg-white/70 backdrop-blur-xl border border-white/40 shadow-2xl shadow-black/5 rounded-[3rem] p-8 md:p-10">
+                            <h3 className="text-xl font-display font-black text-slate-900 mb-8 flex items-center gap-3">
+                                <div className="w-2 h-8 bg-secondary rounded-full"></div>
+                                Lịch trình chi tiết
+                            </h3>
 
                             {/* Day Tabs */}
                             {dayTabs.length > 1 && (
@@ -427,9 +434,9 @@ const TourDetailPage = () => {
                                         <button
                                             key={day}
                                             onClick={() => setActiveDay(day)}
-                                            className={`px-4 py-2 rounded-xl font-medium text-sm whitespace-nowrap transition-all ${activeDay === day
-                                                ? 'bg-primary text-white shadow-md'
-                                                : 'bg-white/80 text-slate-600 hover:bg-white border border-slate-200'
+                                            className={`px-6 py-3 rounded-2xl font-bold text-sm whitespace-nowrap transition-all ${activeDay === day
+                                                ? 'bg-primary text-white shadow-xl shadow-primary/30 scale-105'
+                                                : 'bg-white/50 text-slate-600 hover:bg-white border border-white/40'
                                                 }`}
                                         >
                                             Ngày {day}
@@ -464,8 +471,8 @@ const TourDetailPage = () => {
                                             </div>
 
                                             {/* Content */}
-                                            <div className="flex-1 pb-6">
-                                                <div className="bg-white/80 rounded-2xl p-4 border border-slate-100 hover:shadow-md transition-shadow">
+                                            <div className="flex-1 pb-10">
+                                                <div className="bg-white/60 backdrop-blur-md rounded-[2rem] p-6 border border-white/40 hover:bg-white/90 hover:shadow-2xl hover:shadow-black/5 transition-all group-hover:-translate-y-1">
                                                     <div className="flex gap-4">
                                                         {/* Text content */}
                                                         <div className="flex-1">
@@ -548,7 +555,7 @@ const TourDetailPage = () => {
                     {/* Sidebar */}
                     <div className="lg:sticky lg:top-24 lg:self-start space-y-6">
                         {/* Booking Card */}
-                        <div className="bg-white/60 backdrop-blur-md border border-white/60 shadow-xl rounded-[2rem] p-6">
+                        <div className="bg-white/70 backdrop-blur-xl border border-white/40 shadow-2xl shadow-black/10 rounded-[3rem] p-8">
                             <div className="mb-6">
                                 <div className="flex items-baseline gap-2">
                                     <span className="text-3xl font-display font-bold text-slate-900">
@@ -707,7 +714,7 @@ const TourDetailPage = () => {
                             )}
                         </div>
                         {/* Agent Info */}
-                        <div className="bg-white/60 backdrop-blur-md border border-white/60 shadow-sm rounded-[2rem] p-6">
+                        <div className="bg-white/70 backdrop-blur-xl border border-white/40 shadow-2xl shadow-black/5 rounded-[2.5rem] p-8">
                             <h3 className="text-lg font-display font-bold text-slate-900 mb-4">Thông tin đại lý</h3>
                             <div
                                 className="flex items-center gap-4 cursor-pointer hover:bg-white/50 rounded-xl p-2 -m-2 transition-colors"

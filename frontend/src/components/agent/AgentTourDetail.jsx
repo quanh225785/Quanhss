@@ -197,41 +197,51 @@ const AgentTourDetail = () => {
                 onScanError={handleScanError}
             />
 
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
+            {/* Header - Stacked in 2 rows with background for Title */}
+            <div className="space-y-6">
+                {/* Row 1: Back Button + Title with Background */}
+                <div className="bg-white/70 backdrop-blur-2xl border border-white/40 p-8 rounded-[3rem] shadow-sm flex items-center gap-6">
                     <button
                         onClick={() => navigate('/agent/tours')}
-                        className="p-2 rounded-lg hover:bg-zinc-100 transition-colors"
+                        className="p-4 rounded-2xl bg-white/50 border border-white/40 hover:bg-white transition-all text-slate-600 hover:text-primary"
                     >
-                        <ArrowLeft size={20} />
+                        <ArrowLeft size={24} />
                     </button>
-                    <div>
-                        <h1 className="text-2xl font-bold tracking-tight">{tour.name}</h1>
-                        <p className="text-zinc-500">Chi tiết tour</p>
+                    <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-1">
+                            <div className="w-2 h-8 bg-primary rounded-full"></div>
+                            <h1 className="text-3xl font-black tracking-tight text-slate-900 leading-tight">
+                                {tour.name}
+                            </h1>
+                        </div>
+                        <p className="text-slate-500 font-bold ml-5 uppercase tracking-[0.2em] text-[10px]">
+                            Quản lý chi tiết hành trình
+                        </p>
                     </div>
                 </div>
+
+                {/* Row 2: Action Buttons */}
                 {tour.status === 'APPROVED' && (
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap items-center gap-4 px-2">
                         <button
                             onClick={() => setShowQrScanner(true)}
-                            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                            className="flex items-center gap-3 px-8 py-4 bg-blue-600 text-white font-black rounded-2xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-900/10 hover:-translate-y-0.5"
                         >
-                            <QrCode size={16} />
+                            <QrCode size={20} />
                             Quét QR Check-in
                         </button>
                         <button
                             onClick={() => navigate(`/agent/tours/${id}/trips`)}
-                            className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
+                            className="flex items-center gap-3 px-8 py-4 bg-emerald-600 text-white font-black rounded-2xl hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-900/10 hover:-translate-y-0.5"
                         >
-                            <Calendar size={16} />
+                            <Calendar size={20} />
                             Quản lý chuyến
                         </button>
                         <button
                             onClick={() => setShowEditModal(true)}
-                            className="flex items-center gap-2 px-4 py-2 border border-zinc-200 text-zinc-700 rounded-lg hover:bg-zinc-50 transition-colors"
+                            className="flex items-center gap-3 px-8 py-4 bg-white/50 border border-white/40 text-slate-700 font-black rounded-2xl hover:bg-white hover:border-slate-300 transition-all hover:-translate-y-0.5"
                         >
-                            <Pencil size={16} />
+                            <Pencil size={20} />
                             Sửa Tour
                         </button>
                     </div>
@@ -240,7 +250,7 @@ const AgentTourDetail = () => {
 
             {/* Tour Images */}
             {(tour.imageUrls?.length > 0 || tour.imageUrl) && (
-                <div className="bg-white border border-zinc-200 rounded-xl p-4">
+                <div className="bg-white/70 backdrop-blur-xl border border-white/40 rounded-[2.5rem] p-6 shadow-xl shadow-black/5">
                     <h3 className="font-bold text-lg mb-4">Ảnh Tour</h3>
                     <ImageCarousel
                         images={tour.imageUrls?.length > 0 ? tour.imageUrls : [tour.imageUrl]}
@@ -252,30 +262,30 @@ const AgentTourDetail = () => {
 
             {/* Stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-white border border-zinc-200 rounded-xl p-4 text-center">
+                <div className="bg-white/70 backdrop-blur-xl border border-white/40 rounded-3xl p-6 text-center shadow-xl shadow-black/5">
                     <Users className="w-8 h-8 text-blue-500 mx-auto mb-2" />
-                    <p className="text-2xl font-bold">{tripStats.totalParticipants}</p>
+                    <p className="text-2xl font-bold font-sans">{tripStats.totalParticipants}</p>
                     <p className="text-xs text-zinc-500">Tổng người đăng ký</p>
                 </div>
-                <div className="bg-white border border-zinc-200 rounded-xl p-4 text-center">
+                <div className="bg-white/70 backdrop-blur-xl border border-white/40 rounded-3xl p-6 text-center shadow-xl shadow-black/5">
                     <CheckCircle className="w-8 h-8 text-green-500 mx-auto mb-2" />
-                    <p className="text-2xl font-bold">{tripStats.activeTrips}</p>
+                    <p className="text-2xl font-bold font-sans">{tripStats.activeTrips}</p>
                     <p className="text-xs text-zinc-500">Chuyến đang mở</p>
                 </div>
-                <div className="bg-white border border-zinc-200 rounded-xl p-4 text-center">
+                <div className="bg-white/70 backdrop-blur-xl border border-white/40 rounded-3xl p-6 text-center shadow-xl shadow-black/5">
                     <Calendar className="w-8 h-8 text-amber-500 mx-auto mb-2" />
-                    <p className="text-2xl font-bold">{tripStats.totalTrips}</p>
+                    <p className="text-2xl font-bold font-sans">{tripStats.totalTrips}</p>
                     <p className="text-xs text-zinc-500">Tổng số chuyến</p>
                 </div>
-                <div className="bg-white border border-zinc-200 rounded-xl p-4 text-center">
+                <div className="bg-white/70 backdrop-blur-xl border border-white/40 rounded-3xl p-6 text-center shadow-xl shadow-black/5">
                     <MapPin className="w-8 h-8 text-purple-500 mx-auto mb-2" />
-                    <p className="text-2xl font-bold">{tour.points?.length || 0}</p>
+                    <p className="text-2xl font-bold font-sans">{tour.points?.length || 0}</p>
                     <p className="text-xs text-zinc-500">Điểm đến</p>
                 </div>
             </div>
 
             {/* Map */}
-            <div className="bg-white border border-zinc-200 rounded-xl overflow-hidden">
+            <div className="bg-white/70 backdrop-blur-xl border border-white/40 rounded-[2.5rem] overflow-hidden shadow-xl shadow-black/5">
                 <TourMap
                     points={tour.points?.map(p => ({
                         latitude: p.latitude,
@@ -290,8 +300,8 @@ const AgentTourDetail = () => {
             </div>
 
             {/* Itinerary */}
-            <div className="bg-white border border-zinc-200 rounded-xl p-6">
-                <h3 className="font-bold text-lg mb-4"> Lịch trình</h3>
+            <div className="bg-white/70 backdrop-blur-xl border border-white/40 rounded-[2.5rem] p-10 shadow-xl shadow-black/5">
+                <h3 className="font-bold text-xl mb-6">Lịch trình chi tiết</h3>
 
                 {dayTabs.length > 1 && (
                     <div className="flex gap-2 mb-4 overflow-x-auto pb-2">

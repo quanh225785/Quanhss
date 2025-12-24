@@ -1,0 +1,85 @@
+.santa-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 9999;
+    overflow: hidden;
+}
+
+.santa-claus {
+    position: absolute;
+    top: 15%;
+    right: -300px;
+    width: 250px;
+    height: auto;
+    animation: flyAcross 6.5s linear forwards;
+    z-index: 100;
+}
+
+.santa-claus img {
+    width: 100%;
+    height: auto;
+    filter: drop-shadow(0 5px 15px rgba(0, 0, 0, 0.2));
+    /* Make Santa look like he's flying slightly up and down */
+    animation: bobbing 1.2s ease-in-out infinite alternate;
+}
+
+@keyframes flyAcross {
+    0% {
+        right: -300px;
+        top: 15%;
+    }
+
+    50% {
+        top: 20%;
+    }
+
+    100% {
+        right: 110vw;
+        top: 15%;
+    }
+}
+
+@keyframes bobbing {
+    from {
+        transform: translateY(0) rotate(-2deg);
+    }
+
+    to {
+        transform: translateY(-20px) rotate(2deg);
+    }
+}
+
+.gift-box {
+    position: absolute;
+    width: 35px;
+    height: 35px;
+    animation: dropGift 2.5s cubic-bezier(.17, .67, .83, .67) forwards;
+}
+
+.gift-box img {
+    width: 100%;
+    height: 100%;
+    transform: rotate(var(--rotate));
+    filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.1));
+}
+
+@keyframes dropGift {
+    0% {
+        transform: translateY(0) scale(0) rotate(0deg);
+        opacity: 0;
+    }
+
+    15% {
+        transform: translateY(0) scale(1.2) rotate(10deg);
+        opacity: 1;
+    }
+
+    100% {
+        transform: translateY(100vh) rotate(360deg) scale(0.8);
+        opacity: 0;
+    }
+}

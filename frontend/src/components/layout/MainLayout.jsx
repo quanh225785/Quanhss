@@ -60,11 +60,19 @@ const MainLayout = ({ children, onLogout }) => {
     };
 
     return (
-        <div className="flex flex-col md:flex-row h-screen bg-surface font-sans overflow-hidden relative">
-            {/* Ambient Background Elements */}
-            <div className="fixed top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none">
-                <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] rounded-full bg-primary/5 blur-3xl animate-pulse"></div>
-                <div className="absolute bottom-[-10%] left-[-10%] w-[600px] h-[600px] rounded-full bg-secondary/5 blur-3xl animate-pulse delay-1000"></div>
+        <div className="flex flex-col md:flex-row h-screen font-sans overflow-hidden relative">
+            {/* Christmas Background */}
+            <div
+                className="fixed top-0 left-0 w-full h-full -z-10 pointer-events-none"
+                style={{
+                    backgroundImage: 'url(https://static.vecteezy.com/system/resources/previews/034/805/960/large_2x/merry-christmas-background-with-christmas-elements-for-social-media-posts-banners-greeting-cards-and-web-banners-free-photo.jpg)',
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    backgroundRepeat: 'no-repeat'
+                }}
+            >
+                {/* Overlay để nội dung dễ đọc hơn */}
+                <div className="absolute inset-0 bg-white/60 backdrop-blur-sm"></div>
             </div>
 
             {/* Sidebar - Glassmorphism (Hidden on mobile, visible on md+) */}

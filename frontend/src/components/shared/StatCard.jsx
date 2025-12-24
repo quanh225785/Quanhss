@@ -1,16 +1,18 @@
 import React from "react";
 
 const StatCard = ({ title, value, change, icon }) => (
-  <div className="bg-white p-6 rounded-xl border border-zinc-200 shadow-sm">
-    <div className="flex items-center justify-between mb-4">
-      <span className="text-zinc-500 text-sm font-medium">{title}</span>
-      <div className="p-2 bg-zinc-50 rounded-lg">{icon}</div>
+  <div className="bg-white/70 backdrop-blur-xl p-8 rounded-[2.5rem] border border-white/40 shadow-xl shadow-black/5 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
+    <div className="flex items-center justify-between mb-6">
+      <span className="text-slate-500 text-sm font-black uppercase tracking-widest">{title}</span>
+      <div className="p-3 bg-white/50 border border-white/40 rounded-2xl shadow-sm">{icon}</div>
     </div>
-    <div className="flex items-baseline gap-2">
-      <span className="text-2xl font-bold text-zinc-900">{value}</span>
-      <span className="text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
-        {change}
-      </span>
+    <div className="flex flex-col gap-2">
+      <span className="text-3xl font-black text-slate-900 tracking-tight">{value}</span>
+      <div className="flex">
+        <span className="text-[10px] font-black text-emerald-600 bg-emerald-50/50 border border-emerald-100 px-3 py-1 rounded-full uppercase tracking-wider">
+          {change}
+        </span>
+      </div>
     </div>
   </div>
 );

@@ -147,20 +147,20 @@ const UserOverview = () => {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div>
           <h2 className="text-2xl md:text-4xl font-display font-black text-slate-900 tracking-tight">
-            Khám phá trải nghiệm mới
+            Nâng tầm chuyến đi theo cách bạn muốn
           </h2>
           {/* <p className="text-slate-500 mt-2 text-lg">
             Những hành trình độc đáo được thiết kế riêng cho bạn.
           </p> */}
         </div>
         <div className="flex gap-4">
-          <div className="px-5 py-2.5 bg-white/70 backdrop-blur-md rounded-2xl border border-white/50 shadow-sm flex items-center gap-3">
-            <div className="p-2 bg-primary/10 text-primary rounded-xl">
-              <Star size={18} className="fill-current" />
+          <div className="px-5 py-3 bg-white/70 backdrop-blur-xl rounded-2xl border border-white/40 shadow-xl shadow-black/5 flex items-center gap-4 transition-all hover:scale-105">
+            <div className="w-10 h-10 bg-amber-500/10 text-amber-600 rounded-xl flex items-center justify-center shadow-inner">
+              <Star size={20} className="fill-current" />
             </div>
             <div>
-              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Hạng thành viên</p>
-              <p className="text-sm font-black text-slate-700">Crystal Explorer</p>
+              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Hạng thành viên</p>
+              <p className="text-base font-black text-slate-800">Crystal Explorer</p>
             </div>
           </div>
         </div>
@@ -186,13 +186,13 @@ const UserOverview = () => {
         {loading ? (
           <div className="flex gap-6 overflow-x-hidden p-2">
             {[1, 2, 3, 4].map(i => (
-              <div key={i} className="min-w-[300px] h-[400px] bg-slate-100 animate-pulse rounded-[2.5rem]"></div>
+              <div key={i} className="min-w-[300px] h-[400px] bg-white/20 backdrop-blur-xl animate-pulse rounded-[2.5rem] border border-white/20 shadow-lg"></div>
             ))}
           </div>
         ) : trendingTours.length === 0 ? (
-          <div className="text-center py-16 bg-white/50 rounded-[2.5rem] border border-white/50 border-dashed">
-            <Compass className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-            <h4 className="text-lg font-bold text-slate-700 mb-2">Chưa có xu hướng mới</h4>
+          <div className="text-center py-20 bg-white/70 backdrop-blur-xl rounded-[2.5rem] border border-white/40 border-dashed shadow-xl shadow-black/5">
+            <Compass className="w-20 h-20 text-slate-300 mx-auto mb-6" />
+            <h4 className="text-xl font-bold text-slate-700 mb-2">Chưa có xu hướng mới</h4>
             <p className="text-slate-500">Chúng tôi đang cập nhật những điểm đến hot nhất.</p>
           </div>
         ) : (
@@ -208,7 +208,7 @@ const UserOverview = () => {
               <div
                 key={tour.id}
                 onClick={() => navigate(`/tour/${tour.id}`)}
-                className="min-w-[280px] md:min-w-[340px] h-[450px] snap-start group relative rounded-[2.5rem] overflow-hidden shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 border border-white/20 bg-white cursor-pointer"
+                className="min-w-[280px] md:min-w-[340px] h-[450px] snap-start group relative rounded-[2.5rem] overflow-hidden shadow-xl hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 border border-white/40 bg-white/70 backdrop-blur-xl cursor-pointer"
               >
                 <div className="absolute top-6 left-6 z-10">
                   <div className="w-12 h-12 bg-white/90 backdrop-blur-md rounded-2xl flex items-center justify-center text-primary font-black text-xl shadow-lg border border-white/50">
@@ -305,7 +305,7 @@ const UserOverview = () => {
                 <div
                   key={tour.id}
                   onClick={() => navigate(`/tour/${tour.id}`)}
-                  className="flex items-center gap-3 md:gap-4 p-3 md:p-4 bg-white/60 backdrop-blur-md border border-white/60 rounded-2xl hover:shadow-md hover:-translate-y-0.5 transition-all cursor-pointer group"
+                  className="flex items-center gap-3 md:gap-6 p-4 md:p-5 bg-white/70 backdrop-blur-xl border border-white/40 rounded-[2rem] hover:shadow-xl hover:bg-white/80 hover:-translate-y-1 transition-all duration-300 cursor-pointer group shadow-lg shadow-black/5"
                 >
                   <img
                     src={getTourImage(tour)}

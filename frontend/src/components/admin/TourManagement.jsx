@@ -159,166 +159,167 @@ const TourManagement = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="bg-white/70 backdrop-blur-2xl border border-white/40 p-10 rounded-[3rem] shadow-2xl shadow-black/5 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Quản lý Tour</h2>
-          <p className="text-zinc-500">Duyệt tour đề xuất từ các agent.</p>
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-2 h-8 bg-primary rounded-full"></div>
+            <h2 className="text-3xl font-black tracking-tight text-slate-900 leading-tight">
+              Quản lý Tour
+            </h2>
+          </div>
+          <p className="text-slate-500 font-medium ml-5">Kiểm duyệt và quản lý danh sách tour trên toàn hệ thống.</p>
         </div>
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
-          <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-          <div className="flex-1">
-            <p className="text-sm font-medium text-red-900">Lỗi</p>
-            <p className="text-sm text-red-700 mt-1">{error}</p>
-          </div>
+        <div className="bg-red-50/50 backdrop-blur-md border border-red-100 text-red-700 px-6 py-4 rounded-2xl flex items-center gap-3">
+          <AlertCircle className="w-5 h-5" />
+          <span className="font-bold">{error}</span>
         </div>
       )}
 
-      {/* Tabs */}
-      <div className="border-b border-zinc-200">
-        <div className="flex gap-4">
+      {/* Navigation and Filters */}
+      <div className="flex flex-col lg:flex-row gap-6 items-center bg-white/70 backdrop-blur-xl p-8 rounded-[2.5rem] border border-white/40 shadow-xl shadow-black/5">
+        <div className="flex p-2 bg-slate-100/50 backdrop-blur-sm rounded-2xl border border-white/40 w-full lg:w-auto">
           <button
             onClick={() => setActiveTab('pending')}
-            className={`pb-3 px-1 text-sm font-medium border-b-2 transition-colors ${activeTab === 'pending'
-              ? 'border-zinc-900 text-zinc-900'
-              : 'border-transparent text-zinc-500 hover:text-zinc-700'
+            className={`flex-1 lg:flex-none px-6 py-3 text-xs font-black uppercase tracking-widest rounded-xl transition-all ${activeTab === 'pending'
+              ? "bg-white text-primary shadow-sm"
+              : "text-slate-500 hover:text-slate-900"
               }`}
           >
-            Tour chờ duyệt ({tours.filter(t => t.status === 'PENDING').length})
+            Chờ duyệt ({tours.filter(t => t.status === 'PENDING').length})
           </button>
           <button
             onClick={() => setActiveTab('all')}
-            className={`pb-3 px-1 text-sm font-medium border-b-2 transition-colors ${activeTab === 'all'
-              ? 'border-zinc-900 text-zinc-900'
-              : 'border-transparent text-zinc-500 hover:text-zinc-700'
+            className={`flex-1 lg:flex-none px-6 py-3 text-xs font-black uppercase tracking-widest rounded-xl transition-all ${activeTab === 'all'
+              ? "bg-white text-primary shadow-sm"
+              : "text-slate-500 hover:text-slate-900"
               }`}
           >
-            Tất cả tour ({tours.length})
+            Tất cả ({tours.length})
           </button>
         </div>
-      </div>
 
-      <div className="bg-white p-4 rounded-lg border border-zinc-200">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 w-4 h-4" />
+        <div className="relative flex-1 w-full">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
           <input
             type="text"
-            placeholder="Tìm kiếm tour..."
+            placeholder="Tìm kiếm theo tên tour, agent, mô tả..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-zinc-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900"
+            className="w-full pl-12 pr-6 py-4 bg-white/50 border border-white/40 rounded-2xl text-sm font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all placeholder:text-slate-400"
           />
         </div>
       </div>
 
       {/* Tours List */}
       {filteredTours.length === 0 ? (
-        <div className="bg-white rounded-lg border border-zinc-200 p-12 text-center">
-          <Route className="w-12 h-12 text-zinc-300 mx-auto mb-3" />
-          <p className="text-zinc-500">
+        <div className="bg-white/70 backdrop-blur-2xl border border-white/40 rounded-[2.5rem] p-24 text-center shadow-2xl shadow-black/5">
+          <div className="bg-slate-50 w-24 h-24 rounded-[2rem] flex items-center justify-center mx-auto mb-6 border border-white/40 shadow-inner">
+            <Route className="w-12 h-12 text-slate-300" />
+          </div>
+          <p className="text-slate-900 font-black text-2xl tracking-tight mb-2">
             {searchQuery ? 'Không tìm thấy tour nào' : 'Chưa có tour nào'}
           </p>
+          <p className="text-slate-500 font-medium">Thử thay đổi bộ lọc hoặc tiêu chí tìm kiếm</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
           {filteredTours.map((tour) => (
             <div
               key={tour.id}
-              className="bg-white p-5 rounded-xl border border-zinc-200 shadow-sm flex flex-col gap-3"
+              className="group bg-white/70 backdrop-blur-xl p-8 rounded-[2.5rem] border border-white/40 shadow-xl shadow-black/5 flex flex-col gap-6 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300"
             >
-              <div className="flex items-start justify-between">
+              <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-zinc-900 truncate">{tour.name}</h3>
+                  <h3 className="text-xl font-black text-slate-900 truncate leading-tight mb-2">
+                    {tour.name}
+                  </h3>
                   {tour.description && (
-                    <p className="text-sm text-zinc-600 line-clamp-2 mt-1">
+                    <p className="text-sm font-medium text-slate-500 line-clamp-2 leading-relaxed">
                       {tour.description}
                     </p>
                   )}
                 </div>
-                {getStatusBadge(tour.status)}
-              </div>
-
-              <div className="grid grid-cols-2 gap-3 text-sm">
-                {tour.numberOfDays && tour.numberOfDays > 1 && (
-                  <div className="flex items-center gap-2 text-zinc-600">
-                    <Calendar className="w-4 h-4 text-blue-500" />
-                    {tour.numberOfDays} ngày
-                  </div>
-                )}
-                {tour.startDate && (
-                  <div className="flex items-center gap-2 text-zinc-600">
-                    <Calendar className="w-4 h-4 text-emerald-500" />
-                    {new Date(tour.startDate).toLocaleString('vi-VN', {
-                      day: '2-digit',
-                      month: '2-digit',
-                      year: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
-                  </div>
-                )}
-                {tour.endDate && (
-                  <div className="flex items-center gap-2 text-zinc-600">
-                    <Calendar className="w-4 h-4 text-red-500" />
-                    {new Date(tour.endDate).toLocaleString('vi-VN', {
-                      day: '2-digit',
-                      month: '2-digit',
-                      year: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
-                  </div>
-                )}
-                {tour.maxParticipants && (
-                  <div className="flex items-center gap-2 text-zinc-600">
-                    <span className="text-zinc-400">👥</span>
-                    {tour.currentParticipants || 0}/{tour.maxParticipants}
-                  </div>
-                )}
-                <div className="flex items-center gap-2 text-zinc-600">
-                  <MapPin className="w-4 h-4 text-zinc-400" />
-                  {tour.points?.length || 0} điểm
+                <div className="flex-shrink-0">
+                  {getStatusBadge(tour.status)}
                 </div>
-                {tour.totalDistance && (
-                  <div className="flex items-center gap-2 text-zinc-600">
-                    <Route className="w-4 h-4 text-zinc-400" />
-                    {formatDistance(tour.totalDistance)}
-                  </div>
-                )}
-                {tour.totalTime && (
-                  <div className="flex items-center gap-2 text-zinc-600">
-                    <Clock className="w-4 h-4 text-zinc-400" />
-                    {formatDuration(tour.totalTime)}
-                  </div>
-                )}
-                {tour.price && (
-                  <div className="text-zinc-900 font-medium">
-                    {tour.price.toLocaleString('vi-VN')} VNĐ
-                  </div>
-                )}
               </div>
 
-              <div className="text-sm text-zinc-600">
-                Tạo bởi: <span className="font-medium">{tour.createdByUsername}</span>
-                {tour.isOptimized && (
-                  <span className="ml-2 px-2 py-0.5 rounded-full text-xs bg-blue-50 text-blue-700">
-                    TSP
-                  </span>
-                )}
+              <div className="grid grid-cols-2 gap-y-4 gap-x-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-blue-50 rounded-xl">
+                    <Calendar className="w-4 h-4 text-blue-600" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Thời gian</p>
+                    <p className="text-sm font-bold text-slate-700">{tour.numberOfDays || 1} ngày</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-indigo-50 rounded-xl">
+                    <MapPin className="w-4 h-4 text-indigo-600" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Điểm đến</p>
+                    <p className="text-sm font-bold text-slate-700">{tour.points?.length || 0} điểm</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-emerald-50 rounded-xl">
+                    <Route className="w-4 h-4 text-emerald-600" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Quãng đường</p>
+                    <p className="text-sm font-bold text-slate-700">{formatDistance(tour.totalDistance || 0)}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-amber-50 rounded-xl">
+                    <Clock className="w-4 h-4 text-amber-600" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Thời gian đi</p>
+                    <p className="text-sm font-bold text-slate-700">{formatDuration(tour.totalTime || 0)}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between p-4 bg-slate-50/50 rounded-2xl border border-slate-100">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-black text-xs">
+                    {tour.createdByUsername?.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Đại lý</p>
+                    <p className="text-xs font-bold text-slate-700">@{tour.createdByUsername}</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Giá tour</p>
+                  <p className="text-base font-black text-primary">
+                    {tour.price?.toLocaleString('vi-VN')} <span className="text-[10px]">VNĐ</span>
+                  </p>
+                </div>
               </div>
 
               {tour.status === 'REJECTED' && tour.rejectionReason && (
-                <div className="text-xs text-red-600 bg-red-50 p-2 rounded">
-                  Lý do từ chối: {tour.rejectionReason}
+                <div className="flex items-start gap-2 bg-red-50/50 p-4 rounded-2xl border border-red-100">
+                  <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
+                  <p className="text-xs font-bold text-red-600">
+                    Lý do từ chối: {tour.rejectionReason}
+                  </p>
                 </div>
               )}
 
-              <div className="flex gap-2 pt-2 border-t border-zinc-100">
+              <div className="flex gap-3 pt-6 border-t border-white/40">
                 <button
                   onClick={() => openDetailsModal(tour)}
-                  className="flex-1 flex items-center justify-center gap-1 py-2 text-sm font-medium text-zinc-700 bg-zinc-50 hover:bg-zinc-100 rounded-md transition-colors"
+                  className="flex-1 flex items-center justify-center gap-2 py-3.5 text-sm font-black text-slate-700 bg-white/50 border border-white/40 hover:bg-white rounded-2xl transition-all shadow-sm"
                 >
                   <Eye className="w-4 h-4" />
                   Chi tiết
@@ -328,7 +329,7 @@ const TourManagement = () => {
                     <button
                       onClick={() => openApproveModal(tour)}
                       disabled={processingId === tour.id}
-                      className="flex-1 flex items-center justify-center gap-1 py-2 text-sm font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-md disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      className="flex-1 flex items-center justify-center gap-2 py-3.5 text-sm font-black text-white bg-emerald-600 hover:bg-emerald-700 rounded-2xl shadow-xl shadow-emerald-900/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                     >
                       {processingId === tour.id ? (
                         <Loader2 className="w-4 h-4 animate-spin" />
@@ -340,7 +341,7 @@ const TourManagement = () => {
                     <button
                       onClick={() => openRejectModal(tour)}
                       disabled={processingId === tour.id}
-                      className="flex-1 flex items-center justify-center gap-1 py-2 text-sm font-medium text-red-700 bg-red-50 hover:bg-red-100 rounded-md disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      className="flex-1 flex items-center justify-center gap-2 py-3.5 text-sm font-black text-white bg-red-600 hover:bg-red-700 rounded-2xl shadow-xl shadow-red-900/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                     >
                       {processingId === tour.id ? (
                         <Loader2 className="w-4 h-4 animate-spin" />
@@ -522,7 +523,7 @@ const TourManagement = () => {
             {/* Itinerary by Day */}
             <div>
               <h4 className="text-sm font-medium text-zinc-700 mb-2">
-                 Lịch trình ({selectedTour.points?.length || 0} điểm)
+                Lịch trình ({selectedTour.points?.length || 0} điểm)
               </h4>
               <div className="space-y-3 max-h-64 overflow-y-auto">
                 {Array.from({ length: selectedTour.numberOfDays || 1 }, (_, i) => i + 1).map(day => {
@@ -553,7 +554,7 @@ const TourManagement = () => {
                                 {point.locationName ? (
                                   <>
                                     <p className="text-xs text-zinc-500 truncate">
-                                       {point.locationName}
+                                      {point.locationName}
                                     </p>
                                     {point.locationAddress && (
                                       <p className="text-xs text-zinc-400 truncate">{point.locationAddress}</p>
