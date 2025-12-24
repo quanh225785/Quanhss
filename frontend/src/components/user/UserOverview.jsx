@@ -153,17 +153,17 @@ const UserOverview = () => {
             Những hành trình độc đáo được thiết kế riêng cho bạn.
           </p> */}
         </div>
-        <div className="flex gap-4">
+        {/* <div className="flex gap-4">
           <div className="px-5 py-3 bg-white/70 backdrop-blur-xl rounded-2xl border border-white/40 shadow-xl shadow-black/5 flex items-center gap-4 transition-all hover:scale-105">
             <div className="w-10 h-10 bg-amber-500/10 text-amber-600 rounded-xl flex items-center justify-center shadow-inner">
               <Star size={20} className="fill-current" />
             </div>
-            <div>
-              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Hạng thành viên</p>
+             <div>
+             <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Hạng thành viên</p>
               <p className="text-base font-black text-slate-800">Crystal Explorer</p>
             </div>
           </div>
-        </div>
+        </div> */}
       </div>
 
       {/* Top 10 Trending Section */}
