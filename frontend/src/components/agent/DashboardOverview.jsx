@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { BarChart3, Map, Calendar, FileText, Loader2, AlertCircle, CheckCircle, XCircle, EyeOff, Download, DollarSign, X, TrendingUp, Users, CalendarDays, ArrowRight, Search, Filter } from 'lucide-react';
+import { BarChart3, Map, Calendar, FileText, Loader2, AlertCircle, CheckCircle, XCircle, EyeOff, Download, DollarSign, X, TrendingUp, Users, CalendarDays, ArrowRight, Search, Filter, ChevronLeft } from 'lucide-react';
 import {
     BarChart,
     Bar,
@@ -640,47 +640,47 @@ const DashboardOverview = () => {
 
             {/* Revenue Details Modal */}
             {showRevenueDetails && (
-                <div className="absolute inset-0 bg-black/40 z-40 backdrop-blur-sm">
-                    <div className="w-full h-full bg-white/90 backdrop-blur-xl overflow-hidden flex flex-col shadow-2xl">
+                <div className="fixed inset-0 bg-slate-900/40 z-[100] backdrop-blur-md flex items-center justify-center p-4 md:p-8 animate-in fade-in duration-300">
+                    <div className="w-full max-w-7xl h-full max-h-[90vh] bg-white/80 backdrop-blur-2xl rounded-[2.5rem] border border-white/40 shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-300">
                         {/* Header */}
-                        <div className="bg-gradient-to-r from-green-50 to-emerald-50 px-8 py-6 border-b border-green-100 shadow-sm">
-                            <div className="flex justify-between items-start mb-4">
+                        <div className="px-8 py-6 border-b border-white/40 bg-white/30">
+                            <div className="flex justify-between items-start mb-6">
                                 <div>
-                                    <h2 className="text-3xl font-bold text-zinc-900 flex items-center gap-3">
-                                        <TrendingUp className="text-green-600" size={32} />
+                                    <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-3">
+                                        <TrendingUp className="text-blue-600" size={28} />
                                         Báo cáo doanh thu chi tiết
                                     </h2>
-                                    <p className="text-base text-zinc-600 mt-2">Theo từng tour và chuyến</p>
+                                    <p className="text-sm text-slate-500 mt-1 font-medium">Theo từng tour và chuyến</p>
                                 </div>
                                 <button
                                     onClick={() => setShowRevenueDetails(false)}
-                                    className="p-3 hover:bg-white/80 rounded-lg transition-colors text-zinc-600 hover:text-zinc-900"
+                                    className="p-2 hover:bg-slate-200/50 rounded-xl transition-all text-slate-500 hover:text-slate-900 shadow-sm bg-white/50 border border-white/40"
                                 >
-                                    <X size={28} />
+                                    <X size={24} />
                                 </button>
                             </div>
 
                             {/* Search and Filter */}
                             <div className="flex flex-col sm:flex-row gap-4">
                                 {/* Search Input */}
-                                <div className="flex-1 relative">
-                                    <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-zinc-400" size={20} />
+                                <div className="flex-1 relative group">
+                                    <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-colors" size={18} />
                                     <input
                                         type="text"
                                         placeholder="Tìm kiếm theo tên tour..."
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
-                                        className="w-full pl-12 pr-4 py-3 bg-white border border-zinc-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-base"
+                                        className="w-full pl-11 pr-4 py-2.5 bg-white/60 border border-white/40 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/30 text-sm transition-all shadow-inner"
                                     />
                                 </div>
 
                                 {/* Sort Filter */}
-                                <div className="relative">
-                                    <Filter className="absolute left-4 top-1/2 transform -translate-y-1/2 text-zinc-400" size={20} />
+                                <div className="relative group">
+                                    <Filter className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-colors" size={18} />
                                     <select
                                         value={sortBy}
                                         onChange={(e) => setSortBy(e.target.value)}
-                                        className="pl-12 pr-10 py-3 bg-white border border-zinc-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-base appearance-none cursor-pointer min-w-[200px]"
+                                        className="pl-11 pr-10 py-2.5 bg-white/60 border border-white/40 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/30 text-sm appearance-none cursor-pointer min-w-[220px] transition-all shadow-inner"
                                     >
                                         <option value="revenue-desc">Doanh thu: Cao → Thấp</option>
                                         <option value="revenue-asc">Doanh thu: Thấp → Cao</option>
@@ -688,65 +688,68 @@ const DashboardOverview = () => {
                                         <option value="bookings-asc">Đặt chỗ: Ít → Nhiều</option>
                                         <option value="name-asc">Tên: A → Z</option>
                                     </select>
+                                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                                        <ChevronLeft size={16} className="-rotate-90" />
+                                    </div>
                                 </div>
                             </div>
 
                             {/* Results count */}
                             {revenueDetails && (
-                                <div className="mt-4 text-sm text-zinc-600">
-                                    Hiển thị <strong className="text-zinc-900">{filteredRevenueDetails.length}</strong> / {revenueDetails.length} tour
+                                <div className="mt-4 px-1 text-xs text-slate-500 font-medium uppercase tracking-wider">
+                                    Hiển thị <span className="text-slate-900 font-bold">{filteredRevenueDetails.length}</span> / {revenueDetails.length} tour
                                 </div>
                             )}
                         </div>
 
                         {/* Content */}
-                        <div className="overflow-y-auto p-8 flex-1 bg-zinc-50">
+                        <div className="overflow-y-auto p-6 md:p-8 flex-1 bg-slate-50/30 custom-scrollbar">
                             {loadingRevenue ? (
-                                <div className="flex items-center justify-center py-16">
-                                    <Loader2 className="w-8 h-8 animate-spin text-green-600" />
+                                <div className="flex flex-col items-center justify-center py-24">
+                                    <Loader2 className="w-10 h-10 animate-spin text-blue-600 mb-4" />
+                                    <p className="text-slate-500 font-medium anim-pulse">Đang xử lý dữ liệu báo cáo...</p>
                                 </div>
                             ) : revenueDetails && revenueDetails.length > 0 ? (
                                 filteredRevenueDetails.length > 0 ? (
                                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                        {filteredRevenueDetails.map((tour, index) => (
+                                        {filteredRevenueDetails.map((tour) => (
                                             <div
                                                 key={tour.tourId}
-                                                className="bg-white rounded-xl shadow-lg border border-zinc-200 overflow-hidden hover:shadow-xl transition-all"
+                                                className="bg-white/70 backdrop-blur-md rounded-2xl border border-white/40 shadow-xl shadow-black/5 overflow-hidden hover:shadow-2xl hover:shadow-blue-500/5 transition-all duration-300 flex flex-col"
                                             >
                                                 {/* Tour Header */}
-                                                <div className="p-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-zinc-200">
-                                                    <div className="flex items-start gap-5">
+                                                <div className="p-5 bg-gradient-to-br from-blue-50/50 to-indigo-50/50 border-b border-white/40">
+                                                    <div className="flex items-center gap-4">
                                                         {tour.tourImageUrl ? (
-                                                            <img
-                                                                src={tour.tourImageUrl}
-                                                                alt={tour.tourName}
-                                                                className="w-32 h-32 object-cover rounded-xl shadow-lg border-2 border-white"
-                                                            />
+                                                            <div className="relative shrink-0">
+                                                                <img
+                                                                    src={tour.tourImageUrl}
+                                                                    alt={tour.tourName}
+                                                                    className="w-20 h-20 object-cover rounded-xl shadow-md border-2 border-white"
+                                                                />
+                                                                <div className="absolute inset-0 rounded-xl ring-1 ring-inset ring-black/5"></div>
+                                                            </div>
                                                         ) : (
-                                                            <div className="w-32 h-32 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-xl shadow-lg flex items-center justify-center">
-                                                                <Map className="text-white" size={48} />
+                                                            <div className="w-20 h-20 bg-gradient-to-br from-slate-100 to-slate-200 rounded-xl shadow-inner flex items-center justify-center shrink-0">
+                                                                <Map className="text-slate-400" size={28} />
                                                             </div>
                                                         )}
                                                         <div className="flex-1 min-w-0">
-                                                            <div className="flex items-start justify-between gap-4">
-                                                                <div className="flex-1">
-                                                                    <h3 className="text-2xl font-bold text-zinc-900 mb-3 line-clamp-2">
-                                                                        {tour.tourName}
-                                                                    </h3>
-                                                                    <div className="flex flex-wrap gap-3">
-                                                                        <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg shadow-md">
-                                                                            <Users size={18} className="text-blue-600" />
-                                                                            <span className="text-base font-semibold text-zinc-700">
-                                                                                {formatNumber(tour.totalBookings)} đặt chỗ
-                                                                            </span>
-                                                                        </div>
-                                                                        <div className="flex items-center gap-2 px-4 py-2 bg-green-50 rounded-lg shadow-md border border-green-200">
-                                                                            <DollarSign size={18} className="text-green-600" />
-                                                                            <span className="text-base font-bold text-green-700">
-                                                                                {formatCurrency(tour.totalRevenue)}
-                                                                            </span>
-                                                                        </div>
-                                                                    </div>
+                                                            <h3 className="text-base font-bold text-slate-900 mb-2 line-clamp-2 leading-snug">
+                                                                {tour.tourName}
+                                                            </h3>
+                                                            <div className="flex flex-wrap gap-2">
+                                                                <div className="flex items-center gap-1.5 px-2.5 py-1 bg-white/80 rounded-lg shadow-sm border border-slate-100">
+                                                                    <Users size={14} className="text-blue-600" />
+                                                                    <span className="text-xs font-bold text-slate-700">
+                                                                        {formatNumber(tour.totalBookings)} đặt chỗ
+                                                                    </span>
+                                                                </div>
+                                                                <div className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 rounded-lg shadow-sm border border-emerald-100">
+                                                                    <DollarSign size={14} className="text-emerald-600" />
+                                                                    <span className="text-xs font-black text-emerald-700">
+                                                                        {formatCurrency(tour.totalRevenue)}
+                                                                    </span>
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -755,14 +758,14 @@ const DashboardOverview = () => {
 
                                                 {/* Trips List */}
                                                 {tour.trips && tour.trips.length > 0 && (
-                                                    <div className="p-6">
-                                                        <div className="flex items-center gap-2 mb-5">
-                                                            <CalendarDays size={20} className="text-indigo-600" />
-                                                            <h4 className="text-base font-semibold text-zinc-700 uppercase tracking-wide">
-                                                                Chi tiết theo chuyến ({tour.trips.length} chuyến)
+                                                    <div className="p-5 flex-1 flex flex-col">
+                                                        <div className="flex items-center gap-2 mb-4">
+                                                            <CalendarDays size={16} className="text-slate-400" />
+                                                            <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                                                Chi tiết theo chuyến ({tour.trips.length})
                                                             </h4>
                                                         </div>
-                                                        <div className="space-y-3 max-h-[400px] overflow-y-auto">
+                                                        <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1 -mr-1 custom-scrollbar">
                                                             {tour.trips.map((trip) => {
                                                                 const startDate = new Date(trip.startDate);
                                                                 const endDate = new Date(trip.endDate);
@@ -771,54 +774,34 @@ const DashboardOverview = () => {
                                                                 return (
                                                                     <div
                                                                         key={trip.tripId}
-                                                                        className={`p-5 rounded-xl border-2 transition-all ${hasRevenue
-                                                                            ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-200 hover:border-green-300 hover:shadow-md'
-                                                                            : 'bg-zinc-50 border-zinc-200'
+                                                                        className={`p-3.5 rounded-xl border transition-all duration-200 ${hasRevenue
+                                                                            ? 'bg-white/60 border-emerald-100 hover:border-emerald-300 hover:bg-white/80'
+                                                                            : 'bg-slate-100/50 border-slate-200'
                                                                             }`}
                                                                     >
                                                                         <div className="flex items-center justify-between gap-4">
-                                                                            <div className="flex items-center gap-4 flex-1">
-                                                                                <div className={`p-3 rounded-xl ${hasRevenue ? 'bg-green-100' : 'bg-zinc-200'
-                                                                                    }`}>
-                                                                                    <Calendar className={hasRevenue ? 'text-green-700' : 'text-zinc-600'} size={24} />
+                                                                            <div className="flex items-center gap-3 flex-1">
+                                                                                <div className={`p-1.5 rounded-lg ${hasRevenue ? 'bg-emerald-100/50' : 'bg-slate-200/50'}`}>
+                                                                                    <Calendar className={hasRevenue ? 'text-emerald-600' : 'text-slate-500'} size={18} />
                                                                                 </div>
-                                                                                <div className="flex-1 min-w-0">
-                                                                                    <div className="flex items-center gap-3 text-base font-semibold text-zinc-900">
-                                                                                        <span className="text-zinc-700">
-                                                                                            {startDate.toLocaleDateString('vi-VN', {
-                                                                                                day: '2-digit',
-                                                                                                month: '2-digit',
-                                                                                                year: 'numeric'
-                                                                                            })}
-                                                                                        </span>
-                                                                                        <ArrowRight size={16} className="text-zinc-400" />
-                                                                                        <span className="text-zinc-700">
-                                                                                            {endDate.toLocaleDateString('vi-VN', {
-                                                                                                day: '2-digit',
-                                                                                                month: '2-digit',
-                                                                                                year: 'numeric'
-                                                                                            })}
-                                                                                        </span>
-                                                                                    </div>
+                                                                                <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-700">
+                                                                                    <span>{startDate.toLocaleDateString('vi-VN')}</span>
+                                                                                    <ArrowRight size={12} className="text-slate-300" />
+                                                                                    <span>{endDate.toLocaleDateString('vi-VN')}</span>
                                                                                 </div>
                                                                             </div>
-                                                                            <div className="flex items-center gap-6">
-                                                                                <div className="text-right">
-                                                                                    <div className="flex items-center gap-2 text-base">
-                                                                                        <Users size={18} className="text-zinc-500" />
-                                                                                        <span className="text-zinc-700 font-semibold">
-                                                                                            {formatNumber(trip.totalBookings)}
-                                                                                        </span>
-                                                                                    </div>
+
+                                                                            <div className="flex items-center gap-4">
+                                                                                <div className="flex items-center gap-1 text-slate-500">
+                                                                                    <Users size={12} />
+                                                                                    <span className="text-xs font-bold leading-none">
+                                                                                        {formatNumber(trip.totalBookings)}
+                                                                                    </span>
                                                                                 </div>
-                                                                                <div className="text-right min-w-[150px]">
-                                                                                    <div className="flex items-center gap-2">
-                                                                                        <DollarSign size={20} className={hasRevenue ? 'text-green-600' : 'text-zinc-400'} />
-                                                                                        <span className={`font-bold text-base ${hasRevenue ? 'text-green-700' : 'text-zinc-500'
-                                                                                            }`}>
-                                                                                            {formatCurrency(trip.totalRevenue)}
-                                                                                        </span>
-                                                                                    </div>
+                                                                                <div className="min-w-[100px] text-right">
+                                                                                    <span className={`text-xs font-black ${hasRevenue ? 'text-emerald-600' : 'text-slate-400'}`}>
+                                                                                        {formatCurrency(trip.totalRevenue)}
+                                                                                    </span>
                                                                                 </div>
                                                                             </div>
                                                                         </div>
@@ -832,21 +815,21 @@ const DashboardOverview = () => {
                                         ))}
                                     </div>
                                 ) : (
-                                    <div className="text-center py-16">
-                                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-zinc-100 mb-4">
-                                            <Search className="text-zinc-400" size={32} />
+                                    <div className="flex flex-col items-center justify-center py-24 text-center">
+                                        <div className="w-20 h-20 rounded-3xl bg-slate-100 flex items-center justify-center mb-4 shadow-inner">
+                                            <Search className="text-slate-400" size={40} />
                                         </div>
-                                        <p className="text-zinc-500 font-medium">Không tìm thấy tour nào</p>
-                                        <p className="text-sm text-zinc-400 mt-1">Thử thay đổi từ khóa tìm kiếm hoặc bộ lọc</p>
+                                        <h4 className="text-lg font-bold text-slate-900">Không tìm thấy tour nào</h4>
+                                        <p className="text-slate-500 max-w-xs mx-auto mt-2">Thử điều chỉnh từ khóa tìm kiếm hoặc sử dụng các bộ lọc khác.</p>
                                     </div>
                                 )
                             ) : (
-                                <div className="text-center py-16">
-                                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-zinc-100 mb-4">
-                                        <TrendingUp className="text-zinc-400" size={32} />
+                                <div className="flex flex-col items-center justify-center py-24 text-center">
+                                    <div className="w-20 h-20 rounded-3xl bg-blue-50 flex items-center justify-center mb-4 shadow-inner">
+                                        <TrendingUp className="text-blue-400" size={40} />
                                     </div>
-                                    <p className="text-zinc-500 font-medium">Chưa có dữ liệu doanh thu</p>
-                                    <p className="text-sm text-zinc-400 mt-1">Dữ liệu sẽ hiển thị khi có đặt chỗ đã thanh toán</p>
+                                    <h4 className="text-lg font-bold text-slate-900">Chưa có dữ liệu doanh thu</h4>
+                                    <p className="text-slate-500 max-w-xs mx-auto mt-2">Dữ liệu doanh thu chi tiết sẽ tự động hiển thị khi có đặt chỗ mới được thực hiện.</p>
                                 </div>
                             )}
                         </div>

@@ -184,6 +184,19 @@ const MainLayout = ({ children, onLogout }) => {
                             </span>
                         </button>
                     ))}
+                    {userRole === 'ADMIN' && (
+                        <button
+                            onClick={handleLogout}
+                            className="flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-xl transition-all duration-200 min-w-[60px] text-red-500 hover:bg-red-50"
+                        >
+                            <div className="relative">
+                                <LogOut size={22} />
+                            </div>
+                            <span className="text-[10px] font-medium truncate max-w-[60px]">
+                                Đăng xuất
+                            </span>
+                        </button>
+                    )}
                 </div>
             </nav>
         </div>
