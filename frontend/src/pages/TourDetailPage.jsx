@@ -101,6 +101,46 @@ const TourDetailPage = () => {
         }
     };
 
+    const handleShare = async () => {
+        const shareUrl = window.location.href;
+        const shareTitle = tour?.name || 'Tour du lịch';
+        const shareText = `${shareTitle} - ${formatPrice(tour?.price)}/người`;
+
+        try {
+            // Check if Web Share API is available (primarily on mobile devices)
+            if (navigator.share) {
+                await navigator.share({
+                    title: shareTitle,
+                    text: shareText,
+                    url: shareUrl,
+                });
+                showToast({
+                    type: 'success',
+                    message: 'Chia sẻ thành công',
+                    description: 'Tour đã được chia sẻ'
+                });
+            } else {
+                // Fallback to copy to clipboard for desktop
+                await navigator.clipboard.writeText(shareUrl);
+                showToast({
+                    type: 'success',
+                    message: 'Đã sao chép liên kết',
+                    description: 'Liên kết tour đã được sao chép vào clipboard'
+                });
+            }
+        } catch (error) {
+            // User cancelled share or clipboard access denied
+            if (error.name !== 'AbortError') {
+                console.error('Error sharing:', error);
+                showToast({
+                    type: 'error',
+                    message: 'Không thể chia sẻ',
+                    description: 'Vui lòng thử lại sau'
+                });
+            }
+        }
+    };
+
     const formatPrice = (price) => {
         if (!price) return 'Liên hệ';
         return new Intl.NumberFormat('vi-VN', {
